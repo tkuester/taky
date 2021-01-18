@@ -2,9 +2,13 @@
 
 taky - A simple COT server for ATAK
 
-## Features
+## Features (and anti-Features!)
 
-Android clients don't disconnect!
+ * Android clients don't disconnect!
+ * No design consideration for XML security!
+ * Atrocious CoT routing ensures everyone (may) get your updates!
+ * Streaming XML Parsing character by character to ensure the most accurate XML
+   handling with no regard to efficiency!
 
 ## Requirements
 
