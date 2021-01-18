@@ -38,4 +38,4 @@ $ taky
 
 # Run taky on 127.0.0.1:58087 with debugging enabled
 $ taky --ip 127.0.0.1 --port 58087 -l DEBUG
-`
+```
