@@ -99,7 +99,7 @@ class TAKClient(object):
     @property
     def as_element(self, stale_s=20):
         now = datetime.utcnow()
-        stale = now + timedelta(stale_s)
+        stale = now + timedelta(seconds=stale_s)
         evt = cot.Event(
             uid=self.uid,
             etype=self.marker or 'a-f',
