@@ -33,7 +33,7 @@ class COTServer(threading.Thread):
             self.lgr.log(logging.DEBUG - 1, "%s: %s", addr, data)
 
             if len(data) == 0:
-                self.lgr.info('Client disconnect: %s', addr)
+                self.lgr.debug('Client disconnect: %s', addr)
                 sock.close()
                 self.clients.pop(sock)
                 return
@@ -45,8 +45,9 @@ class COTServer(threading.Thread):
                     continue
 
             for (etype, elm) in parser.read_events():
-                self.lgr.debug('UID: %s', elm.get('uid'))
-                if elm.get('uid').endswith('-ping'):
+                evt = cot.Event.from_elm(elm)
+                self.lgr.debug(str(evt))
+                if evt.uid.endswith('-ping'):
                     now = datetime.utcnow()
                     pong = cot.Event(
                         uid='takPong',
