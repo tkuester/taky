@@ -95,8 +95,8 @@ class COTServer(threading.Thread):
                     else:
                         self.handle_client(sock)
         except Exception as e:
-            self.lgr.crit("Unhandled exception: %s", e)
-            self.lgr.crit(traceback.format_exc())
+            self.lgr.critical("Unhandled exception: %s", e)
+            self.lgr.critical(traceback.format_exc())
         finally:
             for (sock, addr) in self.clients.items():
                 self.lgr.debug("Closing %s", addr['addr'])
