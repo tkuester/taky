@@ -124,6 +124,11 @@ class TAKClient(object):
             })
             evt.detail.append(status)
 
+        uid = etree.Element('uid', attrib={
+            'Droid': self.callsign or 'JENNY'
+        })
+        evt.detail.append(uid)
+
         contact = etree.Element('contact', attrib={
             'callsign': self.callsign or 'JENNY',
             'endpoint': '*:-1:stcp',
