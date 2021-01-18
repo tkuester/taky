@@ -47,7 +47,7 @@ class COTServer(threading.Thread):
             for (etype, elm) in parser.read_events():
                 self.lgr.debug('UID: %s', elm.get('uid'))
                 if elm.get('uid').endswith('-ping'):
-                    now = datetime.now()
+                    now = datetime.utcnow()
                     pong = cot.Event(
                         uid='takPong',
                         etype='t-x-c-t-r',
