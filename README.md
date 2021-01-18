@@ -10,6 +10,10 @@ Android clients don't disconnect!
 
  * Python 3.6 or greater
  * lxml
+ * dateutil
+
+This application was developed with Python 3.8, and tested with ATAK v4.2.0.4.
+It is in an extremely alpha state, and isn't useful for anything at this point.
 
 ## Installation
 

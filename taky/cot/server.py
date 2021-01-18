@@ -38,6 +38,7 @@ class COTServer(threading.Thread):
                 self.clients.pop(sock)
                 return
 
+            # XXX: This is the ugliest way to support multiple <?xml> tags...
             for ch in data:
                 try:
                     parser.feed(chr(ch))
