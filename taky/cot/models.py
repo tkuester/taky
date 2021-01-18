@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from lxml import etree
+import dateutil.parser
 
 @dataclass
 class Point(object):
@@ -21,7 +22,7 @@ class Point(object):
     @staticmethod
     def from_elm(elm):
         if elm.tag != 'point':
-            raise TypeError("Cannot create Point from %s" % type(elm))
+            raise TypeError("Cannot create Point from %s" % elm.tag)
 
         return Point(
             lat=float(elm.get('lat')),
@@ -60,6 +61,36 @@ class Event(object):
         self.point = Point()
         self.detail = None
 
+    def __repr__(self):
+        return '<Event uid="%s" time=%s">' % (self.uid, self.time)
+
+    @staticmethod
+    def from_elm(elm):
+        if elm.tag != 'event':
+            raise TypeError('Cannot create Event from %s' % elm.tag)
+
+        time = dateutil.parser.isoparse(elm.get('time')).replace(tzinfo=None)
+        start = dateutil.parser.isoparse(elm.get('start')).replace(tzinfo=None)
+        stale = dateutil.parser.isoparse(elm.get('stale')).replace(tzinfo=None)
+
+        ret = Event(
+            version=elm.get('version'),
+            uid=elm.get('uid'),
+            etype=elm.get('type'),
+            how=elm.get('how'),
+            time=time,
+            start=start,
+            stale=stale
+        )
+
+        for child in elm.iterchildren():
+            if child.tag == 'point':
+                ret.point = Point.from_elm(child)
+            elif child.tag == 'detail':
+                ret.detail = child
+
+        return ret
+
     @property
     def as_element(self):
         ret = etree.Element('event')
@@ -67,9 +98,9 @@ class Event(object):
         ret.set('uid', self.uid)
         ret.set('type', self.etype)
         ret.set('how', self.how)
-        ret.set('time', self.time.strftime('%Y-%m-%dT%H:%M:%S.000Z'))
-        ret.set('start', self.start.strftime('%Y-%m-%dT%H:%M:%S.000Z'))
-        ret.set('stale', self.stale.strftime('%Y-%m-%dT%H:%M:%S.000Z'))
+        ret.set('time', self.time.isoformat(timespec='milliseconds') + 'Z')
+        ret.set('start', self.start.isoformat(timespec='milliseconds') + 'Z')
+        ret.set('stale', self.stale.isoformat(timespec='milliseconds') + 'Z')
         ret.append(self.point.as_element)
         if self.detail:
             ret.append(self.detail)
