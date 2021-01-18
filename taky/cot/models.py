@@ -10,6 +10,7 @@ class Point(object):
     lon: float = 0.0
     hae: float = 0.0
     ce: float = 9999999.0
+    le: float = 9999999.0
 
     @property
     def coords(self):
@@ -28,7 +29,8 @@ class Point(object):
             lat=float(elm.get('lat')),
             lon=float(elm.get('lon')),
             hae=float(elm.get('hae')),
-            ce=float(elm.get('ce'))
+            ce=float(elm.get('ce')),
+            le=float(elm.get('le'))
         )
 
     @property
@@ -38,6 +40,7 @@ class Point(object):
         ret.set('lon', '%.6f' % self.lon)
         ret.set('hae', '%.1f' % self.hae)
         ret.set('ce', '%.1f' % self.ce)
+        ret.set('le', '%.1f' % self.le)
 
         return ret
 
