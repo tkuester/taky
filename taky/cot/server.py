@@ -67,7 +67,8 @@ class COTServer(threading.Thread):
                     if sock is self.srv:
                         (sock, addr) = sock.accept()
                         self.lgr.debug("New client: %s", addr)
-                        self.clients[sock] = cot.TAKClient(sock)
+                        # FIXME: https://i.imgur.com/jjdqSsb.mp4
+                        self.clients[sock] = cot.TAKClient(sock, self)
                     else:
                         self.handle_client(sock)
         except Exception as e:

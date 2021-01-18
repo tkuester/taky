@@ -7,8 +7,10 @@ from lxml import etree
 from taky import cot
 
 class TAKClient(object):
-    def __init__(self, sock):
+    def __init__(self, sock, server):
         self.sock = sock
+        # FIXME: This is so bad
+        self.server = server
 
         self.uid = None
         self.callsign = None
@@ -79,6 +81,18 @@ class TAKClient(object):
                 self.point = evt.point
                 for child in evt.detail.iterchildren():
                     self.from_elm(child)
+
+                if self.server is None:
+                    return
+
+                out = etree.tostring(self.as_element)
+                for client in self.server.clients.values():
+                    if client is self:
+                        continue
+
+                    self.lgr.info("Broadcasting update from %s to %s", self, client)
+                    self.lgr.info(out)
+                    client.sock.sendall(out)
 
     def handle_tasking(self, elm):
         if elm.etype == 't-x-c-t':
