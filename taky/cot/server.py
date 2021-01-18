@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from datetime import datetime, timedelta
 import socket
 import select
 import threading
@@ -26,40 +25,18 @@ class COTServer(threading.Thread):
         self.stopped = threading.Event()
 
     def handle_client(self, sock):
-        addr = self.clients[sock]['addr']
-        parser = self.clients[sock]['parser']
+        client = self.clients[sock]
         try:
             data = sock.recv(4096)
-            self.lgr.log(logging.DEBUG - 1, "%s: %s", addr, data)
+            #self.lgr.log(logging.DEBUG - 1, "%s: %s", addr, data)
 
             if len(data) == 0:
-                self.lgr.debug('Client disconnect: %s', addr)
+                self.lgr.debug('Client disconnect: %s', client)
                 sock.close()
                 self.clients.pop(sock)
                 return
 
-            # XXX: This is the ugliest way to support multiple <?xml> tags...
-            for ch in data:
-                try:
-                    parser.feed(chr(ch))
-                except etree.XMLSyntaxError as e:
-                    continue
-
-            for (etype, elm) in parser.read_events():
-                evt = cot.Event.from_elm(elm)
-                self.lgr.debug(str(evt))
-                if evt.uid.endswith('-ping'):
-                    now = datetime.utcnow()
-                    pong = cot.Event(
-                        uid='takPong',
-                        etype='t-x-c-t-r',
-                        how='h-g-i-g-o',
-                        time=now,
-                        start=now,
-                        stale=now + timedelta(seconds=20)
-                    )
-                    sock.sendall(pong.as_xml)
-                elm.clear(keep_tail=True)
+            client.feed(data)
         except (socket.error, IOError, OSError) as e:
             self.lgr.info('%s closed on error: %s', addr, e)
             sock.close()
@@ -90,16 +67,15 @@ class COTServer(threading.Thread):
                     if sock is self.srv:
                         (sock, addr) = sock.accept()
                         self.lgr.debug("New client: %s", addr)
-                        self.clients[sock] = {'addr': addr,
-                                              'parser': etree.XMLPullParser(tag="event")}
+                        self.clients[sock] = cot.TAKClient(sock)
                     else:
                         self.handle_client(sock)
         except Exception as e:
             self.lgr.critical("Unhandled exception: %s", e)
             self.lgr.critical(traceback.format_exc())
         finally:
-            for (sock, addr) in self.clients.items():
-                self.lgr.debug("Closing %s", addr['addr'])
+            for (sock, client) in self.clients.items():
+                self.lgr.debug("Closing %s", client)
                 sock.shutdown(socket.SHUT_RDWR)
                 sock.close()
 

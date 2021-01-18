@@ -62,7 +62,7 @@ class Event(object):
         self.detail = None
 
     def __repr__(self):
-        return '<Event uid="%s" time=%s">' % (self.uid, self.time)
+        return '<Event uid="%s" type="%s" time=%s">' % (self.uid, self.etype, self.time)
 
     @staticmethod
     def from_elm(elm):
@@ -102,7 +102,7 @@ class Event(object):
         ret.set('start', self.start.isoformat(timespec='milliseconds') + 'Z')
         ret.set('stale', self.stale.isoformat(timespec='milliseconds') + 'Z')
         ret.append(self.point.as_element)
-        if self.detail:
+        if self.detail is not None:
             ret.append(self.detail)
 
         return ret
