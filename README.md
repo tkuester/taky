@@ -9,6 +9,9 @@ taky - A simple COT server for ATAK
  * Atrocious CoT routing ensures everyone (may) get your updates!
  * Streaming XML Parsing character by character to ensure the most accurate XML
    handling with no regard to efficiency!
+ * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
+   industry experience in implementing CoT technology!
+ * Server shuts down in about 1 second with only one Ctrl+C!
 
 ## Requirements
 
@@ -18,6 +21,8 @@ taky - A simple COT server for ATAK
 
 This application was developed with Python 3.8, and tested with ATAK v4.2.0.4.
 It is in an extremely alpha state, and isn't useful for anything at this point.
+
+No, really. Using this is probably a very-bad-idea (TM).
 
 ## Installation
 
