@@ -20,6 +20,7 @@ class COTServer(threading.Thread):
         self.address = (ip, port)
         self.srv = None
         self.clients = {}
+        self.router = cot.COTRouter(self)
 
         self.lgr = logging.getLogger()
         self.stopped = threading.Event()
@@ -53,6 +54,8 @@ class COTServer(threading.Thread):
         self.srv.listen()
         self.lgr.info("Listening on %s:%s", self.address[0], self.address[1])
 
+        self.router.start()
+
         try:
             while not self.stopped.is_set():
                 sox = [self.srv]
@@ -67,8 +70,7 @@ class COTServer(threading.Thread):
                     if sock is self.srv:
                         (sock, addr) = sock.accept()
                         self.lgr.debug("New client: %s", addr)
-                        # FIXME: https://i.imgur.com/jjdqSsb.mp4
-                        self.clients[sock] = cot.TAKClient(sock, self)
+                        self.clients[sock] = cot.TAKClient(sock, self.router.event_q)
                     else:
                         self.handle_client(sock)
         except Exception as e:
@@ -82,5 +84,9 @@ class COTServer(threading.Thread):
 
             self.srv.close()
 
+        self.router.stop()
+        self.router.join()
+
     def stop(self):
+        self.router.stop()
         self.stopped.set()
