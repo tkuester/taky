@@ -1,6 +1,7 @@
 import queue
 import threading
 import logging
+import traceback
 
 from lxml import etree
 
@@ -33,6 +34,9 @@ class COTRouter(threading.Thread):
                     client.sock.sendall(msg)
             except queue.Empty:
                 continue
+            except Exception as e:
+                self.lgr.error("Unhandled exception: %s", e)
+                self.lgr.error(traceback.format_exc())
 
         self.lgr.info("Stopping COT Router")
 
