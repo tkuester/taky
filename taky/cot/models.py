@@ -1,8 +1,54 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from lxml import etree
 import dateutil.parser
+
+lgr = logging.getLogger()
+
+class GeoChat(object):
+    def __init__(self):
+        self.uid = None
+        self.chatroom = None
+        self.chat_id = None
+        self.sender_cs = None
+        self.remarks_to = None
+        self.remarks_src = None
+        self.message = None
+
+        self.time = None
+        self.point = None
+
+    @staticmethod
+    def from_elm(elm):
+        # Sanity check inputs
+        if elm.detail is None:
+            return
+
+        chat = elm.detail.find('__chat')
+        remarks = elm.detail.find('remarks')
+
+        if chat is None or remarks is None:
+            return
+
+        gch = GeoChat()
+        gch.uid = elm.uid
+        gch.time = elm.time
+        gch.point = elm.point
+
+        gch.chatroom = chat.get('chatroom')
+        gch.chat_id = chat.get('id')
+        gch.sender_cs = chat.get('senderCallsign')
+        gch.remarks_to = remarks.get('to')
+        gch.remarks_src = remarks.get('source')
+        gch.message = remarks.text
+
+        lgr.info("%s", gch)
+        return gch
+
+    def __str__(self):
+        return "[ #%s ] < %s >: %s" % (self.chatroom, self.sender_cs, self.message)
 
 @dataclass
 class TAKDevice(object):
