@@ -181,6 +181,8 @@ class TAKClient(object):
             self.push_event(self.user.as_element)
 
     def handle_bits(self, evt):
+        if evt.etype == 'b-t-f':
+            gc = cot.GeoChat.from_elm(evt)
         self.push_event(evt)
 
     def handle_tasking(self, elm):
