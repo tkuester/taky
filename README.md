@@ -7,8 +7,7 @@ taky - A simple COT server for ATAK
  * Android clients don't disconnect!
  * No design consideration for XML security!
  * Atrocious CoT routing ensures everyone (may) get your updates!
- * Streaming XML Parsing character by character to ensure the most accurate XML
-   handling with no regard to efficiency!
+ * A hacked up XML parser written by someone who barely understands XML!
  * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
    industry experience in implementing CoT technology!
  * Server shuts down in about 1 second with only one Ctrl+C!
