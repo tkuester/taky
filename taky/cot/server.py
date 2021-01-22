@@ -69,7 +69,7 @@ class COTServer(threading.Thread):
                 for sock in rd:
                     if sock is self.srv:
                         (sock, addr) = sock.accept()
-                        self.lgr.debug("New client: %s", addr)
+                        self.lgr.info("New client from %s:%s", addr[0], addr[1])
                         self.clients[sock] = cot.TAKClient(sock, self.router.event_q)
                     else:
                         self.handle_client(sock)

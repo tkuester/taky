@@ -160,18 +160,28 @@ class TAKClient(object):
                 self.lgr.warn("Unhandled event: %s", evt)
             elm.clear(keep_tail=True)
 
+    def push_event(self, elm):
+        if not self.event_q:
+            return
+
+        if isinstance(elm, cot.Event):
+            elm = elm.as_element
+
+        if not isinstance(elm, etree._Element):
+            raise ValueError("Unable to push event of type %s", type(elm))
+
+        self.event_q.put((self, elm))
+
     def handle_atom(self, evt):
         if evt.detail is None:
             return
 
         if evt.detail.find('takv') is not None:
             self.user.update_from_evt(evt)
-            if self.event_q:
-                self.event_q.put((self, self.user.as_element))
+            self.push_event(self.user.as_element)
 
     def handle_bits(self, evt):
-        if self.event_q:
-            self.event_q.put((self, evt))
+        self.push_event(evt)
 
     def handle_tasking(self, elm):
         if elm.etype == 't-x-c-t':
