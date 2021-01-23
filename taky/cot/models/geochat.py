@@ -80,7 +80,10 @@ class GeoChat(object):
             chat.dst_uid = dst
             chat.dst_cs = dst
         else:
-            raise ValueError("dst must be string, or TAKUser")
+            raise ValueError("dst must be string, or cot.TAKUser")
+
+        if not isinstance(src, cot.TAKUser):
+            raise ValueError("src must be cot.TAKUser")
 
         chat.src = src
         chat.src_uid = src.uid

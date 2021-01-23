@@ -57,7 +57,22 @@ class TAKClient(object):
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
-            gc = cot.GeoChat.from_elm(evt)
+            chat = cot.GeoChat.from_elm(evt)
+            if chat.src is None:
+                chat.src = self.router.find_user(uid=chat.src_uid)
+            if chat.dst is None:
+                chat.dst = self.router.find_user(uid=chat.dst_uid)
+
+            if self.user is not chat.src:
+                self.lgr.warn("%s is sending messages for user %s", self.user, chat.src)
+            if isinstance(chat.dst, cot.Teams) and self.user.group != chat.dst:
+                self.lgr.warn("%s is sending messages for group %s", self.user, chat.src)
+
+            if chat.src is not None and chat.dst is not None:
+                self.lgr.info("%s -> %s: %s", chat.src, chat.dst, chat.message)
+                self.router.push_event(src=chat.src, event=chat.event, dst=chat.dst)
+                return
+
         self.router.push_event(self, evt)
 
     def handle_tasking(self, elm):

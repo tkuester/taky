@@ -40,12 +40,21 @@ class COTRouter(threading.Thread):
             xml = etree.tostring(_client.user.as_element)
             client.sock.sendall(xml)
 
-    def get_client(uid=None, callsign=None):
+    def find_client(self, uid=None, callsign=None):
         for client in self.clients:
             if uid and client.user.uid == uid:
                 return client
             if callsign and client.user.callsign == callsign:
                 return client
+
+        return None
+
+    def find_user(self, uid=None, callsign=None):
+        client = self.find_client(uid=uid, callsign=callsign)
+        if client is None:
+            return None
+
+        return client.user
 
     def push_event(self, src, event, dst=None):
         if not self.is_alive():
@@ -67,13 +76,23 @@ class COTRouter(threading.Thread):
             # TODO: Timeouts? select() on writable sockets? Thread safety?
             client.sock.sendall(msg)
 
-    def group_broadcast(self, src, msg):
-        # TODO: Broadcast to group that isn't yours?
+    def group_broadcast(self, src, msg, group=None):
+        if group is None:
+            if isinstance(src, cot.TAKUser):
+                group = src.group
+            elif isinstance(src, cot.TAKClient):
+                group = src.user.group
+            else:
+                raise ValueError("Unable to determine group to send to")
+
+        if not isinstance(group, cot.Teams):
+            raise ValueError("group must be cot.Teams")
+
         for client in self.clients:
-            if client is src:
+            if client.user is src:
                 continue
 
-            if client.group == src.group:
+            if client.user.group == group:
                 client.sock.sendall(msg)
 
     def run(self):
@@ -98,12 +117,23 @@ class COTRouter(threading.Thread):
                     self.lgr.warn("Unhandled event queue: %s, %s, %s", src, dst, evt)
                     continue
 
+
                 if dst is Destination.BROADCAST:
                     self.broadcast(src, xml)
                 elif dst is Destination.GROUP:
                     self.group_broadcast(src, xml)
+                elif isinstance(dst, cot.Teams):
+                    self.group_broadcast(src, xml, dst)
                 elif isinstance(dst, cot.TAKClient):
                     dst.sock.sendall(xml)
+                elif isinstance(dst, cot.TAKUser):
+                    client = self.find_client(uid=dst.uid)
+                    if client is None:
+                        self.lgr.warn("Can't find client for %s to deliver message", dst)
+                    else:
+                        client.sock.sendall(xml)
+                else:
+                    self.lgr.warn("Don't know what to do!")
             except queue.Empty:
                 continue
             except Exception as e:
