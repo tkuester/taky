@@ -111,7 +111,7 @@ class COTRouter(threading.Thread):
 
                 if isinstance(evt, cot.Event):
                     xml = etree.tostring(evt.as_element)
-                elif isinstance(evt, etree._Element):
+                elif isinstance(evt, etree._Element) and evt.tag == 'event':
                     xml = etree.tostring(evt)
                 else:
                     self.lgr.warn("Unhandled event queue: %s, %s, %s", src, dst, evt)
