@@ -10,7 +10,8 @@ from ipaddress import ip_address, IPv4Address, IPv6Address
 from taky import cot
 
 class COTServer(threading.Thread):
-    def __init__(self, ip=None, port=8087, ssl_cert=None, ssl_key=None):
+    def __init__(self, ip=None, port=8087,
+                 ca_cert=None, ssl_cert=None, ssl_key=None, verify_client=False):
         threading.Thread.__init__(self)
 
         if ip is None:
@@ -19,15 +20,17 @@ class COTServer(threading.Thread):
         self.address = (ip, port)
         self.srv = None
 
-        self.ssl_cert = ssl_cert
-        self.ssl_key = ssl_key
         self.ssl_ctx = None
+        self.verify_client = verify_client
 
         self.clients = {}
         self.router = cot.COTRouter(self)
 
         self.lgr = logging.getLogger(COTServer.__name__)
         self.stopped = threading.Event()
+        
+        if ssl_cert and ssl_key:
+            self.ssl_setup(ssl_cert, ssl_key, ca_cert, verify_client)
 
     def handle_client(self, sock):
         client = self.clients[sock]
@@ -48,6 +51,35 @@ class COTServer(threading.Thread):
             sock.close()
             self.clients.pop(sock)
 
+    def ssl_setup(self, ssl_cert, ssl_key, ca_cert=None, verify_client=False):
+        self.ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+        # Load up CA certificates
+        if ca_cert:
+            self.lgr.info("Loading CA certificate from %s", ca_cert)
+            try:
+                self.ssl_ctx.load_verify_locations(ca_cert)
+            except (ssl.SSLError, FileNotFoundError) as e:
+                self.lgr.error("Unable to load CA certificates: %s", e)
+                raise e
+        else:
+            self.lgr.info("Using default CA certificates")
+            self.ssl_ctx.load_default_certs()
+
+        if self.verify_client:
+            self.ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+        else:
+            self.lgr.info("Clients will not need to present a certificate")
+            self.ssl_ctx.verify_mode = ssl.CERT_OPTIONAL
+
+        try:
+            self.ssl_ctx.load_cert_chain(ssl_cert, ssl_key)
+        except (ssl.SSLError, FileNotFoundError) as e:
+            self.lgr.error("Unable to load SSL certificate / key: %s", e)
+            raise e
+
+        return True
+
     def run(self):
         if isinstance(self.address[0], IPv4Address):
             self.srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,16 +90,10 @@ class COTServer(threading.Thread):
         self.srv.bind((str(self.address[0]), self.address[1]))
         self.srv.listen()
 
-        if self.ssl_cert and self.ssl_key:
-            self.ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            try:
-                self.ssl_ctx.load_cert_chain(self.ssl_cert, self.ssl_key)
-            except (ssl.SSLError, FileNotFoundError) as e:
-                self.lgr.error("Unable to load SSL certificate / key: %s", e)
-                return
 
+        if self.ssl_ctx:
             self.srv = self.ssl_ctx.wrap_socket(self.srv, server_side=True)
-            self.lgr.info("Listening SSL %s on %s:%s", self.srv.version(), self.address[0], self.address[1])
+            self.lgr.info("Listening for SSL on %s:%s", self.address[0], self.address[1])
         else:
             self.lgr.info("Listening on %s:%s", self.address[0], self.address[1])
 
@@ -87,8 +113,12 @@ class COTServer(threading.Thread):
                     if sock is self.srv:
                         try:
                             (sock, addr) = self.srv.accept()
+                        except ssl.SSLError as e:
+                            self.lgr.info("Rejecting client: %s", e)
+                            continue
                         except OSError as e:
-                            self.lgr.info("Server socket closed: %s", e)
+                            self.lgr.info("Server socket closed")
+                            self.stop()
                             break
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
