@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(name='taky',
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     use_scm_version=True,
     author="Tim K",
     author_email="tpkuester@gmail.com",
