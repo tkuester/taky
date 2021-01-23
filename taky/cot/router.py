@@ -39,6 +39,13 @@ class COTRouter(threading.Thread):
             xml = etree.tostring(_client.user.as_element)
             client.sock.sendall(xml)
 
+    def get_client(uid=None, callsign=None):
+        for client in self.clients:
+            if uid and client.uid == uid:
+                return client
+            if callsign and client.callsign == callsign:
+                return client
+
     def push_event(self, src, event, dst=None):
         if not self.is_alive():
             raise RuntimeError("Router is not running")
