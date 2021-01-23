@@ -59,6 +59,9 @@ class TAKUser(object):
 
         self.device = None
 
+        self.last_seen = None
+        self.stale = None
+
     def update_from_evt(self, evt):
         # Sanity check inputs
         if evt.detail is None:
@@ -76,6 +79,8 @@ class TAKUser(object):
 
         self.marker = evt.etype
         self.point = evt.point
+        self.last_seen = evt.start
+        self.stale = evt.stale
 
         for elm in evt.detail.iterchildren():
             if elm.tag == 'takv':
@@ -103,8 +108,14 @@ class TAKUser(object):
 
     @property
     def as_element(self, stale_s=20):
-        now = datetime.utcnow()
-        stale = now + timedelta(seconds=stale_s)
+        if self.last_seen is None:
+            # TODO: What should we do if we've never been seen?
+            now = datetime.utcnow()
+            stale = now + timedelta(seconds=stale_s)
+        else:
+            now = self.last_seen
+            stale = self.stale
+
         evt = Event(
             uid=self.uid,
             etype=self.marker or 'a-f',
