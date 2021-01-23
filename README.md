@@ -33,7 +33,17 @@ But, really. Using this is for anything important is probably a very-bad-idea (T
 
 Inside the taky folder, run
 
-`python3 setup.py install`
+```bash
+$ git clone https://github.com/tkuester/taky
+$ cd taky
+$ python3 setup.py install
+```
+
+Alternatively, you can use pip!
+
+```bash
+$ python3 -m pip install taky
+```
 
 ## Usage
 
