@@ -32,7 +32,7 @@ class COTServer(threading.Thread):
             #self.lgr.log(logging.DEBUG - 1, "%s: %s", addr, data)
 
             if len(data) == 0:
-                self.lgr.debug('Client disconnect: %s', client)
+                self.lgr.info('Client disconnect: %s', client)
                 sock.close()
                 self.clients.pop(sock)
                 self.router.client_disconnect(client)
