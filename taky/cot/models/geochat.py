@@ -7,9 +7,6 @@ from taky.cot.models.event import Event
 
 class GeoChat(object):
     def __init__(self):
-        self.src_usr = None
-        self.dst_usr = None
-
         self.uid = None
         self.chatroom = None
         self.chat_id = None
@@ -52,10 +49,10 @@ class GeoChat(object):
     def __str__(self):
         return "[ #%s ] < %s >: %s" % (self.chatroom, self.sender_cs, self.message)
 
-    @property
-    def as_element(self):
+    @staticmethod
+    def build_msg(src, dst, message, parent='RootContactGroup'):
         now = datetime.utcnow()
-        uid = f'GeoChat.{self.src_usr.uid}.{self.dst_usr.callsign}.{uuid.uuid4()}'
+        uid = f'GeoChat.{src.uid}.{dst.callsign}.{uuid.uuid4()}'
         evt = Event(
             uid=uid,
             etype='b-t-f',
@@ -64,43 +61,43 @@ class GeoChat(object):
             start=now,
             stale=now
         )
-        evt.point = self.src_usr.point
+        evt.point = src.point
 
         evt.detail = etree.Element('detail')
         chat = etree.Element('__chat', attrib={
-            'parent': self.parent,
+            'parent': parent,
             'groupOwner': 'false',
-            'chatroom': self.dst_usr.callsign,
-            'id': self.dst_usr.uid,
-            'senderCallsign': self.src_usr.callsign
+            'chatroom': dst.callsign,
+            'id': dst.uid,
+            'senderCallsign': src.callsign
         })
         chatgroup = etree.Element('chatgrp', attrib={
-            'uid0': self.src_usr.uid,
-            'uid1': self.dst_usr.uid,
-            'id': self.dst_usr.uid
+            'uid0': src.uid,
+            'uid1': dst.uid,
+            'id': dst.uid
         })
         chat.append(chatgroup)
         evt.detail.append(chat)
 
         link = etree.Element('link', attrib={
-            'uid': self.src_usr.uid,
-            'type': self.src_usr.marker,
+            'uid': src.uid,
+            'type': src.marker,
             'relation': 'p-p'
         })
         evt.detail.append(link)
 
-        rmk_src = f'BAO.F.ATAK.{self.src_usr.uid}'
+        rmk_src = f'BAO.F.ATAK.{src.uid}'
         remarks = etree.Element('remarks', attrib={
             'source': rmk_src,
-            'to': self.dst_usr.uid,
+            'to': dst.uid,
             'time': now.isoformat(timespec='milliseconds') + 'Z'
         })
-        remarks.text = self.message
+        remarks.text = message
         evt.detail.append(remarks)
 
         marti = etree.Element('marti')
         dest = etree.Element('dest', attrib={
-            'callsign': self.dst_usr.callsign
+            'callsign': dst.callsign
         })
         marti.append(dest)
         evt.detail.append(marti)
