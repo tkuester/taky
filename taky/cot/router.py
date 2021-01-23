@@ -33,6 +33,8 @@ class COTRouter(threading.Thread):
         for _client in self.clients:
             if _client is client:
                 continue
+            elif _client.uid is None:
+                continue
 
             xml = etree.tostring(_client.user.as_element)
             client.sock.sendall(xml)
