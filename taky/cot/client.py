@@ -41,7 +41,8 @@ class TAKClient(object):
             elif evt.etype.startswith('t'):
                 self.handle_tasking(evt)
             else:
-                self.lgr.warn("Unhandled event: %s", evt)
+                # Don't know what to do with these yet!
+                self.handle_marti(evt)
             elm.clear(keep_tail=True)
 
     def handle_atom(self, evt):
@@ -57,16 +58,7 @@ class TAKClient(object):
 
             return
 
-        marti = evt.detail.find('marti')
-        if marti is not None:
-            for dest in marti.iterfind('dest'):
-                callsign = dest.get('callsign')
-                dst = self.router.find_client(callsign=callsign)
-                if dst is None:
-                    continue
-                self.router.push_event(self, evt, dst)
-        else:
-            self.router.push_event(self, evt)
+        self.handle_marti(evt)
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
@@ -86,11 +78,30 @@ class TAKClient(object):
                 self.router.push_event(src=chat.src, event=chat.event, dst=chat.dst)
                 return
 
-        self.router.push_event(self, evt)
+        self.handle_marti(evt)
 
     def handle_tasking(self, elm):
         if elm.etype == 't-x-c-t':
             self.pong()
+            return
+
+        self.handle_marti(evt)
+
+    def handle_marti(self, evt):
+        if evt.detail is None:
+            return
+
+        marti = evt.detail.find('marti')
+        if marti is not None:
+            for dest in marti.iterfind('dest'):
+                callsign = dest.get('callsign')
+                dst = self.router.find_client(callsign=callsign)
+                if dst is None:
+                    continue
+                self.router.push_event(self, evt, dst)
+        else:
+            self.router.push_event(self, evt)
+
 
     def pong(self):
         now = datetime.utcnow()
