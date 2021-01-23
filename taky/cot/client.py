@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from dataclasses import dataclass
 
 from lxml import etree
 

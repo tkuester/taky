@@ -6,8 +6,6 @@ import traceback
 import logging
 from ipaddress import ip_address, IPv4Address, IPv6Address
 
-from lxml import etree
-
 from taky import cot
 
 class COTServer(threading.Thread):

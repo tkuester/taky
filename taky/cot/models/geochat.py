@@ -3,7 +3,6 @@ import uuid
 
 from lxml import etree
 
-from taky.cot.models.point import Point
 from taky.cot.models.event import Event
 
 class GeoChat(object):
