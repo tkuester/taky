@@ -90,7 +90,7 @@ class GeoChat(object):
 
         if time is None:
             time = datetime.utcnow()
-        uid = f'GeoChat.{chat.src.uid}.{chat.dst_cs}.{uuid.uuid4()}'
+        uid = f'GeoChat.{chat.src_uid}.{chat.dst_cs}.{uuid.uuid4()}'
         chat.event = cot.Event(
             uid=uid,
             etype='b-t-f',

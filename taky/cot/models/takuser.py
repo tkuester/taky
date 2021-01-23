@@ -3,8 +3,7 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from taky.cot.models.point import Point
-from taky.cot.models.event import Event
+from taky import cot
 
 @dataclass
 class TAKDevice(object):
@@ -41,6 +40,7 @@ class TAKDevice(object):
     @property
     def as_xml(self):
         return etree.tostring(self.as_element)
+
 @dataclass
 class TAKUser(object):
     def __init__(self):
@@ -51,7 +51,7 @@ class TAKUser(object):
         self.group = None
         self.role = None
 
-        self.point = Point()
+        self.point = cot.Point()
         self.course = None
         self.speed = None
 
@@ -61,6 +61,9 @@ class TAKUser(object):
 
         self.last_seen = None
         self.stale = None
+
+    def __repr__(self):
+        return f"<TAKUser uid={self.uid}, callsign={self.callsign}, group={self.group}>"
 
     def update_from_evt(self, evt):
         # Sanity check inputs
@@ -89,7 +92,7 @@ class TAKUser(object):
                 self.callsign = elm.get('callsign')
                 self.phone = elm.get('phone')
             elif elm.tag == '__group':
-                self.group = elm.get('group')
+                self.group = cot.Teams(elm.get('name'))
                 self.role = elm.get('role')
             elif elm.tag == 'status':
                 self.battery = elm.get('battery')
@@ -116,7 +119,7 @@ class TAKUser(object):
             now = self.last_seen
             stale = self.stale
 
-        evt = Event(
+        evt = cot.Event(
             uid=self.uid,
             etype=self.marker or 'a-f',
             how='m-g',
@@ -155,7 +158,7 @@ class TAKUser(object):
 
         group = etree.Element('__group', attrib={
             'role': self.role or 'Team Member',
-            'name': self.group or 'Cyan',
+            'name': self.group.value,
         })
         evt.detail.append(group)
 
