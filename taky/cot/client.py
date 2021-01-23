@@ -62,6 +62,11 @@ class TAKClient(object):
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
+            # Currently, ATAK 4.2.0.4 does not properly set MARTI for chat
+            # messages sent to teams. In any case, setting the destination as a
+            # cot.Teams prevents queue-ing multiple messages in the routing
+            # engine
+
             chat = cot.GeoChat.from_elm(evt)
             if chat.src is None:
                 chat.src = self.router.find_client(uid=chat.src_uid)
@@ -74,7 +79,6 @@ class TAKClient(object):
                 self.lgr.warn("%s is sending messages for group %s", self.user, chat.src)
 
             if chat.src is not None and chat.dst is not None:
-                self.lgr.info("%s -> %s: %s", chat.src, chat.dst, chat.message)
                 self.router.push_event(src=chat.src, event=chat.event, dst=chat.dst)
                 return
 
