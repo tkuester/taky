@@ -4,9 +4,12 @@ taky - A simple COT server for ATAK
 
 ## Features (and anti-Features!)
 
- * Should support multiple ATAK clients simultaneously! You can see them on the map!
+ * Should support multiple ATAK clients simultaneously! You can see them on the
+   map!
+ * GeoChats are routed to appropriate groups / UIDs, unless broadcast!
  * Some design consideration for XML security!
- * Mediocre CoT routing ensures everyone gets your GeoChats!
+ * Mediocre CoT routing broadcasts to everyone if it doesn't recognize the
+   detail!
  * A hacked up XML parser written by someone who barely understands XML!
  * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
    industry experience in implementing CoT technology!
