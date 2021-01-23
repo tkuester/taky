@@ -129,7 +129,7 @@ class TAKClient(object):
     def __init__(self, sock, event_q=None):
         self.sock = sock
         self.event_q = event_q
-        self.parser = etree.XMLPullParser(tag='event')
+        self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
         self.parser.feed(b'<root>')
         self.user = cot.TAKUser()
         self.xdc = XMLDeclStrip()
