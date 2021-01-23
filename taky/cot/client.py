@@ -50,8 +50,11 @@ class TAKClient(object):
             return
 
         if evt.detail.find('takv') is not None:
-            self.user.update_from_evt(evt)
+            first_ident = self.user.update_from_evt(evt)
             self.router.push_event(self, self.user.as_element)
+
+            if first_ident:
+                self.router.client_ident(self)
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':

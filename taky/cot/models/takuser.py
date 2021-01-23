@@ -62,17 +62,17 @@ class TAKUser(object):
     def update_from_evt(self, evt):
         # Sanity check inputs
         if evt.detail is None:
-            return
+            return False
         if evt.detail.find('takv') is None:
-            return
+            return False
 
+        ret = False
         # Is this our first run?
         if self.uid is None:
             self.uid = evt.uid
-
-        # Don't update the user if it's a different UID
-        if self.uid != evt.uid:
-            return
+            ret = True
+        elif self.uid != evt.uid:
+            return False
 
         self.marker = evt.etype
         self.point = evt.point
@@ -98,6 +98,8 @@ class TAKUser(object):
             else:
                 #self.lgr.warn("Unhandled TAKClient detail: %s", elm.tag)
                 pass
+
+        return ret
 
     @property
     def as_element(self, stale_s=20):

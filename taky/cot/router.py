@@ -28,6 +28,15 @@ class COTRouter(threading.Thread):
     def client_disconnect(self, client):
         self.clients.discard(client)
 
+    def client_ident(self, client):
+        self.lgr.debug("Sending active clients to %s", client)
+        for _client in self.clients:
+            if _client is client:
+                continue
+
+            xml = etree.tostring(_client.user.as_element)
+            client.sock.sendall(xml)
+
     def push_event(self, src, event, dst=None):
         if not self.is_alive():
             raise RuntimeError("Router is not running")
