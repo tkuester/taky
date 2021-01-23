@@ -20,7 +20,7 @@ class COTServer(threading.Thread):
         self.address = (ip, port)
         self.srv = None
         self.clients = {}
-        self.router = cot.COTRouter(self)
+        self.router = cot.COTRouter()
 
         self.lgr = logging.getLogger()
         self.stopped = threading.Event()
@@ -35,6 +35,7 @@ class COTServer(threading.Thread):
                 self.lgr.debug('Client disconnect: %s', client)
                 sock.close()
                 self.clients.pop(sock)
+                self.router.client_disconnect(client)
                 return
 
             client.feed(data)

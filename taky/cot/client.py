@@ -8,18 +8,20 @@ from taky import cot
 from taky.util import XMLDeclStrip
 
 class TAKClient(object):
-    def __init__(self, sock, event_q=None):
+    def __init__(self, sock, router=None):
         self.sock = sock
-        self.event_q = event_q
+        self.router = router
+        self.user = cot.TAKUser()
+
+        self.xdc = XMLDeclStrip()
         self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
         self.parser.feed(b'<root>')
-        self.user = cot.TAKUser()
-        self.xdc = XMLDeclStrip()
 
         self.lgr = logging.getLogger()
 
     def __repr__(self):
-        (ip, port) = self.sock.getpeername()
+        # IPv6 returns a 4 element tuple
+        (ip, port) = self.sock.getpeername()[:2]
         return f'<TAKClient uid={self.user.uid} callsign={self.user.callsign} client={ip}:{port}>'
 
     def feed(self, data):
@@ -43,30 +45,18 @@ class TAKClient(object):
                 self.lgr.warn("Unhandled event: %s", evt)
             elm.clear(keep_tail=True)
 
-    def push_event(self, elm):
-        if not self.event_q:
-            return
-
-        if isinstance(elm, cot.Event):
-            elm = elm.as_element
-
-        if not isinstance(elm, etree._Element):
-            raise ValueError("Unable to push event of type %s", type(elm))
-
-        self.event_q.put((self, elm))
-
     def handle_atom(self, evt):
         if evt.detail is None:
             return
 
         if evt.detail.find('takv') is not None:
             self.user.update_from_evt(evt)
-            self.push_event(self.user.as_element)
+            self.router.push_event(self, self.user.as_element)
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
             gc = cot.GeoChat.from_elm(evt)
-        self.push_event(evt)
+        self.router.push_event(self, evt)
 
     def handle_tasking(self, elm):
         if elm.etype == 't-x-c-t':
@@ -82,5 +72,4 @@ class TAKClient(object):
             start=now,
             stale=now + timedelta(seconds=20)
         )
-        self.sock.sendall(etree.tostring(pong.as_element))
-
+        self.router.push_event(self, pong, dst=self)
