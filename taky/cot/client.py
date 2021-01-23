@@ -55,13 +55,26 @@ class TAKClient(object):
             if first_ident:
                 self.router.client_ident(self)
 
+            return
+
+        marti = evt.detail.find('marti')
+        if marti is not None:
+            for dest in marti.iterfind('dest'):
+                callsign = dest.get('callsign')
+                dst = self.router.find_client(callsign=callsign)
+                if dst is None:
+                    continue
+                self.router.push_event(self, evt, dst)
+        else:
+            self.router.push_event(self, evt)
+
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
             chat = cot.GeoChat.from_elm(evt)
             if chat.src is None:
-                chat.src = self.router.find_user(uid=chat.src_uid)
+                chat.src = self.router.find_client(uid=chat.src_uid)
             if chat.dst is None:
-                chat.dst = self.router.find_user(uid=chat.dst_uid)
+                chat.dst = self.router.find_client(uid=chat.dst_uid)
 
             if self.user is not chat.src:
                 self.lgr.warn("%s is sending messages for user %s", self.user, chat.src)
