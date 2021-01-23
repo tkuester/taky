@@ -93,6 +93,8 @@ class COTRouter(threading.Thread):
 
                 if dst is Destination.BROADCAST:
                     self.broadcast(src, xml)
+                elif dst is Destination.GROUP:
+                    self.group_broadcast(src, xml)
                 elif isinstance(dst, cot.TAKClient):
                     dst.sock.sendall(xml)
             except queue.Empty:
