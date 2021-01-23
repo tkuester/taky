@@ -34,7 +34,7 @@ class COTRouter(threading.Thread):
         for _client in self.clients:
             if _client is client:
                 continue
-            elif _client.uid is None:
+            if _client.user.uid is None:
                 continue
 
             xml = etree.tostring(_client.user.as_element)
@@ -42,9 +42,9 @@ class COTRouter(threading.Thread):
 
     def get_client(uid=None, callsign=None):
         for client in self.clients:
-            if uid and client.uid == uid:
+            if uid and client.user.uid == uid:
                 return client
-            if callsign and client.callsign == callsign:
+            if callsign and client.user.callsign == callsign:
                 return client
 
     def push_event(self, src, event, dst=None):
