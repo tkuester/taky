@@ -16,7 +16,7 @@ class TAKClient(object):
         self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
         self.parser.feed(b'<root>')
 
-        self.lgr = logging.getLogger()
+        self.lgr = logging.getLogger(TAKClient.__name__)
 
     def __repr__(self):
         # IPv6 returns a 4 element tuple

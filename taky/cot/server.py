@@ -20,7 +20,7 @@ class COTServer(threading.Thread):
         self.clients = {}
         self.router = cot.COTRouter()
 
-        self.lgr = logging.getLogger()
+        self.lgr = logging.getLogger(COTServer.__name__)
         self.stopped = threading.Event()
 
     def handle_client(self, sock):

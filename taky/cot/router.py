@@ -20,7 +20,7 @@ class COTRouter(threading.Thread):
 
         self.event_q = queue.Queue()
         self.stopped = threading.Event()
-        self.lgr = logging.getLogger()
+        self.lgr = logging.getLogger(COTRouter.__name__)
 
     def client_connect(self, client):
         self.clients.add(client)
