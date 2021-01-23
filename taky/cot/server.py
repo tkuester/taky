@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import socket
 import select
+import ssl
 import threading
 import traceback
 import logging
@@ -9,7 +10,7 @@ from ipaddress import ip_address, IPv4Address, IPv6Address
 from taky import cot
 
 class COTServer(threading.Thread):
-    def __init__(self, ip=None, port=8087):
+    def __init__(self, ip=None, port=8087, ssl_cert=None, ssl_key=None):
         threading.Thread.__init__(self)
 
         if ip is None:
@@ -17,6 +18,11 @@ class COTServer(threading.Thread):
 
         self.address = (ip, port)
         self.srv = None
+
+        self.ssl_cert = ssl_cert
+        self.ssl_key = ssl_key
+        self.ssl_ctx = None
+
         self.clients = {}
         self.router = cot.COTRouter(self)
 
@@ -51,7 +57,19 @@ class COTServer(threading.Thread):
         self.srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.srv.bind((str(self.address[0]), self.address[1]))
         self.srv.listen()
-        self.lgr.info("Listening on %s:%s", self.address[0], self.address[1])
+
+        if self.ssl_cert and self.ssl_key:
+            self.ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            try:
+                self.ssl_ctx.load_cert_chain(self.ssl_cert, self.ssl_key)
+            except (ssl.SSLError, FileNotFoundError) as e:
+                self.lgr.error("Unable to load SSL certificate / key: %s", e)
+                return
+
+            self.srv = self.ssl_ctx.wrap_socket(self.srv, server_side=True)
+            self.lgr.info("Listening SSL %s on %s:%s", self.srv.version(), self.address[0], self.address[1])
+        else:
+            self.lgr.info("Listening on %s:%s", self.address[0], self.address[1])
 
         self.router.start()
 
@@ -69,8 +87,8 @@ class COTServer(threading.Thread):
                     if sock is self.srv:
                         try:
                             (sock, addr) = self.srv.accept()
-                        except OSError:
-                            self.lgr.info("Server socket closed")
+                        except OSError as e:
+                            self.lgr.info("Server socket closed: %s", e)
                             break
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])

@@ -32,7 +32,12 @@ class TAKClient(object):
 
         for (etype, elm) in self.parser.read_events():
             #self.lgr.debug(etree.tostring(elm))
-            evt = cot.Event.from_elm(elm)
+            try:
+                evt = cot.Event.from_elm(elm)
+            except (ValueError, TypeError) as e:
+                self.lgr.warn("Unable to parse element: %s", e)
+                continue
+
             self.lgr.debug(evt)
             if evt.etype.startswith('a'):
                 self.handle_atom(evt)
