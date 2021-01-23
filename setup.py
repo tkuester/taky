@@ -4,6 +4,7 @@ setup(name='taky',
     python_requires='>=3.6',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
+    install_requires=['lxml', 'dateutils'],
     description='TAK Server',
     packages=find_packages(),
     entry_points={
