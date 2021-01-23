@@ -18,7 +18,7 @@ class COTServer(threading.Thread):
         self.address = (ip, port)
         self.srv = None
         self.clients = {}
-        self.router = cot.COTRouter()
+        self.router = cot.COTRouter(self)
 
         self.lgr = logging.getLogger(COTServer.__name__)
         self.stopped = threading.Event()
@@ -36,7 +36,7 @@ class COTServer(threading.Thread):
                 self.router.client_disconnect(client)
                 return
 
-            client.feed(data)
+            self.router.event_q.put((self, client, data))
         except (socket.error, IOError, OSError) as e:
             self.lgr.info('%s closed on error: %s', addr, e)
             sock.close()
@@ -95,4 +95,7 @@ class COTServer(threading.Thread):
     def stop(self):
         self.router.stop()
         self.stopped.set()
-        self.srv.shutdown(socket.SHUT_RDWR)
+        try:
+            self.srv.shutdown(socket.SHUT_RDWR)
+        except:
+            pass

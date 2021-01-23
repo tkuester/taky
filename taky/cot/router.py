@@ -13,9 +13,10 @@ class Destination(enum.Enum):
     GROUP=2
 
 class COTRouter(threading.Thread):
-    def __init__(self):
+    def __init__(self, server):
         threading.Thread.__init__(self)
 
+        self.srv = server
         self.clients = set()
 
         self.event_q = queue.Queue()
@@ -84,11 +85,17 @@ class COTRouter(threading.Thread):
                 if src is self and evt == 'shutdown':
                     break
 
+                # Handle socket bytes from server
+                if src is self.srv:
+                    dst.feed(evt)
+                    continue
+
                 if isinstance(evt, cot.Event):
                     xml = etree.tostring(evt.as_element)
                 elif isinstance(evt, etree._Element):
                     xml = etree.tostring(evt)
                 else:
+                    self.lgr.warn("Unhandled event queue: %s, %s, %s", src, dst, evt)
                     continue
 
                 if dst is Destination.BROADCAST:
@@ -103,6 +110,7 @@ class COTRouter(threading.Thread):
                 self.lgr.error("Unhandled exception: %s", e)
                 self.lgr.error(traceback.format_exc())
 
+        self.srv.stop()
         self.lgr.info("Stopping COT Router")
 
     def stop(self):
