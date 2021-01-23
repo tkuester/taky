@@ -4,17 +4,18 @@ taky - A simple COT server for ATAK
 
 ## Features (and anti-Features!)
 
- * Android clients don't disconnect!
- * No design consideration for XML security!
- * Atrocious CoT routing ensures everyone (may) get your updates!
+ * Should support multiple ATAK clients simultaneously! You can see them on the map!
+ * Some design consideration for XML security!
+ * Mediocre CoT routing ensures everyone gets your GeoChats!
  * A hacked up XML parser written by someone who barely understands XML!
  * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
    industry experience in implementing CoT technology!
- * Server shuts down in about 1 second with only one Ctrl+C!
+ * Server shuts down with only one Ctrl+C!
+ * Thread safety? Why would you need thread safety?
 
 ## Requirements
 
- * Python 3.6 or greater
+ * Python 3.7 or greater
  * lxml
  * dateutil
 
@@ -50,4 +51,7 @@ $ taky
 
 # Run taky on 127.0.0.1:58087 with debugging enabled
 $ taky --ip 127.0.0.1 --port 58087 -l DEBUG
+
+# Run taky within the folder (ie: if you can't install it)
+~/taky $ python3 -m taky
 ```
