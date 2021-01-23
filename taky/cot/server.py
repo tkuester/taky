@@ -68,9 +68,15 @@ class COTServer(threading.Thread):
 
                 for sock in rd:
                     if sock is self.srv:
-                        (sock, addr) = sock.accept()
+                        try:
+                            (sock, addr) = self.srv.accept()
+                        except OSError:
+                            self.lgr.info("Server socket closed")
+                            break
+
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
-                        self.clients[sock] = cot.TAKClient(sock, self.router.event_q)
+                        self.clients[sock] = cot.TAKClient(sock, self.router)
+                        self.router.client_connect(self.clients[sock])
                     else:
                         self.handle_client(sock)
         except Exception as e:
@@ -90,3 +96,4 @@ class COTServer(threading.Thread):
     def stop(self):
         self.router.stop()
         self.stopped.set()
+        self.srv.shutdown(socket.SHUT_RDWR)
