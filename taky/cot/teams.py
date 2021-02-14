@@ -15,3 +15,4 @@ class Teams(enum.Enum):
     GREEN = 'Green'
     DARK_GREEN = 'Dark Green'
     BROWN = 'Brown'
+    UNKNOWN = 'Cyan'

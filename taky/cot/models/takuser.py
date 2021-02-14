@@ -92,7 +92,11 @@ class TAKUser(object):
                 self.callsign = elm.get('callsign')
                 self.phone = elm.get('phone')
             elif elm.tag == '__group':
-                self.group = cot.Teams(elm.get('name'))
+                try:
+                    self.group = cot.Teams(elm.get('name'))
+                except ValueError:
+                    # TODO: How to handle unknown group? Defaults to "Cyan"
+                    self.group = cot.Teams.UNKNOWN
                 self.role = elm.get('role')
             elif elm.tag == 'status':
                 self.battery = elm.get('battery')
