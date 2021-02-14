@@ -28,14 +28,14 @@ class TAKClient(object):
         try:
             self.parser.feed(self.xdc.feed(data))
         except etree.XMLSyntaxError as e:
-            self.lgr.warn("XML Parsing Error: %s", e)
+            self.lgr.warning("XML Parsing Error: %s", e)
 
-        for (etype, elm) in self.parser.read_events():
+        for (_, elm) in self.parser.read_events():
             #self.lgr.debug(etree.tostring(elm))
             try:
                 evt = cot.Event.from_elm(elm)
             except (ValueError, TypeError) as e:
-                self.lgr.warn("Unable to parse element: %s", e)
+                self.lgr.warning("Unable to parse element: %s", e)
                 continue
 
             self.lgr.debug(evt)
@@ -79,9 +79,9 @@ class TAKClient(object):
                 chat.dst = self.router.find_client(uid=chat.dst_uid)
 
             if self.user is not chat.src:
-                self.lgr.warn("%s is sending messages for user %s", self.user, chat.src)
+                self.lgr.warning("%s is sending messages for user %s", self.user, chat.src)
             if isinstance(chat.dst, cot.Teams) and self.user.group != chat.dst:
-                self.lgr.warn("%s is sending messages for group %s", self.user, chat.src)
+                self.lgr.warning("%s is sending messages for group %s", self.user, chat.src)
 
             if chat.src is not None and chat.dst is not None:
                 self.router.push_event(src=chat.src, event=chat.event, dst=chat.dst)

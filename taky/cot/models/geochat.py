@@ -48,7 +48,7 @@ class GeoChat(object):
         gch.event = elm
 
         gch.chat_parent = chat.get('parent')
-        gch.group_onwer = (chat.get('groupOwner') == 'true')
+        gch.group_owner = (chat.get('groupOwner') == 'true')
         gch.src_uid = link.get('uid')
         gch.src_cs = chat.get('senderCallsign')
         gch.src_marker = link.get('type')

@@ -3,7 +3,6 @@ import sys
 import logging
 import argparse
 import configparser
-from ipaddress import ip_address
 
 from taky import __version__, DEFAULT_CFG
 from taky.cot import COTServer

@@ -114,7 +114,7 @@ class COTRouter(threading.Thread):
                 elif isinstance(evt, etree._Element) and evt.tag == 'event':
                     xml = etree.tostring(evt)
                 else:
-                    self.lgr.warn("Unhandled event queue: %s, %s, %s", src, dst, evt)
+                    self.lgr.warning("Unhandled event queue: %s, %s, %s", src, dst, evt)
                     continue
 
 
@@ -129,11 +129,11 @@ class COTRouter(threading.Thread):
                 elif isinstance(dst, cot.TAKUser):
                     client = self.find_client(uid=dst.uid)
                     if client is None:
-                        self.lgr.warn("Can't find client for %s to deliver message", dst)
+                        self.lgr.warning("Can't find client for %s to deliver message", dst)
                     else:
                         client.sock.sendall(xml)
                 else:
-                    self.lgr.warn("Don't know what to do!")
+                    self.lgr.warning("Don't know what to do!")
             except queue.Empty:
                 continue
             except Exception as e:

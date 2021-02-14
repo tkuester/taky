@@ -5,7 +5,6 @@ import ssl
 import threading
 import traceback
 import logging
-from ipaddress import ip_address, IPv4Address, IPv6Address
 
 from taky import cot
 
@@ -31,11 +30,11 @@ class COTServer(threading.Thread):
         else:
             try:
                 port = int(port)
-            except:
-                raise ValueError(f"Invalid port: {port}")
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"Invalid port: {port}") from e
 
             if port <= 0 or port >= 65535:
-                raise ValueError(f"Invalid port: {port}")
+                raise ValueError(f"Invalid port: {port}") from e
 
         if ip is None:
             ip = ''
@@ -45,11 +44,11 @@ class COTServer(threading.Thread):
             try:
                 ai = socket.getaddrinfo(ip, port, type=socket.SOCK_STREAM)
                 if len(ai) > 1:
-                    self.lgr.warn("Multiple address entities for %s:%s", ip, port)
+                    self.lgr.warning("Multiple address entities for %s:%s", ip, port)
                 (sock_fam, _, _, _, bind_args) = ai[0]
                 self.srv = socket.socket(sock_fam, socket.SOCK_STREAM)
             except socket.gaierror as e:
-                raise ValueError(f"Unable to determine address info for bind_ip: {ip}")
+                raise ValueError(f"Unable to determine address info for bind_ip: {ip}") from e
 
         ssl_ctx = self.ssl_setup()
 
@@ -109,8 +108,8 @@ class COTServer(threading.Thread):
 
             self.router.event_q.put((self, client, data))
         except (socket.error, IOError, OSError) as e:
-            (addr, ip) = sock.getpeername()
-            self.lgr.info('%s closed on error: %s', addr, e)
+            (ip, _) = sock.getpeername()
+            self.lgr.info('%s closed on error: %s', ip, e)
             sock.close()
             self.clients.pop(sock)
 
@@ -122,7 +121,7 @@ class COTServer(threading.Thread):
                 sox = [self.srv]
                 sox.extend(self.clients.keys())
 
-                (rd, _, ex) = select.select(sox, [], sox, 10)
+                (rd, _, _) = select.select(sox, [], [], 10)
 
                 if len(rd) == 0:
                     continue

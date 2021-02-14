@@ -116,4 +116,3 @@ class XMLDeclStrip(object):
 
         # In the event we consumed everything cleanly!
         return ret
-
