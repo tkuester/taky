@@ -94,7 +94,7 @@ class TAKClient(object):
             self.pong()
             return
 
-        self.handle_marti(evt)
+        self.handle_marti(elm)
 
     def handle_marti(self, evt):
         if evt.detail is None:
