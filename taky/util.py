@@ -77,7 +77,6 @@ class XMLDeclStrip:
                     # of an element, or the start of a declaration. We won't
                     # know until we get the next few bytes.
 
-                    dlen = len(data)
                     pos = data.rfind(b'<')
                     if pos < 0:
                         # We didn't find it, we can feed all of the buffer,
