@@ -15,6 +15,7 @@ taky - A simple COT server for ATAK
  * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
    industry experience in implementing CoT technology!
  * Server shuts down with only one Ctrl+C!
+ * Does not require root to run!
  * Thread safety? Why would you need thread safety?
 
 ## Requirements
