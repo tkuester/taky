@@ -17,7 +17,7 @@ DEFAULT_CFG = {
 
     'ssl': {
         'enabled': False,
-        'verify_client': False,
+        'client_cert_required': False,
         'cert': '/etc/taky/ssl/server.pem',
         'key': None,
         'ca': None,

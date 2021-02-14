@@ -39,7 +39,7 @@ class COTServer(threading.Thread):
 
         if ip is None:
             ip = ''
-            sock_fam = socket.AF_INET6
+            sock_fam = socket.AF_INET
             bind_args = ('', port)
         else:
             try:
@@ -69,7 +69,7 @@ class COTServer(threading.Thread):
 
         ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
-        if self.config.getboolean('ssl', 'verify_client'):
+        if self.config.getboolean('ssl', 'client_cert_required'):
             ssl_ctx.verify_mode = ssl.CERT_REQUIRED
         else:
             self.lgr.info("Clients will not need to present a certificate")

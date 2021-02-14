@@ -1,0 +1,29 @@
+[taky]
+# System hostname
+#hostname=
+
+[cot_server]
+# The IP to bind to. Defaults to 0.0.0.0. To use IPv6, set to "::"
+#bind_ip=
+# If left blank, taky will listen on 8087 without SSL, or 8089 with SSL 
+#port=
+
+[ssl]
+# SSL is disabled by default. Set enabled to "true" to enable
+#enabled=false
+
+# Should taky require clients to have a certificate?
+#client_cert_required=false
+
+# The server certificate or certificate+keyfile
+#cert=/etc/taky/ssl/server.pem
+
+# Specify the SSL key path
+#key=
+
+# Specify the SSL key password (if required)
+#key_pw=
+
+# Specify an explicit CA certificate
+# If left blank, will use system CA certificates
+#ca=

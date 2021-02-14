@@ -50,32 +50,26 @@ $ python3 -m pip install taky
 
 ```bash
 $ taky -h
-usage: taky [-h] [-l {debug,info,warning,error,critical}] [-n IP] [-p PORT] [--ssl-cert SSL_CERT]
-            [--ssl-key SSL_KEY] [--cacert CA_CERT] [--no-verify-client] [--version]
+usage: taky [-h] [-l {debug,info,warning,error,critical}] [-c CFG_FILE] [--version]
 
 Start the taky server
 
 optional arguments:
   -h, --help            show this help message and exit
   -l {debug,info,warning,error,critical}
-                        Specify log level
-  -n IP, --ip IP        IP Address to listen on (v4 or v6)
-  -p PORT, --port PORT  Port to listen on
-  --ssl-cert SSL_CERT   Path to the server certificate
-  --ssl-key SSL_KEY     Path to the server certificate key
-  --cacert CA_CERT      Path to the CA for verifying client certs
-  --no-verify-client    Do not verify client certificates
+                        Log verbosity
+  -c CFG_FILE           Path to configuration file
   --version             show program's version number and exit
 
-# Run taky on :::8087
+# Run taky on 0.0.0.0:8087
 $ taky
-
-# Run taky on 127.0.0.1:58087 with debugging enabled
-$ taky --ip 127.0.0.1 --port 58087 -l debug
 
 # Run taky within the folder (ie: if you can't install it)
 ~/taky $ python3 -m taky
-
-# Run taky with SSL and client certificates on 8089 (default)
-$ taky --ssl-cert ./server.crt --ssl-key ./server.key --cacert ./ca.crt
 ```
+
+`taky`, if no configuration file is specified, will check the current directory
+for `taky.conf` and then `/etc/taky/taky.conf`.
+
+With no (or an empty) configuration file, taky will start a tcp server on
+`0.0.0.0`. A sample configuration file is located in the project root.
