@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from lxml import etree
 
 @dataclass
-class Point(object):
+class Point:
     lat: float = 0.0
     lon: float = 0.0
     hae: float = 0.0

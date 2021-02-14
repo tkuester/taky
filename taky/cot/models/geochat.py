@@ -10,7 +10,7 @@ class ChatParents(enum.Enum):
     ROOT = 'RootContactGroup'
     TEAM = 'TeamGroups'
 
-class GeoChat(object):
+class GeoChat:
     def __init__(self, chat_parent=None, group_owner=False):
         self.event = None
 

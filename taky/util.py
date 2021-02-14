@@ -1,4 +1,4 @@
-class XMLDeclStrip(object):
+class XMLDeclStrip:
     '''
     Strip "<?xml" declarations from a stream of data.
 

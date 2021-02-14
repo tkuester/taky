@@ -6,7 +6,7 @@ from lxml import etree
 from taky import cot
 from taky.util import XMLDeclStrip
 
-class TAKClient(object):
+class TAKClient:
     def __init__(self, sock, router=None):
         self.sock = sock
         self.router = router

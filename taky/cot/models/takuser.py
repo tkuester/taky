@@ -6,7 +6,7 @@ from lxml import etree
 from taky import cot
 
 @dataclass
-class TAKDevice(object):
+class TAKDevice:
     os: str = None
     version: str = None
     device: str = None
@@ -42,7 +42,7 @@ class TAKDevice(object):
         return etree.tostring(self.as_element)
 
 @dataclass
-class TAKUser(object):
+class TAKUser:
     def __init__(self):
         self.uid = None
         self.callsign = None

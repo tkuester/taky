@@ -3,7 +3,7 @@ import dateutil.parser
 
 from taky.cot.models.point import Point
 
-class Event(object):
+class Event:
     def __init__(self, uid=None, etype=None, how=None,
                     time=None, start=None, stale=None,
                     version="2.0"):
