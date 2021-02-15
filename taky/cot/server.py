@@ -24,18 +24,8 @@ class COTServer(threading.Thread):
         self.sock_setup()
 
     def sock_setup(self):
-        ip = self.config.get('cot_server', 'bind_ip')
-        port = self.config.get('cot_server', 'port')
-        if port is None:
-            port = 8089 if self.config.getboolean('ssl', 'enabled') else 8087
-        else:
-            try:
-                port = int(port)
-            except (TypeError, ValueError) as e:
-                raise ValueError(f"Invalid port: {port}") from e
-
-            if port <= 0 or port >= 65535:
-                raise ValueError(f"Invalid port: {port}") from e
+        ip = self.config.get('taky', 'bind_ip')
+        port = self.config.getint('cot_server', 'port')
 
         if ip is None:
             ip = ''
@@ -47,7 +37,6 @@ class COTServer(threading.Thread):
                 if len(ai) > 1:
                     self.lgr.warning("Multiple address entities for %s:%s", ip, port)
                 (sock_fam, _, _, _, bind_args) = ai[0]
-                self.srv = socket.socket(sock_fam, socket.SOCK_STREAM)
             except socket.gaierror as e:
                 raise ValueError(f"Unable to determine address info for bind_ip: {ip}") from e
 

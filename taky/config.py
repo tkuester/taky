@@ -4,12 +4,18 @@ import configparser
 
 DEFAULT_CFG = {
     'taky': {
-        'hostname': None,
+        'hostname': 'taky.local', # Servers FQDN
+        'node_id': 'TAKY',        # TAK Server nodeId
+        'bind_ip': None,          # Defaults to all (0.0.0.0)
+        'public_ip': None,        # Server's public IP address
     },
 
     'cot_server': {
-        'bind_ip': None, # Defaults to all
         'port': None,    # Defaults to 8087 (or 8089 if SSL)
+    },
+
+    'dp_server': {
+        'upload_path': '/var/taky/dp-user',
     },
 
     'ssl': {
@@ -39,5 +45,17 @@ def load_config(path=None):
         fp = open(path, 'r')
         config.read_file(fp, source=path)
         fp.close()
+
+    if config.get('cot_server', 'port') is None:
+        port = 8089 if config.getboolean('ssl', 'enabled') else 8087
+    else:
+        try:
+            port = int(port)
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Invalid port: {port}") from e
+
+        if port <= 0 or port >= 65535:
+            raise ValueError(f"Invalid port: {port}") from e
+    config.set('cot_server', 'port', str(port))
 
     return config
