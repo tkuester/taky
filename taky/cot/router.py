@@ -6,7 +6,8 @@ import traceback
 
 from lxml import etree
 
-from taky import cot
+from . import models
+from .client import TAKClient
 
 class Destination(enum.Enum):
     BROADCAST=1
@@ -21,7 +22,7 @@ class COTRouter(threading.Thread):
 
         self.event_q = queue.Queue()
         self.stopped = threading.Event()
-        self.lgr = logging.getLogger(COTRouter.__name__)
+        self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
         self.clients.add(client)
@@ -60,8 +61,8 @@ class COTRouter(threading.Thread):
         if not self.is_alive():
             raise RuntimeError("Router is not running")
 
-        if not isinstance(event, (cot.Event, etree._Element)):
-            raise ValueError("event must be cot.Event")
+        if not isinstance(event, (models.Event, etree._Element)):
+            raise ValueError("Must be models.Event or lxml Element")
 
         if dst is None:
             dst = Destination.BROADCAST
@@ -78,15 +79,15 @@ class COTRouter(threading.Thread):
 
     def group_broadcast(self, src, msg, group=None):
         if group is None:
-            if isinstance(src, cot.TAKUser):
+            if isinstance(src, models.TAKUser):
                 group = src.group
-            elif isinstance(src, cot.TAKClient):
+            elif isinstance(src, TAKClient):
                 group = src.user.group
             else:
                 raise ValueError("Unable to determine group to send to")
 
-        if not isinstance(group, cot.Teams):
-            raise ValueError("group must be cot.Teams")
+        if not isinstance(group, models.Teams):
+            raise ValueError("group must be models.Teams")
 
         for client in self.clients:
             if client.user is src:
@@ -109,7 +110,7 @@ class COTRouter(threading.Thread):
                     dst.feed(evt)
                     continue
 
-                if isinstance(evt, cot.Event):
+                if isinstance(evt, models.Event):
                     xml = etree.tostring(evt.as_element)
                 elif isinstance(evt, etree._Element) and evt.tag == 'event':
                     xml = etree.tostring(evt)
@@ -122,11 +123,11 @@ class COTRouter(threading.Thread):
                     self.broadcast(src, xml)
                 elif dst is Destination.GROUP:
                     self.group_broadcast(src, xml)
-                elif isinstance(dst, cot.Teams):
+                elif isinstance(dst, models.Teams):
                     self.group_broadcast(src, xml, dst)
-                elif isinstance(dst, cot.TAKClient):
+                elif isinstance(dst, TAKClient):
                     dst.sock.sendall(xml)
-                elif isinstance(dst, cot.TAKUser):
+                elif isinstance(dst, models.TAKUser):
                     client = self.find_client(uid=dst.uid)
                     if client is None:
                         self.lgr.warning("Can't find client for %s to deliver message", dst)

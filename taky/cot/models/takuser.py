@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from taky import cot
+from .teams import Teams
+from .event import Event
+from .point import Point
 
 @dataclass
 class TAKDevice:
@@ -51,7 +53,7 @@ class TAKUser:
         self.group = None
         self.role = None
 
-        self.point = cot.Point()
+        self.point = Point()
         self.course = None
         self.speed = None
 
@@ -93,10 +95,10 @@ class TAKUser:
                 self.phone = elm.get('phone')
             elif elm.tag == '__group':
                 try:
-                    self.group = cot.Teams(elm.get('name'))
+                    self.group = Teams(elm.get('name'))
                 except ValueError:
                     # TODO: How to handle unknown group? Defaults to "Cyan"
-                    self.group = cot.Teams.UNKNOWN
+                    self.group = Teams.UNKNOWN
                 self.role = elm.get('role')
             elif elm.tag == 'status':
                 self.battery = elm.get('battery')
@@ -123,7 +125,7 @@ class TAKUser:
             now = self.last_seen
             stale = self.stale
 
-        evt = cot.Event(
+        evt = Event(
             uid=self.uid,
             etype=self.marker or 'a-f',
             how='m-g',

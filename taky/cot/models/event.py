@@ -1,7 +1,7 @@
 from lxml import etree
 import dateutil.parser
 
-from taky.cot.models.point import Point
+from .point import Point
 
 class Event:
     def __init__(self, uid=None, etype=None, how=None,

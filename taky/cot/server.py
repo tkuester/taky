@@ -6,17 +6,18 @@ import threading
 import traceback
 import logging
 
-from taky import cot
+from .router import COTRouter
+from .client import TAKClient
 
 class COTServer(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
-        self.lgr = logging.getLogger(COTServer.__name__)
+        self.lgr = logging.getLogger(self.__class__.__name__)
         self.stopped = threading.Event()
 
         self.config = config
         self.clients = {}
-        self.router = cot.COTRouter(self)
+        self.router = COTRouter(self)
 
         self.srv = None
 
@@ -141,7 +142,7 @@ class COTServer(threading.Thread):
                             continue
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
-                        self.clients[sock] = cot.TAKClient(sock, self.router)
+                        self.clients[sock] = TAKClient(sock, self.router)
                         self.router.client_connect(self.clients[sock])
                     else:
                         self.handle_client(sock)

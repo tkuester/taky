@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 
 from lxml import etree
 
-from taky import cot
-from taky.util import XMLDeclStrip
+from . import models
+from ..util import XMLDeclStrip
 
 class TAKClient:
     def __init__(self, sock, router=None):
         self.sock = sock
         self.router = router
-        self.user = cot.TAKUser()
+        self.user = models.TAKUser()
 
         self.xdc = XMLDeclStrip()
         self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
@@ -33,7 +33,7 @@ class TAKClient:
         for (_, elm) in self.parser.read_events():
             #self.lgr.debug(etree.tostring(elm))
             try:
-                evt = cot.Event.from_elm(elm)
+                evt = models.Event.from_elm(elm)
             except (ValueError, TypeError) as e:
                 self.lgr.warning("Unable to parse element: %s", e)
                 continue
@@ -69,10 +69,10 @@ class TAKClient:
         if evt.etype == 'b-t-f':
             # Currently, ATAK 4.2.0.4 does not properly set MARTI for chat
             # messages sent to teams. In any case, setting the destination as a
-            # cot.Teams prevents queue-ing multiple messages in the routing
+            # Team prevents queue-ing multiple messages in the routing
             # engine
 
-            chat = cot.GeoChat.from_elm(evt)
+            chat = models.GeoChat.from_elm(evt)
             if chat.src is None:
                 chat.src = self.router.find_client(uid=chat.src_uid)
             if chat.dst is None:
@@ -80,7 +80,7 @@ class TAKClient:
 
             if self.user is not chat.src:
                 self.lgr.warning("%s is sending messages for user %s", self.user, chat.src)
-            if isinstance(chat.dst, cot.Teams) and self.user.group != chat.dst:
+            if isinstance(chat.dst, models.Teams) and self.user.group != chat.dst:
                 self.lgr.warning("%s is sending messages for group %s", self.user, chat.src)
 
             if chat.src is not None and chat.dst is not None:
@@ -114,7 +114,7 @@ class TAKClient:
 
     def pong(self):
         now = datetime.utcnow()
-        pong = cot.Event(
+        pong = models.Event(
             uid='takPong',
             etype='t-x-c-t-r',
             how='h-g-i-g-o',

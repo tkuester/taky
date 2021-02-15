@@ -4,6 +4,17 @@ from lxml import etree
 
 @dataclass
 class Point:
+    ''' An object representing the CoT Point
+
+    All the fields are required. If circular error (ce) or linear error (le)
+    are omitted, they should be set to arbitrarily large values. (Regrettably,
+    this makes a CoT Point rather large in XML.)
+
+    (lat, lon) refers to WGS84 coordinates
+
+    All other units are in meters.
+    '''
+
     lat: float = 0.0
     lon: float = 0.0
     hae: float = 0.0
@@ -41,4 +52,3 @@ class Point:
         ret.set('le', '%.1f' % self.le)
 
         return ret
-

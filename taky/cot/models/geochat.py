@@ -4,7 +4,9 @@ import uuid
 
 from lxml import etree
 
-from taky import cot
+from .teams import Teams
+from .event import Event
+from .takuser import TAKUser
 
 class ChatParents(enum.Enum):
     ROOT = 'RootContactGroup'
@@ -55,7 +57,7 @@ class GeoChat:
 
         gch.dst_cs = chat.get('chatroom')
         if gch.chat_parent == ChatParents.TEAM.value:
-            gch.dst = cot.Teams(gch.dst_cs)
+            gch.dst = Teams(gch.dst_cs)
             gch.dst_uid = gch.dst.value
         elif gch.dst_cs != 'All Chat Rooms':
             gch.dst_uid = chat.get('id')
@@ -66,11 +68,11 @@ class GeoChat:
 
     @staticmethod
     def build_msg(src, dst, message, time=None):
-        if isinstance(dst, cot.TAKUser):
+        if isinstance(dst, TAKUser):
             chat = GeoChat(chat_parent=ChatParents.ROOT.value)
             chat.dst_uid = dst.uid
             chat.dst_cs = dst.callsign
-        elif isinstance(dst, cot.Teams):
+        elif isinstance(dst, Teams):
             chat = GeoChat(chat_parent=ChatParents.TEAM.value)
             chat.dst = dst
             chat.dst_uid = dst.value
@@ -80,10 +82,10 @@ class GeoChat:
             chat.dst_uid = dst
             chat.dst_cs = dst
         else:
-            raise ValueError("dst must be string, or cot.TAKUser")
+            raise ValueError("dst must be string, or TAKUser")
 
-        if not isinstance(src, cot.TAKUser):
-            raise ValueError("src must be cot.TAKUser")
+        if not isinstance(src, TAKUser):
+            raise ValueError("src must be TAKUser")
 
         chat.src = src
         chat.src_uid = src.uid
@@ -94,7 +96,7 @@ class GeoChat:
         if time is None:
             time = datetime.utcnow()
         uid = f'GeoChat.{chat.src_uid}.{chat.dst_cs}.{uuid.uuid4()}'
-        chat.event = cot.Event(
+        chat.event = Event(
             uid=uid,
             etype='b-t-f',
             how='h-g-i-g-o',
@@ -152,4 +154,3 @@ class GeoChat:
     @property
     def as_element(self):
         return self.event.as_element
-
