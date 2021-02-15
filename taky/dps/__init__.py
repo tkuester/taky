@@ -133,6 +133,17 @@ def marti_sync_missionupload():
     meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{filename}.json')
     meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
 
+    try:
+        meta = {}
+        with open(meta_path, 'r') as jfp:
+            meta = json.load(jfp)
+
+        if meta['Hash'] != f_hash:
+            old_meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{meta.get("Hash")}.json')
+            os.unlink(old_meta_hash_path)
+    except:
+        meta = {}
+
     meta = {
         'UID': filename, # What the file will be saved as
         'Name': fp.filename, # File name on the server
