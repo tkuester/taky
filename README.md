@@ -25,6 +25,7 @@ taky - A simple COT server for ATAK
  * Python 3.7 or greater
  * lxml
  * dateutil
+ * flask
 
 This application was developed with Python 3.8, and tested with ATAK v4.2.0.4.
 It is slowly progressing towards a beta state, and should work for playing
