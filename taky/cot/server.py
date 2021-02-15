@@ -117,8 +117,8 @@ class COTServer(threading.Thread):
     def run(self):
         self.router.start()
 
-        try:
-            while not self.stopped.is_set():
+        while not self.stopped.is_set():
+            try:
                 sox = [self.srv]
                 sox.extend(self.clients.keys())
 
@@ -126,36 +126,34 @@ class COTServer(threading.Thread):
 
                 if len(rd) == 0:
                     continue
+                elif self.stopped.is_set():
+                    break
 
                 for sock in rd:
                     if sock is self.srv:
-                        if self.stopped.is_set():
-                            break
-
-                        try:
-                            (sock, addr) = self.srv.accept()
-                        except ssl.SSLError as e:
-                            self.lgr.info("Rejecting client: %s", e)
-                            continue
-                        except OSError as e:
-                            self.lgr.warning("Error on server socket: %s", e)
-                            continue
+                        (sock, addr) = self.srv.accept()
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
                         self.clients[sock] = TAKClient(sock, self.router)
                         self.router.client_connect(self.clients[sock])
                     else:
                         self.handle_client(sock)
-        except Exception as e:
-            self.lgr.critical("Unhandled exception: %s", e)
-            self.lgr.critical(traceback.format_exc())
-        finally:
-            for (sock, client) in self.clients.items():
-                self.lgr.debug("Closing %s", client)
-                sock.shutdown(socket.SHUT_RDWR)
-                sock.close()
+            except ssl.SSLError as e:
+                self.lgr.info("Rejecting client: %s", e)
+            except Exception as e:
+                self.lgr.critical("Unhandled exception: %s", e)
+                self.lgr.critical(traceback.format_exc())
+                break
 
-            self.srv.close()
+        for (sock, client) in self.clients.items():
+            self.lgr.debug("Closing %s", client)
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
+            sock.close()
+
+        self.srv.close()
 
         self.router.stop()
         self.router.join()

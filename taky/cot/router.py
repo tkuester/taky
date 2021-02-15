@@ -118,7 +118,6 @@ class COTRouter(threading.Thread):
                     self.lgr.warning("Unhandled event queue: %s, %s, %s", src, dst, evt)
                     continue
 
-
                 if dst is Destination.BROADCAST:
                     self.broadcast(src, xml)
                 elif dst is Destination.GROUP:
