@@ -17,6 +17,8 @@ taky - A simple COT server for ATAK
  * Server shuts down with only one Ctrl+C!
  * Does not require root to run!
  * Thread safety? Why would you need thread safety?
+ * Slightly less-than-broken Data Package Server
+ * Requires no SQlite / databases! (For now!)
 
 ## Requirements
 
