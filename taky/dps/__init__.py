@@ -1,14 +1,25 @@
 import os
+import json
+from datetime import datetime
 
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, abort
 from werkzeug.utils import secure_filename
 
 from taky import __version__
+from taky.config import load_config
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = '/tmp'
-app.config['HOSTNAME'] = '0.0.0.0'
-app.config['NODEID'] = 'TAKY'
+config = load_config(os.environ.get('TAKY_CONFIG'))
+
+application = app = Flask(__name__)
+app.config['HOSTNAME'] = config.get('taky', 'hostname')
+app.config['NODEID'] = config.get('taky', 'node_id')
+app.config['UPLOAD_PATH'] = config.get('dp_server', 'upload_path')
+
+app.config['COT_PORT'] = config.getint('cot_server', 'port')
+if config.getboolean('ssl', 'enabled'):
+    app.config['COT_CONN_STR'] = 'ssl:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
+else:
+    app.config['COT_CONN_STR'] = 'tcp:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
 
 @app.route('/')
 def hello_world():
@@ -36,16 +47,16 @@ def marti_api_client_endpoints():
     return {
         'Matcher': 'com.bbn.marti.remote.ClientEndpoint',
         'BaseUrl': '',
-        'ServerConnectString': 'tcp:192.168.1.91:8087',
+        'ServerConnectString': app.config['COT_CONN_STR'],
         'NotificationId': '',
         'type': 'com.bbn.marti.remote.ClientEndpoint',
         'data': [
-            {
-                'lastEventTime': '2020-01-31T15:30:00.000Z',
-                'lastStatus': 'Connected',
-                'uid': 'TAKY-lolol',
-                'callsign': 'TAKKY'
-            }
+            #{
+            #    'lastEventTime': '2020-01-31T15:30:00.000Z',
+            #    'lastStatus': 'Connected',
+            #    'uid': 'TAKY-lolol',
+            #    'callsign': 'TAKKY'
+            #}
         ]
     }
 
@@ -53,35 +64,55 @@ def marti_api_client_endpoints():
 def marti_sync_search():
     # Arguments: keywords=missionpackage
     #            tool=public
-    results = [
-        {
-            'UID': 'uid-haha.zip', # What the file will be saved as
-            'Name': 'haha.zip', # File name on the server
-            'Hash': '78e750a5f38a794caf466e0f2fe7a302096d573899cef1869fb5a30f55d7ac4f', # SHA-256, checked
-            'PrimaryKey': 1, # Not used, must be >= 0
-            'SubmissionDateTime': '2021-01-31T00:11:22.000Z',
-            'SubmissionUser': 'SubUser', # Not displayed
-            'CreatorUid': 'cuid', # Displayed, ie: ANDROID-43fa2bcef...
-            'Keywords': 'kw',
-            'MIMEType': 'application/zip',
-            'Size': 181 # Checked, do not fake
-        },
-    ]
+    #keywords = request.args.get('keywords')
+    ret = []
+    for item in os.listdir(app.config['UPLOAD_PATH']):
+        path = os.path.join(app.config['UPLOAD_PATH'], item)
+        meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{item}.json')
+
+        if not os.path.isfile(path):
+            continue
+
+        if not os.path.isfile(meta):
+            continue
+
+        try:
+            with open(meta, 'r') as fp:
+                meta = json.load(fp)
+        except OSError:
+            continue
+        except json.JSONDecodeError:
+            continue
+
+        # TODO: Check if keywords are in meta['Keywords'] or meta['UID']
+        ret.append(meta)
 
     return {
-        'resultCount': len(results),
-        'results': results
+        'resultCount': len(ret),
+        'results': ret
     }
 
 @app.route('/Marti/sync/content')
 def marti_get_content():
-    return send_file('/tmp/haha.zip', as_attachment=True)
+    try:
+        f_hash = request.args['hash']
+    except:
+        abort(400, "Must supply hash")
 
-@app.route('/Marti/sync/missionquery')
-def marti_sync_missionquery():
-    # Args: hash=...
-    # Don't know what to do here
-    return '', 404
+    meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
+    try:
+        with open(meta, 'r') as fp:
+            meta = json.load(fp)
+    except (OSError, json.JSONDecodeError) as e:
+        print(e)
+        abort(404)
+
+    name = os.path.join(app.config['UPLOAD_PATH'], meta['UID'])
+
+    if not os.path.exists(name):
+        abort(404)
+
+    return send_file(name, as_attachment=True, attachment_filename=meta['Name'])
 
 @app.route('/Marti/sync/missionupload', methods=['POST'])
 def marti_sync_missionupload():
@@ -90,38 +121,60 @@ def marti_sync_missionupload():
     # filename=... (lacking extension)
     # creatorUid=ANDROID-43...
 
-    print(request.files)
-    for (key, fp) in request.files.items():
-        print((key, fp, fp.filename))
+    try:
+        fp = request.files['assetfile']
+        creator_uid = request.args['creatorUid']
+        f_hash = request.args['hash']
+    except:
+        abort(400, 'Invalid Arguments')
 
-        fp.save(os.path.join('/tmp', secure_filename(fp.filename)))
+    filename = secure_filename(f'{creator_uid}_{fp.filename}')
+    file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
+    meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{filename}.json')
+    meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
 
-    return ''
+    meta = {
+        'UID': filename, # What the file will be saved as
+        'Name': fp.filename, # File name on the server
+        'Hash': request.args['hash'], # SHA-256, checked
+        'PrimaryKey': 1, # Not used, must be >= 0
+        'SubmissionDateTime': datetime.utcnow().isoformat() + 'Z',
+        'SubmissionUser': 'SubUser', # Not displayed
+        'CreatorUid': request.args['creatorUid'],
+        'Keywords': 'kw',
+        'MIMEType': fp.mimetype,
+        'Size': 0 # Checked, do not fake
+    }
+
+    fp.save(file_path)
+
+    meta['Size'] = os.path.getsize(file_path)
+
+    with open(meta_path, 'w') as fp:
+        json.dump(meta, fp)
+
+    try:
+        os.symlink(meta_path, meta_hash_path)
+    except FileExistsError:
+        pass
+
+    # Seems to just want anything but empty string...
+    # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
+    return 'OK'
 
 @app.route('/Marti/api/sync/metadata/<f_hash>/tool', methods=['PUT'])
 def marti_api_sync_metadata(f_hash):
-    print(f_hash)
-    print(dir(request))
-    print(request.headers)
-    print(request.get_data())
-    return ''
+    meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
+    try:
+        with open(meta, 'r') as fp:
+            meta = json.load(fp)
+    except:
+        meta = {}
 
-@app.route('/Marti/ErrorLog', methods=['POST'])
-def marti_errorlog():
-    # Args:
-    # hash=...
-    # filename=... (lacking extension)
-    # creatorUid=ANDROID-43...
-
-    print(request.files)
-    for (key, fp) in request.files.items():
-        print((key, fp, fp.filename))
-
-        fp.save(os.path.join('/tmp', secure_filename(fp.filename)))
+    print(request.args)
+    print(meta)
+    print('sync/metadata: hash', f_hash) # Relevant
+    print('sync/metadata: data', request.get_data()) # Returns b'public'
+    print('', flush=True)
 
     return ''
-
-
-# Marti/api/tls/config
-# Returns... json+xml?
-# xml: nameEntries, validityDays
