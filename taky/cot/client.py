@@ -20,7 +20,11 @@ class TAKClient:
 
     def __repr__(self):
         # IPv6 returns a 4 element tuple
-        (ip, port) = self.sock.getpeername()[:2]
+        try:
+            (ip, port) = self.sock.getpeername()[:2]
+        except OSError:
+            ip = '???'
+            port = '???'
         return f'<TAKClient uid={self.user.uid} callsign={self.user.callsign} client={ip}:{port}>'
 
     def feed(self, data):

@@ -98,8 +98,7 @@ class COTServer(threading.Thread):
 
             self.router.event_q.put((self, client, data))
         except (socket.error, IOError, OSError) as e:
-            (ip, _) = sock.getpeername()
-            self.lgr.info('%s closed on error: %s', ip, e)
+            self.lgr.info('%s closed on error: %s', client, e)
             sock.close()
             self.clients.pop(sock)
 
