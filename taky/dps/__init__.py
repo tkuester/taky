@@ -189,3 +189,25 @@ def marti_api_sync_metadata(f_hash):
     print('', flush=True)
 
     return ''
+
+@app.route('/Marti/sync/missionquery')
+def marti_sync_missionquery():
+    try:
+        f_hash = request.args['hash']
+    except:
+        abort(400)
+
+    meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
+    print(meta_hash_path)
+    try:
+        with open(meta_hash_path, 'r') as fp:
+            meta = json.load(fp)
+
+        print(meta)
+        file_path = os.path.join(app.config['UPLOAD_PATH'], meta['UID'])
+        if os.path.exists(file_path):
+            return 'OK'
+    except:
+        pass
+
+    abort(404)
