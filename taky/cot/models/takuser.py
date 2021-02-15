@@ -116,11 +116,11 @@ class TAKUser:
         return ret
 
     @property
-    def as_element(self, stale_s=20):
+    def as_element(self):
         if self.last_seen is None:
             # TODO: What should we do if we've never been seen?
             now = datetime.utcnow()
-            stale = now + timedelta(seconds=stale_s)
+            stale = now + timedelta(seconds=20)
         else:
             now = self.last_seen
             stale = self.stale
