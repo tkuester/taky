@@ -68,14 +68,24 @@ Now we have the minimal items required to run `taky` in SSL.
 2. taky-server.key - The private key of the server certificate
 3. ca.crt - The public part of the Certificate Authority
 
-To start up taky, we can run
+To start up taky, edit the config file as follows:
 
-```bash
-$ taky --ssl-cert ./pki/issued/taky-server.crt \
-     --ssl-key ./pki/private/taky-server.key \
-     --cacert ./pki/ca.crt
-INFO:COTServer:Loading CA certificate from ./pki/ca.crt
-INFO:COTServer:Listening for SSL on :::8089
+```
+[ssl]
+enabled=true
+ca=/path/to/ca.crt
+cert=/path/to/taky-server.crt
+key=/path/to/taky-server.key
+```
+
+In the terminal, you should see the following. (Note: If you do not specify
+port, it will be set to 8089 automatically.)
+
+```
+INFO:COTServer:Clients will not need to present a certificate
+INFO:COTServer:Loading CA certificate from /path/to/ca.crt
+INFO:COTServer:Listening on :8089
+INFO:COTRouter:Starting COT Router
 ```
 
 ## Step 3. Generating the Server .p12 TrustStore for ATAK
