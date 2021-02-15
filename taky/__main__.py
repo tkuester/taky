@@ -4,8 +4,9 @@ import logging
 import argparse
 import configparser
 
-from taky import __version__, DEFAULT_CFG
+from taky import __version__
 from taky.cot import COTServer
+from taky.config import load_config
 
 def arg_parse():
     argp = argparse.ArgumentParser(description="Start the taky server")
@@ -22,31 +23,15 @@ def arg_parse():
 
 def main():
     (argp, args) = arg_parse()
-    config = configparser.ConfigParser(allow_no_value=True)
-    config.read_dict(DEFAULT_CFG)
-
-    # TODO: Check for ipv6 support
-
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
 
-    if args.cfg_file is None:
-        if os.path.exists('taky.conf'):
-            args.cfg_file = os.path.abspath('taky.conf')
-        elif os.path.exists('/etc/taky/taky.conf'):
-            args.cfg_file = '/etc/taky/taky.conf'
+    try:
+        config = load_config(args.cfg_file)
+    except (OSError, configparser.ParsingError) as e:
+        logging.error(e)
+        sys.exit(1)
 
-    if args.cfg_file:
-        logging.info("Loading config from '%s'", args.cfg_file)
-        try:
-            fp = open(args.cfg_file, 'r')
-            config.read_file(fp, source=args.cfg_file)
-            fp.close()
-        except configparser.ParsingError as e:
-            logging.error(e)
-            sys.exit(1)
-        except OSError as e:
-            logging.error(e)
-            sys.exit(1)
+    # TODO: Check for ipv6 support
 
     try:
         cs = COTServer(config)
