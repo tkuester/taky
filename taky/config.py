@@ -23,6 +23,8 @@ DEFAULT_CFG = {
         'client_cert_required': True,
         'ca': '/etc/taky/ssl/ca.crt',
         'ca_key': '/etc/taky/ssl/ca.key',
+        'server_p12': '/etc/taky/ssl/server.p12',
+        'server_p12_pw': 'atakatak',
         'cert': '/etc/taky/ssl/server.crt',
         'key': '/etc/taky/ssl/server.key',
         'key_pw': None,
