@@ -9,7 +9,7 @@ setup(name='taky',
     author="Tim K",
     author_email="tpkuester@gmail.com",
     setup_requires=['setuptools_scm'],
-    install_requires=['lxml', 'dateutils', 'Flask'],
+    install_requires=['lxml', 'dateutils', 'Flask', 'pyopenssl'],
     description='A simple TAK server and COT router',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -26,6 +26,7 @@ setup(name='taky',
     entry_points={
         'console_scripts': [
             'taky = taky.cot.__main__:main',
+            'takyctl = taky.__main__:main',
         ]
     }
 )
