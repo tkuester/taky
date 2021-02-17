@@ -1,12 +1,13 @@
 import sys
 import multiprocessing
 import argparse
+import configparser
 
 import gunicorn.app.base
 
 from taky import __version__
 from taky.config import load_config
-from taky.dps import app
+from taky.dps import app as taky_dps
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def __init__(self, app, options=None):
@@ -64,7 +65,7 @@ def main():
         options['certfile'] = config.get('ssl', 'cert')
         options['keyfile'] = config.get('ssl', 'key')
 
-    StandaloneApplication(app, options).run()
+    StandaloneApplication(taky_dps, options).run()
     print("DONE")
 
 if __name__ == '__main__':

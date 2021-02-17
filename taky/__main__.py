@@ -172,7 +172,7 @@ def build_client(config, args):
     
     shutil.rmtree(tdir)
 
-def setup(config, args):
+def setup_taky(config, args):
     config = load_config('/dev/null')
     if args.path:
         if os.path.exists(args.path):
@@ -291,7 +291,7 @@ def main():
         sys.exit(1)
 
     commands = {
-        'setup': setup,
+        'setup': setup_taky,
         'build_client': build_client
     }
 
