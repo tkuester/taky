@@ -61,7 +61,8 @@ def build_client(config, args):
 
     rotc.make_cert(
         path=cdir,
-        name=args.name,
+        f_name=args.name,
+        hostname=args.name,
         cert_pw=args.p12_pw, # TODO: OS environ? -p is bad
         ca=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
         dump_pem=False
@@ -260,7 +261,8 @@ def setup(config, args):
 
         rotc.make_cert(
             path=ssl_path,
-            name='server',
+            f_name='server',
+            hostname=args.hostname,
             cert_pw=args.p12_pw, # TODO: OS environ? -p is bad
             ca=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
             dump_pem=True

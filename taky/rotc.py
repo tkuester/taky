@@ -42,7 +42,7 @@ def make_ca(crt_path, key_path, n_years=10):
 
     os.umask(old)
 
-def make_cert(path, name, cert_pw, ca, n_years=10, dump_pem=False):
+def make_cert(path, f_name, hostname, cert_pw, ca, n_years=10, dump_pem=False):
     (ca_crt, ca_key) = ca
     with open(ca_key, "r") as fp:
         cakey = crypto.load_privatekey(crypto.FILETYPE_PEM, fp.read())
@@ -57,7 +57,7 @@ def make_cert(path, name, cert_pw, ca, n_years=10, dump_pem=False):
     cli_key.generate_key(crypto.TYPE_RSA, 2048)
 
     cert = crypto.X509()
-    cert.get_subject().CN = name
+    cert.get_subject().CN = hostname
     cert.set_serial_number(serialnumber)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(31536000 * n_years)
@@ -72,7 +72,7 @@ def make_cert(path, name, cert_pw, ca, n_years=10, dump_pem=False):
     p12.set_ca_certificates(chain)
     p12data = p12.export(passphrase=bytes(cert_pw, encoding='UTF-8'))
 
-    with open(os.path.join(path, f"{name}.p12"), "wb") as fp:
+    with open(os.path.join(path, f"{f_name}.p12"), "wb") as fp:
         fp.write(p12data)
 
     if not dump_pem:
@@ -80,12 +80,12 @@ def make_cert(path, name, cert_pw, ca, n_years=10, dump_pem=False):
 
     old = os.umask(0o077)
     try:
-        with open(os.path.join(path, f"{name}.key"), "wb") as fp:
+        with open(os.path.join(path, f"{f_name}.key"), "wb") as fp:
             fp.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, cli_key))
     except Exception as e:
         raise e
     finally:
         os.umask(old)
 
-    with open(os.path.join(path, f"{name}.crt"), "wb") as fp:
+    with open(os.path.join(path, f"{f_name}.crt"), "wb") as fp:
         fp.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
