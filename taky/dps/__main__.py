@@ -44,18 +44,22 @@ def main():
     try:
         config = load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as e:
-        print(e)
+        print(e, file=sys.stderr)
         sys.exit(1)
 
     ip = config.get('taky', 'bind_ip')
-    port = 8443 if config.get('ssl', 'enabled') else 8080
+    port = 8443 if config.getboolean('ssl', 'enabled') else 8080
+
+    if ip is None:
+        print("ERROR: Server not configured...", file=sys.stderr)
+        sys.exit(1)
 
     options = {
         'bind': f'{ip}:{port}',
         'workers': number_of_workers(),
         'loglevel': args.log_level,
     }
-    if config.get('ssl', 'enabled'):
+    if config.getboolean('ssl', 'enabled'):
         options['ca-certs'] = config.get('ssl', 'ca')
         options['certfile'] = config.get('ssl', 'cert')
         options['keyfile'] = config.get('ssl', 'key')
