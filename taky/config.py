@@ -20,10 +20,11 @@ DEFAULT_CFG = {
 
     'ssl': {
         'enabled': False,
-        'client_cert_required': False,
-        'ca': None,
-        'cert': '/etc/taky/ssl/server.pem',
-        'key': None,
+        'client_cert_required': True,
+        'ca': '/etc/taky/ssl/ca.crt',
+        'ca_key': '/etc/taky/ssl/ca.key',
+        'cert': '/etc/taky/ssl/server.crt',
+        'key': '/etc/taky/ssl/server.key',
         'key_pw': None,
     }
 }
@@ -42,11 +43,11 @@ def load_config(path=None):
         lgr.info("Loading config file from %s", path)
 
     if path:
-        fp = open(path, 'r')
-        config.read_file(fp, source=path)
-        fp.close()
+        with open(path, 'r') as fp:
+            config.read_file(fp, source=path)
 
-    if config.get('cot_server', 'port') is None:
+    port = config.get('cot_server', 'port')
+    if port in [None, '']:
         port = 8089 if config.getboolean('ssl', 'enabled') else 8087
     else:
         try:
