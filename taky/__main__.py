@@ -37,6 +37,8 @@ def arg_parse():
                        help="Public IP address")
     setup.add_argument('--user', dest='user', default=None,
                        help="User/group for file permissions")
+    setup.add_argument('--no-ssl', dest='use_ssl', action='store_false',
+                       help="Disable SSL for the server")
     setup.add_argument('path', nargs='?', help="Optional path for taky install")
 
     bld_cl = subp.add_parser('build_client', help="Build client file")
@@ -222,8 +224,8 @@ def setup(config, args):
     config.set('taky', 'bind_ip', args.ip)
     config.set('taky', 'public_ip', args.public_ip)
     config.set('taky', 'hostname', args.hostname)
-    config.set('cot_server', 'port', '8089')
-    config.set('ssl', 'enabled', 'true')
+    config.set('cot_server', 'port', '8089' if args.use_ssl else '8087')
+    config.set('ssl', 'enabled', 'true' if args.use_ssl else 'false')
     config.set('ssl', 'server_p12_pw', args.p12_pw)
 
     with open(config_path, 'w') as fp:
@@ -285,7 +287,7 @@ def main():
     try:
         config = load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as e:
-        print(e)
+        print(e, file=sys.stderr)
         sys.exit(1)
 
     commands = {
