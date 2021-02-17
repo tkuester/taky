@@ -25,7 +25,7 @@ setup(name='taky',
     ],
     entry_points={
         'console_scripts': [
-            'taky = taky.__main__:main'
+            'taky = taky.cot.__main__:main',
         ]
     }
 )
