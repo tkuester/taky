@@ -41,10 +41,9 @@ def load_config(path=None):
         elif os.path.exists('/etc/taky/taky.conf'):
             path = '/etc/taky/taky.conf'
 
+    if path:
         lgr = logging.getLogger('load_config')
         lgr.info("Loading config file from %s", path)
-
-    if path:
         with open(path, 'r') as fp:
             config.read_file(fp, source=path)
 
