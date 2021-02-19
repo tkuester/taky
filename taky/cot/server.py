@@ -122,7 +122,11 @@ class COTServer(threading.Thread):
                         (sock, addr) = self.srv.accept()
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
-                        self.clients[sock] = TAKClient(sock, self.router)
+                        self.clients[sock] = TAKClient(
+                            sock,
+                            self.router,
+                            cot_log_dir=self.config.get('cot_server', 'log_cot')
+                        )
                         self.router.client_connect(self.clients[sock])
                     else:
                         self.handle_client(sock)

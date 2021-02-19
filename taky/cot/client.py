@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime, timedelta
 
@@ -7,10 +8,13 @@ from . import models
 from ..util import XMLDeclStrip
 
 class TAKClient:
-    def __init__(self, sock, router=None):
+    def __init__(self, sock, router=None, cot_log_dir=None):
         self.sock = sock
         self.router = router
         self.user = models.TAKUser()
+
+        self.cot_log_dir = cot_log_dir
+        self.cot_fp = None
 
         self.xdc = XMLDeclStrip()
         self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
@@ -26,6 +30,13 @@ class TAKClient:
             ip = '???'
             port = '???'
         return f'<TAKClient uid={self.user.uid} callsign={self.user.callsign} client={ip}:{port}>'
+
+    def close(self):
+        if self.cot_fp:
+            try:
+                self.cot_fp.close()
+            except:
+                pass
 
     def feed(self, data):
         data = self.xdc.feed(data)
@@ -52,6 +63,30 @@ class TAKClient:
             else:
                 # Don't know what to do with these yet!
                 self.handle_marti(evt)
+
+            if self.cot_log_dir:
+                if self.cot_fp is None and self.user.uid:
+                    name = os.path.join(self.cot_log_dir, f'{self.user.uid}.cot')
+                    try:
+                        self.lgr.info("Opening logfile %s", name)
+                        self.cot_fp = open(name, 'a+')
+                    except OSError as e:
+                        self.lgr.warning("Unable to open COT log: %s", e)
+                        self.cot_fp = None
+                        self.cot_log_dir = None
+
+                if self.cot_fp:
+                    try:
+                        self.cot_fp.write(etree.tostring(elm, pretty_print=True).decode())
+                    except (IOError, OSError) as e:
+                        self.lgr.warning("Unable to write to COT log: %s", e)
+                        try:
+                            self.cot_fp.close()
+                        except:
+                            pass
+                        self.cot_fp = None
+                        self.cot_log_dir = None
+
             elm.clear(keep_tail=True)
 
     def handle_atom(self, evt):

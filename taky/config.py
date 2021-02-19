@@ -12,6 +12,7 @@ DEFAULT_CFG = {
 
     'cot_server': {
         'port': None,    # Defaults to 8087 (or 8089 if SSL)
+        'log_cot': None  # Path to log COT files to
     },
 
     'dp_server': {

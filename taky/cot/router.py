@@ -28,6 +28,7 @@ class COTRouter(threading.Thread):
         self.clients.add(client)
 
     def client_disconnect(self, client):
+        client.close()
         self.clients.discard(client)
 
     def client_ident(self, client):
@@ -139,6 +140,9 @@ class COTRouter(threading.Thread):
             except Exception as e:
                 self.lgr.error("Unhandled exception: %s", e)
                 self.lgr.error(traceback.format_exc())
+
+        for client in self.clients:
+            client.close()
 
         self.srv.stop()
         self.lgr.info("Stopping COT Router")
