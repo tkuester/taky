@@ -15,11 +15,15 @@ app.config['HOSTNAME'] = config.get('taky', 'hostname')
 app.config['NODEID'] = config.get('taky', 'node_id')
 app.config['UPLOAD_PATH'] = os.path.realpath(config.get('dp_server', 'upload_path'))
 
+app.config['PUBLIC_IP'] = config.get('taky', 'public_ip')
 app.config['COT_PORT'] = config.getint('cot_server', 'port')
 if config.getboolean('ssl', 'enabled'):
     app.config['COT_CONN_STR'] = 'ssl:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
+    app.config['DPS_PORT'] = 8443
 else:
     app.config['COT_CONN_STR'] = 'tcp:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
+    app.config['DPS_PORT'] = 8080
+    # TODO: Configurable?
 
 @app.route('/')
 def hello_world():
@@ -150,7 +154,7 @@ def marti_sync_missionupload():
         'Hash': request.args['hash'], # SHA-256, checked
         'PrimaryKey': 1, # Not used, must be >= 0
         'SubmissionDateTime': datetime.utcnow().isoformat() + 'Z',
-        'SubmissionUser': 'SubUser', # Not displayed
+        'SubmissionUser': 'SubUser', # TODO: SSL Certificate Identity (MissionPackageQueryResult.java#37)
         'CreatorUid': request.args['creatorUid'],
         'Keywords': 'kw',
         'MIMEType': fp.mimetype,
@@ -169,9 +173,12 @@ def marti_sync_missionupload():
     except FileExistsError:
         pass
 
-    # Seems to just want anything but empty string...
+    ip = app.config['PUBLIC_IP']
+    port = app.config['DPS_PORT']
+
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
-    return 'OK'
+    # This is needed for client-to-client data package transmission
+    return f'{ip}:{port}/Marti/api/sync/metadata/{request.args["hash"]}/tool'
 
 @app.route('/Marti/api/sync/metadata/<f_hash>/tool', methods=['PUT'])
 def marti_api_sync_metadata(f_hash):
@@ -182,10 +189,10 @@ def marti_api_sync_metadata(f_hash):
     except:
         meta = {}
 
-    print(request.args)
-    print(meta)
+    print('sync/metadata/../tool', request.args)
+    print('/sync/metadata/../tool', meta)
     print('sync/metadata: hash', f_hash) # Relevant
-    print('sync/metadata: data', request.get_data()) # Returns b'public'
+    print('sync/metadata: data', request.get_data()) # Returns b'public' or private
     print('', flush=True)
 
     return ''
