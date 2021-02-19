@@ -75,9 +75,10 @@ class TAKClient:
                         self.cot_fp = None
                         self.cot_log_dir = None
 
-                if self.cot_fp:
+                if self.cot_fp and not evt.uid.endswith('-ping'):
                     try:
                         self.cot_fp.write(etree.tostring(elm, pretty_print=True).decode())
+                        self.cot_fp.flush()
                     except (IOError, OSError) as e:
                         self.lgr.warning("Unable to write to COT log: %s", e)
                         try:
