@@ -11,6 +11,8 @@
 [cot_server]
 # If left blank, taky will listen on 8087 without SSL, or 8089 with SSL 
 #port=
+# Where to store a log of .cot messages from the client for debug purposes
+#cot_log=
 
 [dp_server]
 # Where user datapackage uploads are stored.
