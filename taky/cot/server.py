@@ -119,7 +119,12 @@ class COTServer(threading.Thread):
 
                 for sock in rd:
                     if sock is self.srv:
-                        (sock, addr) = self.srv.accept()
+                        try:
+                            (sock, addr) = self.srv.accept()
+                        except OSError as e:
+                            self.lgr.error("OSError: %s", e)
+                            self.lgr.error(traceback.format_exc())
+                            continue
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
                         self.clients[sock] = TAKClient(
