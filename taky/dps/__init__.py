@@ -13,7 +13,7 @@ config = load_config(os.environ.get('TAKY_CONFIG'))
 application = app = Flask(__name__)
 app.config['HOSTNAME'] = config.get('taky', 'hostname')
 app.config['NODEID'] = config.get('taky', 'node_id')
-app.config['UPLOAD_PATH'] = config.get('dp_server', 'upload_path')
+app.config['UPLOAD_PATH'] = os.path.realpath(config.get('dp_server', 'upload_path'))
 
 app.config['COT_PORT'] = config.getint('cot_server', 'port')
 if config.getboolean('ssl', 'enabled'):
@@ -165,7 +165,7 @@ def marti_sync_missionupload():
         json.dump(meta, fp)
 
     try:
-        os.symlink(meta_path, meta_hash_path)
+        os.symlink(f'{filename}.json', meta_hash_path)
     except FileExistsError:
         pass
 
