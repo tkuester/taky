@@ -1,4 +1,5 @@
 import sys
+#import ssl
 import multiprocessing
 import argparse
 import configparser
@@ -64,6 +65,7 @@ def main():
         options['ca-certs'] = config.get('ssl', 'ca')
         options['certfile'] = config.get('ssl', 'cert')
         options['keyfile'] = config.get('ssl', 'key')
+        #options['cert_reqs'] = ssl.VerifyMode.CERT_REQUIRED
 
     StandaloneApplication(taky_dps, options).run()
     print("DONE")
