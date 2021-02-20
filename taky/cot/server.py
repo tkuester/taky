@@ -20,6 +20,7 @@ class COTServer(threading.Thread):
         self.router = COTRouter(self)
 
         self.srv = None
+        self.crash = None
 
         self.sock_setup()
 
@@ -140,6 +141,7 @@ class COTServer(threading.Thread):
             except Exception as e:
                 self.lgr.critical("Unhandled exception: %s", e)
                 self.lgr.critical(traceback.format_exc())
+                self.crash = e
                 break
 
         for (sock, client) in self.clients.items():
@@ -154,6 +156,7 @@ class COTServer(threading.Thread):
 
         self.router.stop()
         self.router.join()
+        self.lgr.info("COT Server stopped")
 
     def stop(self):
         self.router.stop()

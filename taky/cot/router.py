@@ -19,6 +19,7 @@ class COTRouter(threading.Thread):
 
         self.srv = server
         self.clients = set()
+        self.crash = None
 
         self.event_q = queue.Queue()
         self.stopped = threading.Event()
@@ -140,12 +141,13 @@ class COTRouter(threading.Thread):
             except Exception as e:
                 self.lgr.error("Unhandled exception: %s", e)
                 self.lgr.error(traceback.format_exc())
+                self.crash = e
 
         for client in self.clients:
             client.close()
 
         self.srv.stop()
-        self.lgr.info("Stopping COT Router")
+        self.lgr.info("COT Router stopped")
 
     def stop(self):
         self.stopped.set()
