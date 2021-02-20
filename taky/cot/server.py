@@ -3,7 +3,6 @@ import socket
 import select
 import ssl
 import threading
-import traceback
 import logging
 
 from .router import COTRouter
@@ -123,9 +122,10 @@ class COTServer(threading.Thread):
                         try:
                             (sock, addr) = self.srv.accept()
                         except OSError as e:
-                            self.lgr.error("OSError: %s", e)
-                            self.lgr.error(traceback.format_exc())
-                            continue
+                            # https://bugs.python.org/issue31122
+                            if e.errno != 0:
+                                self.lgr.warning("Unable to accept client", e)
+                                continue
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
                         self.clients[sock] = TAKClient(
@@ -139,8 +139,7 @@ class COTServer(threading.Thread):
             except ssl.SSLError as e:
                 self.lgr.info("Rejecting client: %s", e)
             except Exception as e:
-                self.lgr.critical("Unhandled exception: %s", e)
-                self.lgr.critical(traceback.format_exc())
+                self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)
                 self.crash = e
                 break
 

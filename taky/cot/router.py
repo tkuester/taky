@@ -2,7 +2,6 @@ import queue
 import threading
 import enum
 import logging
-import traceback
 
 from lxml import etree
 
@@ -139,8 +138,7 @@ class COTRouter(threading.Thread):
             except queue.Empty:
                 continue
             except Exception as e:
-                self.lgr.error("Unhandled exception: %s", e)
-                self.lgr.error(traceback.format_exc())
+                self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)
                 self.crash = e
 
         for client in self.clients:
