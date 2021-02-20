@@ -39,12 +39,12 @@ But, really. Using this is for anything important is probably a very-bad-idea (T
 
 ## Installation
 
-Inside the taky folder, run
+Open a shell, and run:
 
 ```
 $ git clone https://github.com/tkuester/taky
 $ cd taky
-$ python3 setup.py install
+taky $ python3 setup.py install
 ```
 
 Alternatively, you can use pip!
