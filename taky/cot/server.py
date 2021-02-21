@@ -2,25 +2,20 @@
 import socket
 import select
 import ssl
-import threading
 import logging
 
 from .router import COTRouter
 from .client import TAKClient
 
-class COTServer(threading.Thread):
+class COTServer:
     def __init__(self, config):
-        threading.Thread.__init__(self)
         self.lgr = logging.getLogger(self.__class__.__name__)
-        self.stopped = threading.Event()
 
         self.config = config
         self.clients = {}
         self.router = COTRouter()
 
         self.srv = None
-        self.crash = None
-
         self.sock_setup()
 
     def sock_setup(self):
@@ -46,10 +41,12 @@ class COTServer(threading.Thread):
         self.srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.srv.bind(bind_args)
 
+        mode = 'tcp'
         if ssl_ctx:
+            mode = 'ssl'
             self.srv = ssl_ctx.wrap_socket(self.srv, server_side=True)
 
-        self.lgr.info("Listening on %s:%s", ip, port)
+        self.lgr.info("Listening for %s on %s:%s", mode, ip, port)
         self.srv.listen()
 
     def ssl_setup(self):
@@ -83,6 +80,24 @@ class COTServer(threading.Thread):
 
         return ssl_ctx
 
+    def handle_accept(self):
+        try:
+            (sock, addr) = self.srv.accept()
+        except OSError as e:
+            # https://bugs.python.org/issue31122
+            if e.errno != 0:
+                self.lgr.warning("Unable to accept client: %s", e)
+        except ssl.SSLError as e:
+            self.lgr.info("Rejecting client: %s", e)
+
+        self.lgr.info("New client from %s:%s", addr[0], addr[1])
+        self.clients[sock] = TAKClient(
+            sock,
+            self.router,
+            cot_log_dir=self.config.get('cot_server', 'log_cot')
+        )
+        self.router.client_connect(self.clients[sock])
+
     def handle_client(self, sock):
         client = self.clients[sock]
         try:
@@ -101,45 +116,23 @@ class COTServer(threading.Thread):
             sock.close()
             self.clients.pop(sock)
 
-    def run(self):
-        while not self.stopped.is_set():
-            try:
-                sox = [self.srv]
-                sox.extend(self.clients.keys())
+    def loop(self):
+        sox = [self.srv]
+        sox.extend(self.clients.keys())
 
-                (rd, _, _) = select.select(sox, [], [], 10)
+        (rd, _, _) = select.select(sox, [], [], 10)
 
-                if len(rd) == 0:
-                    continue
-                elif self.stopped.is_set():
-                    break
+        if len(rd) == 0:
+            return
 
-                for sock in rd:
-                    if sock is self.srv:
-                        try:
-                            (sock, addr) = self.srv.accept()
-                        except OSError as e:
-                            # https://bugs.python.org/issue31122
-                            if e.errno != 0:
-                                self.lgr.warning("Unable to accept client: %s", e)
-                                continue
+        for sock in rd:
+            if sock is self.srv:
+                self.handle_accept()
+            else:
+                self.handle_client(sock)
 
-                        self.lgr.info("New client from %s:%s", addr[0], addr[1])
-                        self.clients[sock] = TAKClient(
-                            sock,
-                            self.router,
-                            cot_log_dir=self.config.get('cot_server', 'log_cot')
-                        )
-                        self.router.client_connect(self.clients[sock])
-                    else:
-                        self.handle_client(sock)
-            except ssl.SSLError as e:
-                self.lgr.info("Rejecting client: %s", e)
-            except Exception as e:
-                self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)
-                self.crash = e
-                break
-
+    def shutdown(self):
+        self.lgr.info("Sending disconnect to clients")
         for (sock, client) in self.clients.items():
             self.lgr.debug("Closing %s", client)
             try:
@@ -148,13 +141,11 @@ class COTServer(threading.Thread):
                 pass
             sock.close()
 
-        self.srv.close()
-
-        self.lgr.info("COT Server stopped")
-
-    def stop(self):
-        self.stopped.set()
         try:
             self.srv.shutdown(socket.SHUT_RDWR)
         except:
             pass
+
+        self.srv.close()
+        self.srv = None
+        self.lgr.info("Stopped")

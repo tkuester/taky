@@ -21,6 +21,8 @@ def arg_parse():
     return (argp, args)
 
 def main():
+    ret = 0
+
     (argp, args) = arg_parse()
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
 
@@ -38,17 +40,21 @@ def main():
         logging.error("Unable to start COTServer: %s", e)
         sys.exit(1)
 
-    cs.start()
+    try:
+        while True:
+            cs.loop()
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        logging.critical("Unhandled exception", exc_info=e, stack_info=True)
+        ret = 1
 
     try:
-        cs.join()
-    except KeyboardInterrupt:
-        cs.stop()
+        cs.shutdown()
+    except Exception as e:
+        logging.critical("Exception during shutdown", exc_info=e, stack_info=True)
 
-    cs.join()
-
-    if cs.crash:
-        sys.exit(1)
+    sys.exit(ret)
 
 if __name__ == '__main__':
     main()
