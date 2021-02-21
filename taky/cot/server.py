@@ -228,7 +228,7 @@ class COTServer:
         Disconnect all clients, close server socket.
         '''
         self.lgr.info("Sending disconnect to clients")
-        for sock in self.clients:
+        for sock in list(self.clients):
             self.client_disconnect(sock, 'Server shutting down')
 
         try:
