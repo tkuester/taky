@@ -115,6 +115,8 @@ class COTServer:
                 # TODO: Check SSL certs here
             except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as e:
                 pass
+            except (ssl.SSLError, OSError) as e:
+                self.client_disconnect(sock, str(e))
 
             return
 
