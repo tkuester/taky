@@ -17,13 +17,7 @@ class TAKClient:
     the client.
     '''
 
-    def __init__(self, ip_addr, port, router=None, cot_log_dir=None):
-        self.addr = (ip_addr, port)
-        self.ssl_hs = None # tcp connection
-        # ssl_hs = False: needed, but not done yet
-        # ssl_hs = 'tx': needed, but blocking on tx
-        # ssl_hs = True: done
-
+    def __init__(self, router=None, cot_log_dir=None):
         self.router = router
         self.user = models.TAKUser()
 
@@ -34,36 +28,18 @@ class TAKClient:
         parser.feed(b'<root>')
         self.xdc = XMLDeclStrip(parser)
 
-        self.out_buff = b''
-
         self.lgr = logging.getLogger(TAKClient.__name__)
 
     def __repr__(self):
-        (ip_addr, port) = self.addr
         return f'<TAKClient uid={self.user.uid} ' \
-               f'callsign={self.user.callsign} '\
-               f'client={ip_addr}:{port}>'
+               f'callsign={self.user.callsign}>'
 
     def send(self, data):
         '''
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
         '''
-        if isinstance(data, models.Event):
-            data = data.as_element
-
-        if etree.iselement(data):
-            self.out_buff += etree.tostring(data)
-        elif isinstance(data, bytes):
-            self.out_buff += data
-        else:
-            raise ValueError("Can only send Event / XML to TAKClient!")
-
-    @property
-    def has_data(self):
-        ''' Returns true if there is outbound data pending '''
-        # FIXME: Eww. I claimed this didn't care about the underlying mechanism...
-        return len(self.out_buff) > 0 or self.ssl_hs == 'tx'
+        raise NotImplementedError()
 
     def close(self):
         ''' Close the COT log '''
@@ -230,4 +206,39 @@ class TAKClient:
             start=now,
             stale=now + timedelta(seconds=20)
         )
-        self.router.push_event(self, pong, dst=self)
+        self.send(pong)
+
+class SocketTAKClient(TAKClient):
+    '''
+    A TAK client based on sockets
+    '''
+    def __init__(self, router, cot_log_dir=None, addr=None):
+        super().__init__(router, cot_log_dir)
+        self.addr = addr
+        self.ssl_hs = None
+        self.out_buff = b''
+
+    def __repr__(self):
+        return f'<SocketTAKClient uid={self.user.uid} ' \
+               f'callsign={self.user.callsign} '        \
+               f'addr={self.addr[0]}:{self.addr[1]}>'
+
+    def send(self, data):
+        '''
+        Send a CoT event to the client. Data should be a cot Event object,
+        or an XML element, or a byte string.
+        '''
+        if isinstance(data, models.Event):
+            data = data.as_element
+
+        if etree.iselement(data):
+            self.out_buff += etree.tostring(data)
+        elif isinstance(data, bytes):
+            self.out_buff += data
+        else:
+            raise ValueError("Can only send Event / XML to TAKClient!")
+
+    @property
+    def has_data(self):
+        ''' Returns true if there is outbound data pending '''
+        return len(self.out_buff) > 0 or self.ssl_hs == 'tx'

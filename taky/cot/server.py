@@ -6,7 +6,7 @@ import ssl
 import logging
 
 from .router import COTRouter
-from .client import TAKClient
+from .client import SocketTAKClient
 
 class COTServer:
     '''
@@ -113,11 +113,10 @@ class COTServer:
 
         (ip_addr, port) = addr[0:2]
         self.lgr.info("New client from %s:%s", ip_addr, port)
-        self.clients[sock] = TAKClient(
-            ip_addr,
-            port,
+        self.clients[sock] = SocketTAKClient(
             self.router,
-            cot_log_dir=self.config.get('cot_server', 'log_cot')
+            cot_log_dir=self.config.get('cot_server', 'log_cot'),
+            addr=addr[0:2]
         )
         if self.ssl_ctx:
             self.clients[sock].ssl_hs = False
@@ -129,9 +128,7 @@ class COTServer:
 
         Also responsible for preforming the SSL handshake
         '''
-        if client := self.clients.get(sock) is None:
-            return
-
+        client = self.clients[sock]
         # client.ssl_hs is hacky
         if self.ssl_ctx and client.ssl_hs is not True:
             try:
@@ -166,14 +163,13 @@ class COTServer:
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         '''
-        if client := self.clients.get(sock) is None:
-            return
-
+        client = self.clients[sock]
         if self.ssl_ctx:
             if client.ssl_hs is not True:
                 self.client_rx(sock)
-
-            return
+                return
+            elif client.ssl_hs is False:
+                return
 
         try:
             sent = sock.send(client.out_buff[0:4096])
@@ -203,9 +199,9 @@ class COTServer:
         '''
         Main loop. Call outside this object in a "while True" block.
         '''
-        rd_clients = [self.srv]
-        rd_clients.extend(self.clients)
-        wr_clients = filter(lambda x: self.clients[x].has_data, self.clients)
+        rd_clients = list(self.clients)
+        rd_clients.append(self.srv)
+        wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 

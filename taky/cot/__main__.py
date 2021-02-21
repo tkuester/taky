@@ -58,13 +58,13 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception as exc: # pylint: disable=broad-except
-        logging.critical("Unhandled exception", exc_info=exc, stack_info=True)
+        logging.critical("Unhandled exception", exc_info=exc)
         ret = 1
 
     try:
         cot_srv.shutdown()
     except Exception as exc: # pylint: disable=broad-except
-        logging.critical("Exception during shutdown", exc_info=exc, stack_info=True)
+        logging.critical("Exception during shutdown", exc_info=exc)
 
     sys.exit(ret)
 
