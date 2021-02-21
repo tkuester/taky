@@ -107,14 +107,18 @@ class COTServer:
 
     def client_rx(self, sock):
         client = self.clients[sock]
-        if self.ssl_ctx and not client.ssl_hs:
+        # client.ssl_hs is hacky
+        if self.ssl_ctx and client.ssl_hs is not True:
             try:
                 sock.do_handshake()
                 client.ssl_hs = True
                 sock.setblocking(True)
                 # TODO: Check SSL certs here
-            except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as e:
+            except ssl.SSLWantReadError:
                 pass
+            except ssl.SSLWantWriteError:
+                # This should never happen, but let's catch it anyways
+                client.ssl_hs = 'tx'
             except (ssl.SSLError, OSError) as e:
                 self.client_disconnect(sock, str(e))
 
@@ -132,8 +136,12 @@ class COTServer:
             self.client_disconnect(sock, str(e))
 
     def client_tx(self, sock):
+        client = self.clients[sock]
+        if self.ssl_ctx and client.ssl_hs == 'tx':
+            self.client_rx(sock)
+            return
+
         try:
-            client = self.clients[sock]
             sent = sock.send(client.out_buff[0:4096])
             client.out_buff = client.out_buff[sent:]
         except (socket.error, IOError, OSError) as e:
@@ -159,7 +167,7 @@ class COTServer:
         wr_clients = []
         for (sock, client) in self.clients.items():
             rd_clients.append(sock)
-            if client.has_data:
+            if client.has_data or client.ssl_hs == 'tx':
                 wr_clients.append(sock)
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)

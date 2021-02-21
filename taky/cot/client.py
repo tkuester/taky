@@ -13,6 +13,10 @@ class TAKClient:
         self.ip = ip
         self.port = port
         self.ssl_hs = None
+        # ssl_hs = None: tcp connection
+        # ssl_hs = False: needed, but not done yet
+        # ssl_hs = 'tx': needed, but blocking on tx
+        # ssl_hs = True: done
 
         self.router = router
         self.user = models.TAKUser()
