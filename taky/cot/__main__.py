@@ -1,4 +1,5 @@
 import sys
+import signal
 import logging
 import argparse
 import configparser
@@ -6,6 +7,10 @@ import configparser
 from taky import __version__
 from taky.cot import COTServer
 from taky.config import load_config
+
+def handle_pdb(sig, frame):
+    import pdb
+    pdb.Pdb().set_trace(frame)
 
 def arg_parse():
     argp = argparse.ArgumentParser(description="Start the taky server")
@@ -39,6 +44,8 @@ def main():
     except Exception as e:
         logging.error("Unable to start COTServer: %s", e)
         sys.exit(1)
+
+    signal.signal(signal.SIGUSR1, handle_pdb)
 
     try:
         while True:
