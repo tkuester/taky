@@ -107,7 +107,8 @@ class COTServer:
                                                 do_handshake_on_connect=False)
                 sock.setblocking(False)
         except (ssl.SSLError, socket.error, OSError) as exc:
-            self.lgr.info("Rejecting client: %s", exc)
+            (ip_addr, port) = addr[0:2]
+            self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
             return
 
         (ip_addr, port) = addr[0:2]
@@ -128,7 +129,9 @@ class COTServer:
 
         Also responsible for preforming the SSL handshake
         '''
-        client = self.clients[sock]
+        if client := self.clients.get(sock) is None:
+            return
+
         # client.ssl_hs is hacky
         if self.ssl_ctx and client.ssl_hs is not True:
             try:
@@ -139,7 +142,6 @@ class COTServer:
             except ssl.SSLWantReadError:
                 pass
             except ssl.SSLWantWriteError:
-                # This should never happen, but let's catch it anyways
                 client.ssl_hs = 'tx'
             except (ssl.SSLError, OSError) as exc:
                 self.client_disconnect(sock, str(exc))
@@ -164,7 +166,9 @@ class COTServer:
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         '''
-        client = self.clients[sock]
+        if client := self.clients.get(sock) is None:
+            return
+
         if self.ssl_ctx:
             if client.ssl_hs is not True:
                 self.client_rx(sock)
@@ -199,12 +203,9 @@ class COTServer:
         '''
         Main loop. Call outside this object in a "while True" block.
         '''
-        rd_clients = [self.srv]
-        wr_clients = []
-        for (sock, client) in self.clients.items():
-            rd_clients.append(sock)
-            if client.has_data or client.ssl_hs == 'tx':
-                wr_clients.append(sock)
+        rd_clients = list(self.clients)
+        wr_clients = filter(lambda x: x.has_data or x.ssl_hs == 'tx', rd_clients)
+        rd_clients.append(self.srv)
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 
