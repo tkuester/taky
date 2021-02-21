@@ -188,18 +188,16 @@ class COTServer:
             self.client_tx(sock)
 
     def shutdown(self):
+        '''
+        Disconnect all clients, close server socket.
+        '''
         self.lgr.info("Sending disconnect to clients")
-        for (sock, client) in self.clients.items():
-            self.lgr.debug("Closing %s", client)
-            try:
-                sock.shutdown(socket.SHUT_RDWR)
-            except:
-                pass
-            sock.close()
+        for sock in self.clients:
+            self.client_disconnect(sock, 'Server shutting down')
 
         try:
             self.srv.shutdown(socket.SHUT_RDWR)
-        except:
+        except: # pylint: disable=bare-except
             pass
 
         self.srv.close()
