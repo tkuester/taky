@@ -1,5 +1,4 @@
 import queue
-import threading
 import enum
 import logging
 
@@ -12,16 +11,12 @@ class Destination(enum.Enum):
     BROADCAST=1
     GROUP=2
 
-class COTRouter(threading.Thread):
+class COTRouter:
     def __init__(self, server):
-        threading.Thread.__init__(self)
-
         self.srv = server
         self.clients = set()
-        self.crash = None
 
         self.event_q = queue.Queue()
-        self.stopped = threading.Event()
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
@@ -59,9 +54,6 @@ class COTRouter(threading.Thread):
         return client.user
 
     def push_event(self, src, event, dst=None):
-        if not self.is_alive():
-            raise RuntimeError("Router is not running")
-
         if not isinstance(event, (models.Event, etree._Element)):
             raise ValueError("Must be models.Event or lxml Element")
 
@@ -69,6 +61,7 @@ class COTRouter(threading.Thread):
             dst = Destination.BROADCAST
 
         self.event_q.put((src, dst, event))
+        self.handle_queue()
 
     def broadcast(self, src, msg):
         for client in self.clients:
@@ -97,19 +90,10 @@ class COTRouter(threading.Thread):
             if client.user.group == group:
                 client.sock.sendall(msg)
 
-    def run(self):
-        self.lgr.info("Starting COT Router")
-
-        while not self.stopped.is_set():
-            try:
-                (src, dst, evt) = self.event_q.get(True, timeout=1)
-                if src is self and evt == 'shutdown':
-                    break
-
-                # Handle socket bytes from server
-                if src is self.srv:
-                    dst.feed(evt)
-                    continue
+    def handle_queue(self):
+        try:
+            while True:
+                (src, dst, evt) = self.event_q.get(False)
 
                 if isinstance(evt, models.Event):
                     xml = etree.tostring(evt.as_element)
@@ -135,18 +119,7 @@ class COTRouter(threading.Thread):
                         client.sock.sendall(xml)
                 else:
                     self.lgr.warning("Don't know what to do!")
-            except queue.Empty:
-                continue
-            except Exception as e:
-                self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)
-                self.crash = e
-
-        for client in self.clients:
-            client.close()
-
-        self.srv.stop()
-        self.lgr.info("COT Router stopped")
-
-    def stop(self):
-        self.stopped.set()
-        self.event_q.put((self, None, 'shutdown'))
+        except queue.Empty:
+            return
+        except Exception as e:
+            self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)

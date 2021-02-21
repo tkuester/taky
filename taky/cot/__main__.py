@@ -47,7 +47,7 @@ def main():
 
     cs.join()
 
-    if cs.crash or cs.router.crash:
+    if cs.crash:
         sys.exit(1)
 
 if __name__ == '__main__':
