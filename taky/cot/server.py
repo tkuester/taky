@@ -87,49 +87,84 @@ class COTServer:
             # https://bugs.python.org/issue31122
             if e.errno != 0:
                 self.lgr.warning("Unable to accept client: %s", e)
+            return
         except ssl.SSLError as e:
             self.lgr.info("Rejecting client: %s", e)
+            return
+        except socket.error as e:
+            self.lgr.info("Rejecting client: %s", e)
+            return
 
-        self.lgr.info("New client from %s:%s", addr[0], addr[1])
+        (ip, port) = addr[0:2]
+        self.lgr.info("New client from %s:%s", ip, port)
         self.clients[sock] = TAKClient(
-            sock,
+            ip,
+            port,
             self.router,
             cot_log_dir=self.config.get('cot_server', 'log_cot')
         )
         self.router.client_connect(self.clients[sock])
 
-    def handle_client(self, sock):
+    def client_rx(self, sock):
         client = self.clients[sock]
         try:
             data = sock.recv(4096)
 
             if len(data) == 0:
-                self.lgr.info('Client disconnect: %s', client)
-                sock.close()
-                self.clients.pop(sock)
-                self.router.client_disconnect(client)
+                self.client_disconnect(sock)
                 return
 
             client.feed(data)
         except (socket.error, IOError, OSError) as e:
             self.lgr.info('%s closed on error: %s', client, e)
-            sock.close()
-            self.clients.pop(sock)
+            self.client_disconnect(sock)
+
+    def client_tx(self, sock):
+        try:
+            client = self.clients[sock]
+            sent = sock.send(client.out_buff)
+            client.out_buff = client.out_buff[sent:]
+        except (socket.error, IOError, OSError) as e:
+            self.lgr.info('%s closed on error: %s', client, e)
+            self.client_disconnect(sock)
+
+    def client_disconnect(self, sock):
+        self.lgr.info('Client disconnect: %s', client)
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except:
+            pass
+        sock.close()
+
+        client = self.clients.pop(sock)
+        self.router.client_disconnect(client)
+        client.close()
 
     def loop(self):
-        sox = [self.srv]
-        sox.extend(self.clients.keys())
+        rd_clients = [self.srv]
+        wr_clients = []
+        for (sock, client) in self.clients.items():
+            rd_clients.append(sock)
+            if client.has_data:
+                wr_clients.append(sock)
 
-        (rd, _, _) = select.select(sox, [], [], 10)
+        (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 
-        if len(rd) == 0:
-            return
+        for sock in s_ex:
+            if sock is self.srv:
+                raise RuntimeError("Server socket exceptional condition")
+            else:
+                self.lgr.warning("Client %s exceptional condition", client)
+                self.client_disconnect(sock)
 
-        for sock in rd:
+        for sock in s_rd:
             if sock is self.srv:
                 self.handle_accept()
             else:
-                self.handle_client(sock)
+                self.client_rx(sock)
+
+        for sock in s_wr:
+            self.client_tx(sock)
 
     def shutdown(self):
         self.lgr.info("Sending disconnect to clients")

@@ -20,7 +20,6 @@ class COTRouter:
         self.clients.add(client)
 
     def client_disconnect(self, client):
-        client.close()
         self.clients.discard(client)
 
     def client_ident(self, client):
@@ -31,8 +30,7 @@ class COTRouter:
             if _client.user.uid is None:
                 continue
 
-            xml = etree.tostring(_client.user.as_element)
-            client.sock.sendall(xml)
+            client.send(_client.user.as_element)
 
     def find_client(self, uid=None, callsign=None):
         for client in self.clients:
@@ -49,7 +47,7 @@ class COTRouter:
                 continue
 
             # TODO: Timeouts? select() on writable sockets
-            client.sock.sendall(msg)
+            client.send(msg)
 
     def group_broadcast(self, src, msg, group=None):
         if group is None:
@@ -68,7 +66,7 @@ class COTRouter:
                 continue
 
             if client.user.group == group:
-                client.sock.sendall(msg)
+                client.send(msg)
 
     def push_event(self, src, evt, dst=None):
         if not isinstance(evt, (models.Event, etree._Element)):
@@ -79,7 +77,7 @@ class COTRouter:
 
         if isinstance(evt, models.Event):
             xml = etree.tostring(evt.as_element)
-        elif isinstance(evt, etree._Element) and evt.tag == 'event':
+        elif etree.iselement(evt) and evt.tag == 'event':
             xml = etree.tostring(evt)
         else:
             raise ValueError("Unable to handle event of type %s", type(evt))
@@ -91,12 +89,12 @@ class COTRouter:
         elif isinstance(dst, models.Teams):
             self.group_broadcast(src, xml, dst)
         elif isinstance(dst, TAKClient):
-            dst.sock.sendall(xml)
+            dst.send(xml)
         elif isinstance(dst, models.TAKUser):
             client = self.find_client(uid=dst.uid)
             if client is None:
                 self.lgr.warning("Can't find client for %s to deliver message", dst)
             else:
-                client.sock.sendall(xml)
+                client.send(xml)
         else:
             self.lgr.warning("Don't know what to do with %s", evt)

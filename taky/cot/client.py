@@ -9,8 +9,9 @@ from . import models
 from ..util import XMLDeclStrip
 
 class TAKClient:
-    def __init__(self, sock, router=None, cot_log_dir=None):
-        self.sock = sock
+    def __init__(self, ip, port, router=None, cot_log_dir=None):
+        self.ip = ip
+        self.port = port
         self.router = router
         self.user = models.TAKUser()
 
@@ -21,16 +22,26 @@ class TAKClient:
         self.parser = etree.XMLPullParser(tag='event', resolve_entities=False)
         self.parser.feed(b'<root>')
 
+        self.out_buff = b''
+
         self.lgr = logging.getLogger(TAKClient.__name__)
 
     def __repr__(self):
-        # IPv6 returns a 4 element tuple
-        try:
-            (ip, port) = self.sock.getpeername()[:2]
-        except OSError:
-            ip = '???'
-            port = '???'
-        return f'<TAKClient uid={self.user.uid} callsign={self.user.callsign} client={ip}:{port}>'
+        return f'<TAKClient uid={self.user.uid} callsign={self.user.callsign} client={self.ip}:{self.port}>'
+    def send(self, data):
+        if isinstance(data, models.Event):
+            data = data.as_element
+
+        if etree.iselement(data):
+            self.out_buff += etree.tostring(data)
+        elif isinstance(data, bytes):
+            self.out_buff += data
+        else:
+            raise ValueError("Can only send Event / XML to TAKClient!")
+
+    @property
+    def has_data(self):
+        return len(self.out_buff) > 0
 
     def close(self):
         if self.cot_fp:
