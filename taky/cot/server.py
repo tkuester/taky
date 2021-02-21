@@ -121,7 +121,7 @@ class COTServer:
     def client_tx(self, sock):
         try:
             client = self.clients[sock]
-            sent = sock.send(client.out_buff)
+            sent = sock.send(client.out_buff[0:4096])
             client.out_buff = client.out_buff[sent:]
         except (socket.error, IOError, OSError) as e:
             self.client_disconnect(sock, str(e))
