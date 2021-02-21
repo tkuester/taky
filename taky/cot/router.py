@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 import enum
 import logging
 
@@ -7,21 +8,40 @@ from . import models
 from .client import TAKClient
 
 class Destination(enum.Enum):
+    '''
+    Indicate where this packet is routed
+    '''
     BROADCAST=1
     GROUP=2
 
 class COTRouter:
+    '''
+    Simple class to route packets. A class is a bit over kill when a simple
+    function would do, but currently the router needs to know what clients are
+    available to send packets to.
+    '''
     def __init__(self):
+        # TODO: self.clients as dictionary, with UID as keys?
+        #     : should prohibit multiple sockets sharing a client
         self.clients = set()
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
+        '''
+        Add a client to the router
+        '''
         self.clients.add(client)
 
     def client_disconnect(self, client):
+        '''
+        Remove a client from the router
+        '''
         self.clients.discard(client)
 
     def client_ident(self, client):
+        '''
+        Called by TAKClient when the client first identifies to the server
+        '''
         self.lgr.debug("Sending active clients to %s", client)
         for _client in self.clients:
             if _client is client:
@@ -32,6 +52,9 @@ class COTRouter:
             client.send(_client.user.as_element)
 
     def find_client(self, uid=None, callsign=None):
+        '''
+        Search the client database for a requested client
+        '''
         for client in self.clients:
             if uid and client.user.uid == uid:
                 return client
@@ -41,6 +64,9 @@ class COTRouter:
         return None
 
     def broadcast(self, src, msg):
+        '''
+        Broadcast a message from source to all clients
+        '''
         for client in self.clients:
             if client is src:
                 continue
@@ -48,6 +74,11 @@ class COTRouter:
             client.send(msg)
 
     def group_broadcast(self, src, msg, group=None):
+        '''
+        Broadcast a message from source to all members to a group.
+
+        If group is not specified, the source's group is used.
+        '''
         if group is None:
             if isinstance(src, models.TAKUser):
                 group = src.group
@@ -67,6 +98,9 @@ class COTRouter:
                 client.send(msg)
 
     def push_event(self, src, evt, dst=None):
+        '''
+        Push an event to the router
+        '''
         if dst is None:
             dst = Destination.BROADCAST
 
