@@ -12,11 +12,8 @@ class Destination(enum.Enum):
     GROUP=2
 
 class COTRouter:
-    def __init__(self, server):
-        self.srv = server
+    def __init__(self):
         self.clients = set()
-
-        self.event_q = queue.Queue()
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
@@ -60,8 +57,7 @@ class COTRouter:
         if dst is None:
             dst = Destination.BROADCAST
 
-        self.event_q.put((src, dst, event))
-        self.handle_queue()
+        self.handle_queue(src, dst, event)
 
     def broadcast(self, src, msg):
         for client in self.clients:
@@ -90,36 +86,27 @@ class COTRouter:
             if client.user.group == group:
                 client.sock.sendall(msg)
 
-    def handle_queue(self):
-        try:
-            while True:
-                (src, dst, evt) = self.event_q.get(False)
+    def handle_queue(self, src, dst, evt):
+        if isinstance(evt, models.Event):
+            xml = etree.tostring(evt.as_element)
+        elif isinstance(evt, etree._Element) and evt.tag == 'event':
+            xml = etree.tostring(evt)
+        else:
+            raise ValueError("Unable to handle event of type %s", type(evt))
 
-                if isinstance(evt, models.Event):
-                    xml = etree.tostring(evt.as_element)
-                elif isinstance(evt, etree._Element) and evt.tag == 'event':
-                    xml = etree.tostring(evt)
-                else:
-                    self.lgr.warning("Unhandled event queue: %s, %s, %s", src, dst, evt)
-                    continue
-
-                if dst is Destination.BROADCAST:
-                    self.broadcast(src, xml)
-                elif dst is Destination.GROUP:
-                    self.group_broadcast(src, xml)
-                elif isinstance(dst, models.Teams):
-                    self.group_broadcast(src, xml, dst)
-                elif isinstance(dst, TAKClient):
-                    dst.sock.sendall(xml)
-                elif isinstance(dst, models.TAKUser):
-                    client = self.find_client(uid=dst.uid)
-                    if client is None:
-                        self.lgr.warning("Can't find client for %s to deliver message", dst)
-                    else:
-                        client.sock.sendall(xml)
-                else:
-                    self.lgr.warning("Don't know what to do!")
-        except queue.Empty:
-            return
-        except Exception as e:
-            self.lgr.critical("Unhandled exception", exc_info=e, stack_info=True)
+        if dst is Destination.BROADCAST:
+            self.broadcast(src, xml)
+        elif dst is Destination.GROUP:
+            self.group_broadcast(src, xml)
+        elif isinstance(dst, models.Teams):
+            self.group_broadcast(src, xml, dst)
+        elif isinstance(dst, TAKClient):
+            dst.sock.sendall(xml)
+        elif isinstance(dst, models.TAKUser):
+            client = self.find_client(uid=dst.uid)
+            if client is None:
+                self.lgr.warning("Can't find client for %s to deliver message", dst)
+            else:
+                client.sock.sendall(xml)
+        else:
+            self.lgr.warning("Don't know what to do with %s", evt)

@@ -16,7 +16,7 @@ class COTServer(threading.Thread):
 
         self.config = config
         self.clients = {}
-        self.router = COTRouter(self)
+        self.router = COTRouter()
 
         self.srv = None
         self.crash = None
@@ -121,7 +121,7 @@ class COTServer(threading.Thread):
                         except OSError as e:
                             # https://bugs.python.org/issue31122
                             if e.errno != 0:
-                                self.lgr.warning("Unable to accept client", e)
+                                self.lgr.warning("Unable to accept client: %s", e)
                                 continue
 
                         self.lgr.info("New client from %s:%s", addr[0], addr[1])
