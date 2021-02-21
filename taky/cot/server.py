@@ -203,9 +203,9 @@ class COTServer:
         '''
         Main loop. Call outside this object in a "while True" block.
         '''
-        rd_clients = list(self.clients)
-        wr_clients = filter(lambda x: x.has_data or x.ssl_hs == 'tx', rd_clients)
-        rd_clients.append(self.srv)
+        rd_clients = [self.srv]
+        rd_clients.extend(self.clients)
+        wr_clients = filter(lambda x: self.clients[x].has_data or x.ssl_hs == 'tx', self.clients)
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 
