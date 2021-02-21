@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 from dataclasses import dataclass
 
 from lxml import etree
@@ -119,7 +120,7 @@ class TAKUser:
     def as_element(self):
         if self.last_seen is None:
             # TODO: What should we do if we've never been seen?
-            now = datetime.utcnow()
+            now = dt.utcnow()
             stale = now + timedelta(seconds=20)
         else:
             now = self.last_seen

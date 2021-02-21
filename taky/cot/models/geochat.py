@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime as dt
 import enum
 import uuid
 
@@ -94,7 +94,7 @@ class GeoChat:
         chat.message = message
 
         if time is None:
-            time = datetime.utcnow()
+            time = dt.utcnow()
         uid = f'GeoChat.{chat.src_uid}.{chat.dst_cs}.{uuid.uuid4()}'
         chat.event = Event(
             uid=uid,

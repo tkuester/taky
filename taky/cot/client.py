@@ -1,6 +1,7 @@
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 
 from lxml import etree
 
@@ -156,7 +157,7 @@ class TAKClient:
             self.router.push_event(self, evt)
 
     def pong(self):
-        now = datetime.utcnow()
+        now = dt.utcnow()
         pong = models.Event(
             uid='takPong',
             etype='t-x-c-t-r',

@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime as dt
 
 from flask import Flask, request, send_file, abort
 from werkzeug.utils import secure_filename
@@ -153,7 +153,7 @@ def marti_sync_missionupload():
         'Name': fp.filename, # File name on the server
         'Hash': request.args['hash'], # SHA-256, checked
         'PrimaryKey': 1, # Not used, must be >= 0
-        'SubmissionDateTime': datetime.utcnow().isoformat() + 'Z',
+        'SubmissionDateTime': dt.utcnow().isoformat() + 'Z',
         'SubmissionUser': 'SubUser', # TODO: SSL Certificate Identity (MissionPackageQueryResult.java#37)
         'CreatorUid': request.args['creatorUid'],
         'Keywords': 'kw',
