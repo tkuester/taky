@@ -205,7 +205,7 @@ class COTServer:
         '''
         rd_clients = [self.srv]
         rd_clients.extend(self.clients)
-        wr_clients = filter(lambda x: self.clients[x].has_data or x.ssl_hs == 'tx', self.clients)
+        wr_clients = filter(lambda x: self.clients[x].has_data, self.clients)
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 

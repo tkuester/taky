@@ -62,7 +62,8 @@ class TAKClient:
     @property
     def has_data(self):
         ''' Returns true if there is outbound data pending '''
-        return len(self.out_buff) > 0
+        # FIXME: Eww. I claimed this didn't care about the underlying mechanism...
+        return len(self.out_buff) > 0 or self.ssl_hs == 'tx'
 
     def close(self):
         ''' Close the COT log '''
