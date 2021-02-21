@@ -30,6 +30,7 @@ def main():
 
     (argp, args) = arg_parse()
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
+    logging.info(f"taky v{__version__}")
 
     try:
         config = load_config(args.cfg_file)
