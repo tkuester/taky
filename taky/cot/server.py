@@ -81,12 +81,16 @@ class COTServer:
         try:
             (sock, addr) = self.srv.accept()
             if self.ssl_ctx:
-                sock = self.ssl_ctx.wrap_socket(sock, server_side=True)
+                sock = self.ssl_ctx.wrap_socket(sock, server_side=True,
+                                                do_handshake_on_connect=False)
+                sock.settimeout(0.5)
+                sock.do_handshake()
+                sock.settimeout(None)
                 # TODO: Check peer cert, get hostname, assign to TAKClient
         except ssl.SSLError as e:
             self.lgr.info("Rejecting client: %s", e)
             return
-        except socket.error as e:
+        except (socket.error, socket.timeout) as e:
             self.lgr.info("Rejecting client: %s", e)
             return
         except OSError as e:
