@@ -1,4 +1,3 @@
-import queue
 import enum
 import logging
 
@@ -46,7 +45,6 @@ class COTRouter:
             if client is src:
                 continue
 
-            # TODO: Timeouts? select() on writable sockets
             client.send(msg)
 
     def group_broadcast(self, src, msg, group=None):
@@ -69,9 +67,6 @@ class COTRouter:
                 client.send(msg)
 
     def push_event(self, src, evt, dst=None):
-        if not isinstance(evt, (models.Event, etree._Element)):
-            raise ValueError("Must be models.Event or lxml Element")
-
         if dst is None:
             dst = Destination.BROADCAST
 
@@ -80,7 +75,7 @@ class COTRouter:
         elif etree.iselement(evt) and evt.tag == 'event':
             xml = etree.tostring(evt)
         else:
-            raise ValueError("Unable to handle event of type %s", type(evt))
+            raise ValueError(f"Unable to handle event of type {type(evt)}")
 
         if dst is Destination.BROADCAST:
             self.broadcast(src, xml)

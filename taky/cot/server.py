@@ -83,16 +83,16 @@ class COTServer:
     def handle_accept(self):
         try:
             (sock, addr) = self.srv.accept()
-        except OSError as e:
-            # https://bugs.python.org/issue31122
-            if e.errno != 0:
-                self.lgr.warning("Unable to accept client: %s", e)
-            return
         except ssl.SSLError as e:
             self.lgr.info("Rejecting client: %s", e)
             return
         except socket.error as e:
             self.lgr.info("Rejecting client: %s", e)
+            return
+        except OSError as e:
+            # https://bugs.python.org/issue31122
+            if e.errno != 0:
+                self.lgr.warning("Unable to accept client: %s", e)
             return
 
         (ip, port) = addr[0:2]
@@ -111,13 +111,12 @@ class COTServer:
             data = sock.recv(4096)
 
             if len(data) == 0:
-                self.client_disconnect(sock)
+                self.client_disconnect(sock, "Disconnected")
                 return
 
             client.feed(data)
         except (socket.error, IOError, OSError) as e:
-            self.lgr.info('%s closed on error: %s', client, e)
-            self.client_disconnect(sock)
+            self.client_disconnect(sock, str(e))
 
     def client_tx(self, sock):
         try:
@@ -125,11 +124,9 @@ class COTServer:
             sent = sock.send(client.out_buff)
             client.out_buff = client.out_buff[sent:]
         except (socket.error, IOError, OSError) as e:
-            self.lgr.info('%s closed on error: %s', client, e)
-            self.client_disconnect(sock)
+            self.client_disconnect(sock, str(e))
 
-    def client_disconnect(self, sock):
-        self.lgr.info('Client disconnect: %s', client)
+    def client_disconnect(self, sock, reason=None):
         try:
             sock.shutdown(socket.SHUT_RDWR)
         except:
@@ -137,6 +134,10 @@ class COTServer:
         sock.close()
 
         client = self.clients.pop(sock)
+        if reason:
+            self.lgr.info('Client disconnect: %s (%s)', client, reason)
+        else:
+            self.lgr.info('Client disconnect: %s', client)
         self.router.client_disconnect(client)
         client.close()
 
@@ -153,9 +154,8 @@ class COTServer:
         for sock in s_ex:
             if sock is self.srv:
                 raise RuntimeError("Server socket exceptional condition")
-            else:
-                self.lgr.warning("Client %s exceptional condition", client)
-                self.client_disconnect(sock)
+
+            self.client_disconnect(sock, "Exceptional condition")
 
         for sock in s_rd:
             if sock is self.srv:

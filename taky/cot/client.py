@@ -56,14 +56,14 @@ class TAKClient:
 
         @param evt The COT Event to log
         '''
+        # Skip if we're not configured to log
         if not self.cot_log_dir:
             return
-
         # Skip logging of pings
         if evt.uid.endswith('-ping'):
             return
         # Don't log if we don't have a user yet
-        elif not self.user.uid:
+        if not self.user.uid:
             return
 
         # Open the COT file if it's the first run

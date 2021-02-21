@@ -169,7 +169,7 @@ def build_client(config, args):
             fp.write(os.path.join(root, file))
 
     fp.close()
-    
+
     shutil.rmtree(tdir)
 
 def setup_taky(config, args):
@@ -211,7 +211,7 @@ def setup_taky(config, args):
             os.path.join(args.path, 'etc', 'taky', 'ssl'),
             os.path.join(args.path, 'var', 'taky'),
         ]
-        
+
         for dir_name in dirs:
             if not os.path.exists(dir_name):
                 os.mkdir(dir_name)
@@ -244,10 +244,11 @@ def setup_taky(config, args):
             os.mkdir(dir_name)
             if args.user:
                 shutil.chown(dir_name, user=args.user, group=args.user)
-    
+
     if config.getboolean('ssl', 'enabled'):
         if os.path.exists(config.get('ssl', 'ca')):
-            print("ERROR: CA exists at %s, refusing to run setup" % config.get('ssl', 'ca'), file=sys.stderr)
+            ca_path = config.get('ssl', 'ca')
+            print(f"ERROR: CA exists at {ca_path}, refusing to run setup", file=sys.stderr)
             sys.exit(1)
 
         rotc.make_ca(crt_path=config.get('ssl', 'ca'),
