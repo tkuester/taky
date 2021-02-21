@@ -68,6 +68,8 @@ class TAKClient:
 
         # Open the COT file if it's the first run
         if not self.cot_fp:
+            # TODO: Multiple clients with same name will fight over file
+            #     : Could happen on WiFi -> LTE handoff
             name = os.path.join(self.cot_log_dir, f'{self.user.uid}.cot')
             try:
                 self.lgr.info("Opening logfile %s", name)

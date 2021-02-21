@@ -35,16 +35,13 @@ class COTServer:
             except socket.gaierror as e:
                 raise ValueError(f"Unable to determine address info for bind_ip: {ip}") from e
 
-        ssl_ctx = self.ssl_setup()
+        self.ssl_ctx = self.ssl_setup()
 
         self.srv = socket.socket(sock_fam, socket.SOCK_STREAM)
         self.srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.srv.bind(bind_args)
 
-        mode = 'tcp'
-        if ssl_ctx:
-            mode = 'ssl'
-            self.srv = ssl_ctx.wrap_socket(self.srv, server_side=True)
+        mode = 'ssl' if self.ssl_ctx else 'tcp'
 
         self.lgr.info("Listening for %s on %s:%s", mode, ip, port)
         self.srv.listen()
@@ -83,6 +80,9 @@ class COTServer:
     def handle_accept(self):
         try:
             (sock, addr) = self.srv.accept()
+            if self.ssl_ctx:
+                sock = self.ssl_ctx.wrap_socket(sock, server_side=True)
+                # TODO: Check peer cert, get hostname, assign to TAKClient
         except ssl.SSLError as e:
             self.lgr.info("Rejecting client: %s", e)
             return
