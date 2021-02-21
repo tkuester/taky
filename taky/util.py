@@ -48,14 +48,22 @@ class XMLDeclStrip:
           the XMLPullParser
     '''
 
-    def __init__(self):
+    def __init__(self, parser):
         # Keep the tail of the buffer if we don't have enough information to know
         # whether or not we should feed it to the client yet
         self.tail = b''
         # Handle state between calls -- are we in an XML declaration right now?
         self.in_decl = False
 
+        self.parser = parser
+
+    def read_events(self):
+        return self.parser.read_events()
+
     def feed(self, data):
+        self.parser.feed(self.strip(data))
+
+    def strip(self, data):
         start_tag = b'<?xml '
         end_tag = b'?>'
 
