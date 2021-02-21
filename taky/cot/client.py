@@ -161,7 +161,7 @@ class TAKClient:
             return
 
         marti = evt.detail.find('marti')
-        if marti:
+        if marti is not None:
             for dest in marti.iterfind('dest'):
                 callsign = dest.get('callsign')
                 dst = self.router.find_client(callsign=callsign)
