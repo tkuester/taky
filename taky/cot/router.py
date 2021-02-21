@@ -43,22 +43,6 @@ class COTRouter:
 
         return None
 
-    def find_user(self, uid=None, callsign=None):
-        client = self.find_client(uid=uid, callsign=callsign)
-        if client is None:
-            return None
-
-        return client.user
-
-    def push_event(self, src, event, dst=None):
-        if not isinstance(event, (models.Event, etree._Element)):
-            raise ValueError("Must be models.Event or lxml Element")
-
-        if dst is None:
-            dst = Destination.BROADCAST
-
-        self.handle_queue(src, dst, event)
-
     def broadcast(self, src, msg):
         for client in self.clients:
             if client is src:
@@ -86,7 +70,13 @@ class COTRouter:
             if client.user.group == group:
                 client.sock.sendall(msg)
 
-    def handle_queue(self, src, dst, evt):
+    def push_event(self, src, evt, dst=None):
+        if not isinstance(evt, (models.Event, etree._Element)):
+            raise ValueError("Must be models.Event or lxml Element")
+
+        if dst is None:
+            dst = Destination.BROADCAST
+
         if isinstance(evt, models.Event):
             xml = etree.tostring(evt.as_element)
         elif isinstance(evt, etree._Element) and evt.tag == 'event':

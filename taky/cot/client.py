@@ -124,7 +124,7 @@ class TAKClient:
                 self.lgr.warning("%s is sending messages for group %s", self.user, chat.src)
 
             if chat.src is not None and chat.dst is not None:
-                self.router.push_event(src=chat.src, event=chat.event, dst=chat.dst)
+                self.router.push_event(src=chat.src, evt=chat.event, dst=chat.dst)
                 return
 
         self.handle_marti(evt)
@@ -150,7 +150,6 @@ class TAKClient:
                 self.router.push_event(self, evt, dst)
         else:
             self.router.push_event(self, evt)
-
 
     def pong(self):
         now = datetime.utcnow()
