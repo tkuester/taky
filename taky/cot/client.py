@@ -104,6 +104,7 @@ class TAKClient:
             except (ValueError, TypeError) as e:
                 self.lgr.warning("Unable to parse element: %s", e)
                 self.log_event(evt)
+                elm.clear(keep_tail=True)
                 continue
 
             self.lgr.debug(evt)
