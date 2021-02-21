@@ -48,7 +48,7 @@ class COTRouter:
             if client is src:
                 continue
 
-            # TODO: Timeouts? select() on writable sockets? Thread safety?
+            # TODO: Timeouts? select() on writable sockets
             client.sock.sendall(msg)
 
     def group_broadcast(self, src, msg, group=None):

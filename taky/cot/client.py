@@ -38,6 +38,47 @@ class TAKClient:
             except:
                 pass
 
+    def log_event(self, evt):
+        '''
+        Writes the COT XML to the logfile, if configured.
+
+        @param evt The COT Event to log
+        '''
+        if not self.cot_log_dir:
+            return
+
+        # Skip logging of pings
+        if evt.uid.endswith('-ping'):
+            return
+        # Don't log if we don't have a user yet
+        elif not self.user.uid:
+            return
+
+        # Open the COT file if it's the first run
+        if not self.cot_fp:
+            name = os.path.join(self.cot_log_dir, f'{self.user.uid}.cot')
+            try:
+                self.lgr.info("Opening logfile %s", name)
+                self.cot_fp = open(name, 'a+')
+            except OSError as e:
+                self.lgr.warning("Unable to open COT log: %s", e)
+                self.cot_fp = None
+                self.cot_log_dir = None
+                return
+
+        try:
+            elm = evt.as_element
+            self.cot_fp.write(etree.tostring(elm, pretty_print=True).decode())
+            self.cot_fp.flush()
+        except (IOError, OSError) as e:
+            self.lgr.warning("Unable to write to COT log: %s", e)
+            try:
+                self.cot_fp.close()
+            except:
+                pass
+            self.cot_fp = None
+            self.cot_log_dir = None
+
     def feed(self, data):
         data = self.xdc.feed(data)
         try:
@@ -46,11 +87,11 @@ class TAKClient:
             self.lgr.warning("XML Parsing Error: %s", e)
 
         for (_, elm) in self.parser.read_events():
-            #self.lgr.debug(etree.tostring(elm))
             try:
                 evt = models.Event.from_elm(elm)
             except (ValueError, TypeError) as e:
                 self.lgr.warning("Unable to parse element: %s", e)
+                self.log_event(evt)
                 continue
 
             self.lgr.debug(evt)
@@ -60,33 +101,9 @@ class TAKClient:
                 self.handle_bits(evt)
             elif evt.etype.startswith('t'):
                 self.handle_tasking(evt)
-            else:
-                # Don't know what to do with these yet!
-                self.handle_marti(evt)
 
-            if self.cot_log_dir:
-                if self.cot_fp is None and self.user.uid:
-                    name = os.path.join(self.cot_log_dir, f'{self.user.uid}.cot')
-                    try:
-                        self.lgr.info("Opening logfile %s", name)
-                        self.cot_fp = open(name, 'a+')
-                    except OSError as e:
-                        self.lgr.warning("Unable to open COT log: %s", e)
-                        self.cot_fp = None
-                        self.cot_log_dir = None
-
-                if self.cot_fp and not evt.uid.endswith('-ping'):
-                    try:
-                        self.cot_fp.write(etree.tostring(elm, pretty_print=True).decode())
-                        self.cot_fp.flush()
-                    except (IOError, OSError) as e:
-                        self.lgr.warning("Unable to write to COT log: %s", e)
-                        try:
-                            self.cot_fp.close()
-                        except:
-                            pass
-                        self.cot_fp = None
-                        self.cot_log_dir = None
+            self.handle_marti(evt)
+            self.log_event(evt)
 
             elm.clear(keep_tail=True)
 
@@ -96,14 +113,8 @@ class TAKClient:
 
         if evt.detail.find('takv') is not None:
             first_ident = self.user.update_from_evt(evt)
-            self.router.push_event(self, self.user.as_element)
-
             if first_ident:
                 self.router.client_ident(self)
-
-            return
-
-        self.handle_marti(evt)
 
     def handle_bits(self, evt):
         if evt.etype == 'b-t-f':
@@ -125,29 +136,22 @@ class TAKClient:
 
             if chat.src is not None and chat.dst is not None:
                 self.router.push_event(src=chat.src, evt=chat.event, dst=chat.dst)
-                return
-
-        self.handle_marti(evt)
 
     def handle_tasking(self, elm):
         if elm.etype == 't-x-c-t':
             self.pong()
-            return
-
-        self.handle_marti(elm)
 
     def handle_marti(self, evt):
         if evt.detail is None:
             return
 
         marti = evt.detail.find('marti')
-        if marti is not None:
+        if marti:
             for dest in marti.iterfind('dest'):
                 callsign = dest.get('callsign')
                 dst = self.router.find_client(callsign=callsign)
-                if dst is None:
-                    continue
-                self.router.push_event(self, evt, dst)
+                if dst:
+                    self.router.push_event(self, evt, dst)
         else:
             self.router.push_event(self, evt)
 
