@@ -12,6 +12,8 @@ class TAKClient:
     def __init__(self, ip, port, router=None, cot_log_dir=None):
         self.ip = ip
         self.port = port
+        self.ssl_hs = None
+
         self.router = router
         self.user = models.TAKUser()
 

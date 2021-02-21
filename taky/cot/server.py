@@ -83,11 +83,7 @@ class COTServer:
             if self.ssl_ctx:
                 sock = self.ssl_ctx.wrap_socket(sock, server_side=True,
                                                 do_handshake_on_connect=False)
-                # FIXME: This can bring the whole app to it's knees...
-                sock.settimeout(0.5)
-                sock.do_handshake()
-                sock.settimeout(None)
-                # TODO: Check peer cert, get hostname, assign to TAKClient
+                sock.setblocking(False)
         except (ssl.SSLError, ssl.SSLWantReadError, ssl.SSLWantWriteError, socket.error, socket.timeout) as e:
             self.lgr.info("Rejecting client: %s", e)
             return
@@ -105,10 +101,23 @@ class COTServer:
             self.router,
             cot_log_dir=self.config.get('cot_server', 'log_cot')
         )
+        if self.ssl_ctx:
+            self.clients[sock].ssl_hs = False
         self.router.client_connect(self.clients[sock])
 
     def client_rx(self, sock):
         client = self.clients[sock]
+        if self.ssl_ctx and not client.ssl_hs:
+            try:
+                sock.do_handshake()
+                client.ssl_hs = True
+                sock.setblocking(True)
+                # TODO: Check SSL certs here
+            except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as e:
+                pass
+
+            return
+
         try:
             data = sock.recv(4096)
 
