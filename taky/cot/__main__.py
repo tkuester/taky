@@ -1,18 +1,21 @@
+#pylint: disable=missing-module-docstring
 import sys
 import signal
 import logging
 import argparse
 import configparser
+import pdb
 
 from taky import __version__
 from taky.cot import COTServer
 from taky.config import load_config
 
-def handle_pdb(sig, frame):
-    import pdb
+def handle_pdb(sig, frame): # pylint: disable=unused-argument
+    ''' Signal handler '''
     pdb.Pdb().set_trace(frame)
 
 def arg_parse():
+    ''' Handle arguments '''
     argp = argparse.ArgumentParser(description="Start the taky server")
     argp.add_argument('-l', action='store', dest='log_level', default='info',
                       choices=['debug', 'info', 'warning', 'error', 'critical'],
@@ -26,41 +29,42 @@ def arg_parse():
     return (argp, args)
 
 def main():
+    ''' taky COT server '''
     ret = 0
 
     (argp, args) = arg_parse()
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
-    logging.info(f"taky v{__version__}")
+    logging.info("taky v%s", __version__)
 
     try:
         config = load_config(args.cfg_file)
-    except (OSError, configparser.ParsingError) as e:
-        logging.error(e)
+    except (OSError, configparser.ParsingError) as exc:
+        argp.error(exc)
         sys.exit(1)
 
     # TODO: Check for ipv6 support
 
     try:
-        cs = COTServer(config)
-    except Exception as e:
-        logging.error("Unable to start COTServer: %s", e)
+        cot_srv = COTServer(config)
+    except Exception as exc: # pylint: disable=broad-except
+        logging.error("Unable to start COTServer: %s", exc)
         sys.exit(1)
 
     signal.signal(signal.SIGUSR1, handle_pdb)
 
     try:
         while True:
-            cs.loop()
+            cot_srv.loop()
     except KeyboardInterrupt:
         pass
-    except Exception as e:
-        logging.critical("Unhandled exception", exc_info=e, stack_info=True)
+    except Exception as exc: # pylint: disable=broad-except
+        logging.critical("Unhandled exception", exc_info=exc, stack_info=True)
         ret = 1
 
     try:
-        cs.shutdown()
-    except Exception as e:
-        logging.critical("Exception during shutdown", exc_info=e, stack_info=True)
+        cot_srv.shutdown()
+    except Exception as exc: # pylint: disable=broad-except
+        logging.critical("Exception during shutdown", exc_info=exc, stack_info=True)
 
     sys.exit(ret)
 
