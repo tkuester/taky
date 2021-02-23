@@ -1,8 +1,9 @@
 # pylint: disable=missing-module-docstring
 import os
-import logging
+import enum
 from datetime import datetime as dt
 from datetime import timedelta
+import logging
 
 from lxml import etree
 
@@ -208,6 +209,13 @@ class TAKClient:
         )
         self.send(pong)
 
+class SSLState(enum.Enum):
+    ''' Tracks SSL state '''
+    NO_SSL = 0
+    SSL_WAIT = 1
+    SSL_WAIT_TX = 2
+    SSL_ESTAB = 3
+
 class SocketTAKClient(TAKClient):
     '''
     A TAK client based on sockets
@@ -215,7 +223,7 @@ class SocketTAKClient(TAKClient):
     def __init__(self, router, cot_log_dir=None, addr=None):
         super().__init__(router, cot_log_dir)
         self.addr = addr
-        self.ssl_hs = None
+        self.ssl_hs = SSLState.NO_SSL
         self.out_buff = b''
 
     def __repr__(self):
@@ -231,6 +239,10 @@ class SocketTAKClient(TAKClient):
         if isinstance(data, models.Event):
             data = data.as_element
 
+        # Silently drop data if the SSL handshake is not ready yet
+        if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+            return
+
         if etree.iselement(data):
             self.out_buff += etree.tostring(data)
         elif isinstance(data, bytes):
@@ -241,4 +253,4 @@ class SocketTAKClient(TAKClient):
     @property
     def has_data(self):
         ''' Returns true if there is outbound data pending '''
-        return len(self.out_buff) > 0 or self.ssl_hs == 'tx'
+        return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX

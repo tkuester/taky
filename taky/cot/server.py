@@ -6,7 +6,7 @@ import ssl
 import logging
 
 from .router import COTRouter
-from .client import SocketTAKClient
+from .client import SocketTAKClient, SSLState
 
 class COTServer:
     '''
@@ -119,7 +119,7 @@ class COTServer:
             addr=addr[0:2]
         )
         if self.ssl_ctx:
-            self.clients[sock].ssl_hs = False
+            self.clients[sock].ssl_hs = SSLState.SSL_WAIT
         self.router.client_connect(self.clients[sock])
 
     def client_rx(self, sock):
@@ -130,16 +130,16 @@ class COTServer:
         '''
         client = self.clients[sock]
         # client.ssl_hs is hacky
-        if self.ssl_ctx and client.ssl_hs is not True:
+        if self.ssl_ctx and client.ssl_hs is not SSLState.SSL_ESTAB:
             try:
                 sock.do_handshake()
-                client.ssl_hs = True
+                client.ssl_hs = SSLState.SSL_ESTAB
                 sock.setblocking(True)
                 # TODO: Check SSL certs here
             except ssl.SSLWantReadError:
-                pass
+                client.ssl_hs = SSLState.SSL_WAIT
             except ssl.SSLWantWriteError:
-                client.ssl_hs = 'tx'
+                client.ssl_hs = SSLState.SSL_WAIT_TX
             except (ssl.SSLError, OSError) as exc:
                 self.client_disconnect(sock, str(exc))
 
@@ -165,10 +165,10 @@ class COTServer:
         '''
         client = self.clients[sock]
         if self.ssl_ctx:
-            if client.ssl_hs is not True:
+            if client.ssl_hs is SSLState.SSL_WAIT_TX:
                 self.client_rx(sock)
                 return
-            elif client.ssl_hs is False:
+            elif client.ssl_hs is not SSLState.SSL_ESTAB:
                 return
 
         try:
@@ -205,19 +205,23 @@ class COTServer:
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 
+        # First process exception sockets, then read sockets, then write.
+        # At each stage, we will need to re-check to make sure the previous
+        # stage did not close our socket.
+
         for sock in s_ex:
             if sock is self.srv:
                 raise RuntimeError("Server socket exceptional condition")
 
             self.client_disconnect(sock, "Exceptional condition")
 
-        for sock in s_rd:
+        for sock in filter(lambda x: x.fileno() != -1, s_rd):
             if sock is self.srv:
                 self.handle_accept()
             else:
                 self.client_rx(sock)
 
-        for sock in s_wr:
+        for sock in filter(lambda x: x.fileno() != -1, s_wr):
             self.client_tx(sock)
 
     def shutdown(self):
