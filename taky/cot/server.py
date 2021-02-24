@@ -122,29 +122,27 @@ class COTServer:
             self.clients[sock].ssl_hs = SSLState.SSL_WAIT
         self.router.client_connect(self.clients[sock])
 
-    def client_rx(self, sock):
-        '''
-        Receive data from client socket, and feed to TAKClient
-
-        Also responsible for preforming the SSL handshake
-        '''
-        client = self.clients[sock]
-        # client.ssl_hs is hacky
-        if self.ssl_ctx and client.ssl_hs is not SSLState.SSL_ESTAB:
-            try:
-                sock.do_handshake()
-                client.ssl_hs = SSLState.SSL_ESTAB
-                sock.setblocking(True)
-                # TODO: Check SSL certs here
-            except ssl.SSLWantReadError:
-                client.ssl_hs = SSLState.SSL_WAIT
-            except ssl.SSLWantWriteError:
-                client.ssl_hs = SSLState.SSL_WAIT_TX
-            except (ssl.SSLError, OSError) as exc:
-                self.client_disconnect(sock, str(exc))
-
+    def ssl_handshake(self, sock, client):
+        ''' Preform the SSL handshake on the socket '''
+        if not self.ssl_ctx or client.ssl_hs is SSLState.SSL_ESTAB:
             return
 
+        try:
+            sock.do_handshake()
+            client.ssl_hs = SSLState.SSL_ESTAB
+            sock.setblocking(True)
+            # TODO: Check SSL certs here
+        except ssl.SSLWantReadError:
+            client.ssl_hs = SSLState.SSL_WAIT
+        except ssl.SSLWantWriteError:
+            client.ssl_hs = SSLState.SSL_WAIT_TX
+        except (ssl.SSLError, OSError) as exc:
+            self.client_disconnect(sock, str(exc))
+
+    def client_rx(self, sock, client):
+        '''
+        Receive data from client socket, and feed to TAKClient
+        '''
         try:
             data = sock.recv(4096)
 
@@ -156,21 +154,13 @@ class COTServer:
         except (socket.error, IOError, OSError) as exc:
             self.client_disconnect(sock, str(exc))
 
-    def client_tx(self, sock):
+    def client_tx(self, sock, client):
         '''
         Transmit data to client socket
 
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         '''
-        client = self.clients[sock]
-        if self.ssl_ctx:
-            if client.ssl_hs is SSLState.SSL_WAIT_TX:
-                self.client_rx(sock)
-                return
-            elif client.ssl_hs is not SSLState.SSL_ESTAB:
-                return
-
         try:
             sent = sock.send(client.out_buff[0:4096])
             client.out_buff = client.out_buff[sent:]
@@ -205,24 +195,37 @@ class COTServer:
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
 
-        # First process exception sockets, then read sockets, then write.
         # At each stage, we will need to re-check to make sure the previous
         # stage did not close our socket.
 
+        # Process exception sockets
         for sock in s_ex:
             if sock is self.srv:
                 raise RuntimeError("Server socket exceptional condition")
 
             self.client_disconnect(sock, "Exceptional condition")
 
-        for sock in filter(lambda x: x.fileno() != -1, s_rd):
-            if sock is self.srv:
+        # Process sockets with incoming data
+        for sock in s_rd:
+            client = self.clients.get(sock)
+            if sock.fileno() == -1:
+                continue
+            elif sock is self.srv:
                 self.handle_accept()
+            elif self.ssl_ctx and client.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+                self.ssl_handshake(sock, client)
             else:
-                self.client_rx(sock)
+                self.client_rx(sock, client)
 
+        # Process sockets with outgoing data
         for sock in filter(lambda x: x.fileno() != -1, s_wr):
-            self.client_tx(sock)
+            client = self.clients.get(sock)
+            if sock.fileno() == -1:
+                continue
+            elif self.ssl_ctx and client.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+                self.ssl_handshake(sock, client)
+            else:
+                self.client_tx(sock, client)
 
     def shutdown(self):
         '''

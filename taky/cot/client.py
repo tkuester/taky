@@ -214,7 +214,7 @@ class SSLState(enum.Enum):
     NO_SSL = 0
     SSL_WAIT = 1
     SSL_WAIT_TX = 2
-    SSL_ESTAB = 3
+    SSL_ESTAB = 4
 
 class SocketTAKClient(TAKClient):
     '''
