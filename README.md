@@ -24,16 +24,16 @@ taky - A simple COT server for ATAK
 
 ## Requirements
 
- * Python 3.7 or greater
+ * Python 3.6 or greater (strongly recommend 3.7+)
  * lxml
  * dateutil
  * flask
  * pyopenssl
  * gunicorn
 
-This application was developed with Python 3.8, and tested with ATAK v4.2.0.4.
-It is slowly progressing towards a beta state, and should work for playing
-around.
+This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
+ATAK v4.2.0.4. It is slowly progressing towards a beta state, and should work
+for playing around.
 
 But, really. Using this is for anything important is probably a very-bad-idea (TM).
 

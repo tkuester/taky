@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(name='taky',
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     use_scm_version=True,
     author="Tim K",
     author_email="tpkuester@gmail.com",
@@ -20,7 +20,7 @@ setup(name='taky',
     classifiers=[
         "Topic :: Communications",
         "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
     ],
     entry_points={
