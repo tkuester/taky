@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from lxml import etree
 
+from .detail import Detail
 from .teams import Teams
-from .event import Event
 from .point import Point
 
 @dataclass
@@ -72,7 +72,7 @@ class TAKUser:
         # Sanity check inputs
         if evt.detail is None:
             return False
-        if evt.detail.find('takv') is None:
+        if evt.detail.elm.find('takv') is None:
             return False
 
         ret = False
@@ -88,7 +88,7 @@ class TAKUser:
         self.last_seen = evt.start
         self.stale = evt.stale
 
-        for elm in evt.detail.iterchildren():
+        for elm in evt.detail.elm.iterchildren():
             if elm.tag == 'takv':
                 self.device = TAKDevice.from_elm(elm)
             elif elm.tag == 'contact':
@@ -126,6 +126,7 @@ class TAKUser:
             now = self.last_seen
             stale = self.stale
 
+        from .event import Event
         evt = Event(
             uid=self.uid,
             etype=self.marker or 'a-f',
@@ -135,7 +136,8 @@ class TAKUser:
             stale=stale
         )
         evt.point = self.point
-        evt.detail = etree.Element('detail')
+        evt.detail = Detail(evt, etree.Element('detail'))
+        evt.detail.elm = etree.Element('detail')
         if self.device:
             takv = etree.Element('takv', attrib={
                 'os': self.device.os or '30',
@@ -143,17 +145,17 @@ class TAKUser:
                 'device': self.device.device or 'unknown',
                 'platform': self.device.platform or 'unknown',
             })
-            evt.detail.append(takv)
+            evt.detail.elm.append(takv)
 
             status = etree.Element('status', attrib={
                 'battery': self.battery or '100',
             })
-            evt.detail.append(status)
+            evt.detail.elm.append(status)
 
         uid = etree.Element('uid', attrib={
             'Droid': self.callsign or 'JENNY'
         })
-        evt.detail.append(uid)
+        evt.detail.elm.append(uid)
 
         contact = etree.Element('contact', attrib={
             'callsign': self.callsign or 'JENNY',
@@ -161,24 +163,24 @@ class TAKUser:
         })
         if self.phone:
             contact.set('phone', self.phone)
-        evt.detail.append(contact)
+        evt.detail.elm.append(contact)
 
         group = etree.Element('__group', attrib={
             'role': self.role or 'Team Member',
             'name': self.group.value,
         })
-        evt.detail.append(group)
+        evt.detail.elm.append(group)
 
         track = etree.Element('track', attrib={
             'course': '%.1f' % (self.course or 0.0),
             'speed': '%.1f' % (self.speed or 0.0),
         })
-        evt.detail.append(track)
+        evt.detail.elm.append(track)
 
         precisloc = etree.Element('precisionlocation', attrib={
             'altsrc': 'GPS',
             'geopointsrc': 'GPS',
         })
-        evt.detail.append(precisloc)
+        evt.detail.elm.append(precisloc)
 
         return evt.as_element

@@ -112,14 +112,11 @@ class TAKClient:
             self.lgr.debug(evt)
             if evt.etype.startswith('a'):
                 self.handle_atom(evt)
-            elif evt.etype.startswith('b'):
-                self.handle_bits(evt)
             elif evt.etype.startswith('t'):
                 self.handle_tasking(evt)
 
-            self.handle_marti(evt)
             self.log_event(evt)
-
+            self.router.route(self, evt)
             elm.clear(keep_tail=True)
 
     def handle_atom(self, evt):
@@ -132,37 +129,10 @@ class TAKClient:
         if evt.detail is None:
             return
 
-        if evt.detail.find('takv') is not None:
+        if evt.detail.elm.find('takv') is not None:
             first_ident = self.user.update_from_evt(evt)
             if first_ident:
                 self.router.client_ident(self)
-
-    def handle_bits(self, evt):
-        '''
-        Process COT bits.
-
-        Primarily, this handles fixing Marti routing for chat messages.
-        '''
-
-        if evt.etype == 'b-t-f':
-            # Currently, ATAK 4.2.0.4 does not properly set Marti for chat
-            # messages sent to teams. In any case, setting the destination as a
-            # Team prevents queue-ing multiple messages in the routing
-            # engine
-
-            chat = models.GeoChat.from_elm(evt)
-            if chat.src is None:
-                chat.src = self.router.find_client(uid=chat.src_uid)
-            if chat.dst is None:
-                chat.dst = self.router.find_client(uid=chat.dst_uid)
-
-            if self.user is not chat.src:
-                self.lgr.warning("%s is sending messages for user %s", self.user, chat.src)
-            if isinstance(chat.dst, models.Teams) and self.user.group != chat.dst:
-                self.lgr.warning("%s is sending messages for group %s", self.user, chat.src)
-
-            if chat.src is not None and chat.dst is not None:
-                self.router.push_event(src=chat.src, evt=chat.event, dst=chat.dst)
 
     def handle_tasking(self, elm):
         '''
@@ -172,26 +142,6 @@ class TAKClient:
         '''
         if elm.etype == 't-x-c-t':
             self.pong()
-
-    def handle_marti(self, evt):
-        '''
-        Handle Marti
-
-        For all packets, use Marti to determine how the packet should be
-        routed.
-        '''
-        if evt.detail is None:
-            return
-
-        marti = evt.detail.find('marti')
-        if marti is not None:
-            for dest in marti.iterfind('dest'):
-                callsign = dest.get('callsign')
-                dst = self.router.find_client(callsign=callsign)
-                if dst:
-                    self.router.push_event(self, evt, dst)
-        else:
-            self.router.push_event(self, evt)
 
     def pong(self):
         '''
@@ -246,6 +196,9 @@ class SocketTAKClient(TAKClient):
         if etree.iselement(data):
             self.out_buff += etree.tostring(data)
         elif isinstance(data, bytes):
+            # Only accepting events may make it easier to address things
+            # later like QoS. Can check server load / client data rate, and
+            # decide if this packet can be dropped.
             self.out_buff += data
         else:
             raise ValueError("Can only send Event / XML to TAKClient!")

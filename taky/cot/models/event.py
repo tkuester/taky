@@ -2,6 +2,8 @@ from lxml import etree
 import dateutil.parser
 
 from .point import Point
+from .detail import Detail
+from .geochat import GeoChat
 
 class Event:
     def __init__(self, uid=None, etype=None, how=None,
@@ -19,12 +21,14 @@ class Event:
         self.detail = None
 
     def __repr__(self):
-        return '<Event uid="%s" type="%s" time=%s">' % (self.uid, self.etype, self.time)
+        return '<Event uid="%s" etype="%s" time="%s">' % (self.uid, self.etype, self.time)
 
     @staticmethod
     def from_elm(elm):
+        if not etree.iselement(elm):
+            raise TypeError('Cannot create Event from %s' % type(elm))
         if elm.tag != 'event':
-            raise TypeError('Cannot create Event from %s' % elm.tag)
+            raise ValueError('Cannot create Event from %s' % elm.tag)
 
         time = dateutil.parser.isoparse(elm.get('time')).replace(tzinfo=None)
         start = dateutil.parser.isoparse(elm.get('start')).replace(tzinfo=None)
@@ -44,7 +48,10 @@ class Event:
             if child.tag == 'point':
                 ret.point = Point.from_elm(child)
             elif child.tag == 'detail':
-                ret.detail = child
+                if ret.etype == 'b-t-f':
+                    ret.detail = GeoChat.from_elm(child, event=ret)
+                else:
+                    ret.detail = Detail.from_elm(child, event=ret)
 
         return ret
 
@@ -60,6 +67,6 @@ class Event:
         ret.set('stale', self.stale.isoformat(timespec='milliseconds') + 'Z')
         ret.append(self.point.as_element)
         if self.detail is not None:
-            ret.append(self.detail)
+            ret.append(self.detail.as_element)
 
         return ret

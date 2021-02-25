@@ -2,8 +2,6 @@
 import enum
 import logging
 
-from lxml import etree
-
 from . import models
 from .client import TAKClient
 
@@ -97,33 +95,35 @@ class COTRouter:
             if client.user.group == group:
                 client.send(msg)
 
-    def push_event(self, src, evt, dst=None):
+    def route(self, src, evt):
         '''
         Push an event to the router
         '''
-        if dst is None:
-            dst = Destination.BROADCAST
+        if not isinstance(evt, models.Event):
+            raise ValueError(f"Unable to route {type(evt)}")
 
-        if isinstance(evt, models.Event):
-            xml = etree.tostring(evt.as_element)
-        elif etree.iselement(evt) and evt.tag == 'event':
-            xml = etree.tostring(evt)
-        else:
-            raise ValueError(f"Unable to handle event of type {type(evt)}")
-
-        if dst is Destination.BROADCAST:
-            self.broadcast(src, xml)
-        elif dst is Destination.GROUP:
-            self.group_broadcast(src, xml)
-        elif isinstance(dst, models.Teams):
-            self.group_broadcast(src, xml, dst)
-        elif isinstance(dst, TAKClient):
-            dst.send(xml)
-        elif isinstance(dst, models.TAKUser):
-            client = self.find_client(uid=dst.uid)
-            if client is None:
-                self.lgr.warning("Can't find client for %s to deliver message", dst)
+        # Special handling for chat messages
+        if isinstance(evt.detail, models.GeoChat):
+            chat = evt.detail
+            if chat.broadcast:
+                self.broadcast(src, evt)
+            elif chat.dst_team:
+                self.group_broadcast(src, evt, group=chat.dst_team)
             else:
-                client.send(xml)
-        else:
-            self.lgr.warning("Don't know what to do with %s", evt)
+                client = self.find_client(uid=chat.dst_uid)
+                if client:
+                    client.send(evt)
+                else:
+                    self.lgr.warn("No destination for %s", chat)
+            return
+
+        # Check for Marti, use first
+        if evt.detail and evt.detail.marti_cs:
+            for cs in evt.detail.marti_cs:
+                client = self.find_client(callsign=cs)
+                if client:
+                    client.send(evt)
+            return
+
+        # Assume broadcast
+        self.broadcast(src, evt)

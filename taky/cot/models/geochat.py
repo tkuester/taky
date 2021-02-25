@@ -4,62 +4,80 @@ import uuid
 
 from lxml import etree
 
-from .teams import Teams
-from .event import Event
+from .detail import Detail
 from .takuser import TAKUser
+from .teams import Teams
+
+ALL_CHAT_ROOMS = 'All Chat Rooms'
 
 class ChatParents(enum.Enum):
     ROOT = 'RootContactGroup'
     TEAM = 'TeamGroups'
 
-class GeoChat:
-    def __init__(self, chat_parent=None, group_owner=False):
-        self.event = None
+class GeoChat(Detail):
+    '''
+    Class representing a GeoChat message
 
-        self.chat_parent = chat_parent
-        self.group_owner = group_owner
+    The GeoChat messages sent from Android are a bit difficult to
+    parse. Many fields are redundant, or conflicting in type. This class
+    attempts to unify the field names and meanings.
+    '''
+    def __init__(self, event, elm):
+        super().__init__(event, elm)
 
-        self.src_uid = None
-        self.src_cs = None
-        self.src_marker = None
-        self.src = None
+        self.chatroom = None # detail/__chat.chatroom
+        self.chat_parent = None # detail/__chat.parent
+        self.group_owner = False # detail/__chat.groupOwner
 
+        # We get these fields explicitly
+        self.src_uid = None # detail/link.uid
+        self.src_cs = None # detail/__chat.senderCallsign
+        self.src_marker = None # detail/link.type
+        self.message = None # detail/remarks
+
+        # These fields are inferred
+        # The UID (string) of the recipient (if an individual user, otherwise None)
         self.dst_uid = None
-        self.dst_cs = None
-        self.dst = None
+        # cot.Teams (if a group message, otherwise None)
+        self.dst_team = None
 
-        self.message = None
+    def __repr__(self):
+        if self.broadcast:
+            return '<GeoChat src="%s", dst="%s", msg="%s">' % (self.src_cs, ALL_CHAT_ROOMS, self.message)
+        elif self.dst_team:
+            return '<GeoChat src="%s", dst="%s", msg="%s">' % (self.src_cs, self.dst_team, self.message)
+        else:
+            return '<GeoChat src="%s", dst_uid="%s", msg="%s">' % (self.src_cs, self.dst_uid, self.message)
+
+    @property
+    def broadcast(self):
+        ''' Returns true if message is sent to all chat rooms '''
+        return self.chatroom == ALL_CHAT_ROOMS
 
     @staticmethod
-    def from_elm(elm):
-        # Sanity check inputs
-        if elm.detail is None:
-            raise ValueError("Element does not have detail")
-
-        chat = elm.detail.find('__chat')
+    def from_elm(elm, event=None):
+        chat = elm.find('__chat')
         chatgrp = None
         if chat is not None:
             chatgrp = chat.find('chatgrp')
-        remarks = elm.detail.find('remarks')
-        link = elm.detail.find('link')
+        remarks = elm.find('remarks')
+        link = elm.find('link')
 
         if None in [chat, chatgrp, remarks, link]:
             raise ValueError("Detail does not contain GeoChat")
 
-        gch = GeoChat()
-        gch.event = elm
-
+        gch = GeoChat(event, elm)
         gch.chat_parent = chat.get('parent')
         gch.group_owner = (chat.get('groupOwner') == 'true')
         gch.src_uid = link.get('uid')
         gch.src_cs = chat.get('senderCallsign')
         gch.src_marker = link.get('type')
 
-        gch.dst_cs = chat.get('chatroom')
+        gch.chatroom = chat.get('chatroom')
         if gch.chat_parent == ChatParents.TEAM.value:
-            gch.dst = Teams(gch.dst_cs)
-            gch.dst_uid = gch.dst.value
-        elif gch.dst_cs != 'All Chat Rooms':
+            gch.dst_team = Teams(gch.chatroom)
+        elif gch.chatroom != ALL_CHAT_ROOMS:
+            # Router will have to fill out .dst
             gch.dst_uid = chat.get('id')
 
         gch.message = remarks.text
@@ -67,36 +85,49 @@ class GeoChat:
         return gch
 
     @staticmethod
-    def build_msg(src, dst, message, time=None):
-        if isinstance(dst, TAKUser):
-            chat = GeoChat(chat_parent=ChatParents.ROOT.value)
-            chat.dst_uid = dst.uid
-            chat.dst_cs = dst.callsign
-        elif isinstance(dst, Teams):
-            chat = GeoChat(chat_parent=ChatParents.TEAM.value)
-            chat.dst = dst
-            chat.dst_uid = dst.value
-            chat.dst_cs = dst.value
-        elif dst == 'All Chat Rooms':
-            chat = GeoChat(chat_parent=ChatParents.ROOT.value)
-            chat.dst_uid = dst
-            chat.dst_cs = dst
-        else:
-            raise ValueError("dst must be string, or TAKUser")
+    def build_msg(src, message, dst=None, time=None):
+        '''
+        Builds a message event. dst can be a TAK User, a team, or None (for
+        broadcast). If time is not set, utcnow() is used.
 
+        @param src     The TAKUser which generated the message
+        @param message The message content (string)
+        @param dst     The destination
+        @param time    When the message was generated
+        '''
+        from .event import Event
         if not isinstance(src, TAKUser):
-            raise ValueError("src must be TAKUser")
+            raise ValueError("src must be cot.TAKUser")
 
-        chat.src = src
+        if isinstance(dst, TAKUser):
+            chat = GeoChat(event=None, elm=None)
+            chat.chat_parent = ChatParents.ROOT.value
+            chat.dst_uid = dst.uid
+            chat.chatroom = dst.callsign
+        elif isinstance(dst, Teams):
+            chat = GeoChat(event=None, elm=None)
+            chat.chat_parent = ChatParents.TEAM.value
+            chat.dst_team = dst
+            chat.chatroom = dst.value
+        elif dst is None:
+            chat = GeoChat(event=None, elm=None)
+            chat.chat_parent = ChatParents.ROOT.value
+            chat.chatroom = ALL_CHAT_ROOMS
+        else:
+            raise ValueError("dst must be cot.TAKUser, cot.Teams, or None")
+
+        if time is None:
+            time = dt.utcnow()
+        elif not isinstance(time, dt):
+            raise ValueError("time must be datetime.datetime or None")
+
         chat.src_uid = src.uid
         chat.src_cs = src.callsign
         chat.src_marker = src.marker
         chat.message = message
 
-        if time is None:
-            time = dt.utcnow()
-        uid = f'GeoChat.{chat.src_uid}.{chat.dst_cs}.{uuid.uuid4()}'
-        chat.event = Event(
+        uid = f'GeoChat.{chat.src_uid}.{chat.chatroom}.{uuid.uuid4()}'
+        evt = Event(
             uid=uid,
             etype='b-t-f',
             how='h-g-i-g-o',
@@ -104,53 +135,56 @@ class GeoChat:
             start=time,
             stale=time
         )
-        chat.event.point = src.point
-        chat.populate_detail()
+        evt.point = src.point
+        chat.event = evt
+        evt.detail = chat
 
         return chat
 
-    def populate_detail(self):
-        self.event.detail = etree.Element('detail')
+    @property
+    def as_element(self):
+        if self.elm is not None:
+            return self.elm
+
+        # Fill in hacky destination UID
+        if self.broadcast:
+            dst_uid = ALL_CHAT_ROOMS
+        elif self.dst_team:
+            dst_uid = self.dst_team.value
+        else:
+            dst_uid = self.dst_uid
+
+        detail = etree.Element('detail')
+        # id is optional for All Chat Rooms?
         chat = etree.Element('__chat', attrib={
             'parent': self.chat_parent,
             'groupOwner': 'true' if self.group_owner else 'false',
-            'chatroom': self.dst_cs,
-            'id': self.dst_uid,
+            'chatroom': self.chatroom,
+            'id': dst_uid,
             'senderCallsign': self.src_cs
         })
         chatgroup = etree.Element('chatgrp', attrib={
             'uid0': self.src_uid,
-            'uid1': self.dst_uid,
-            'id': self.dst_uid
+            'uid1': dst_uid,
+            'id': dst_uid
         })
         chat.append(chatgroup)
-        self.event.detail.append(chat)
+        detail.append(chat)
 
         link = etree.Element('link', attrib={
             'uid': self.src_uid,
             'type': self.src_marker,
             'relation': 'p-p'
         })
-        self.event.detail.append(link)
+        detail.append(link)
 
         rmk_src = f'BAO.F.ATAK.{self.src_uid}'
         remarks = etree.Element('remarks', attrib={
             'source': rmk_src,
-            'to': self.dst_uid,
+            'to': dst_uid,
             'time': self.event.time.isoformat(timespec='milliseconds') + 'Z'
         })
         remarks.text = self.message
-        self.event.detail.append(remarks)
+        detail.append(remarks)
 
-        #marti = etree.Element('marti')
-        #dest = etree.Element('dest', attrib={
-        #    'callsign': dst.callsign
-        #})
-        #marti.append(dest)
-        #evt.detail.append(marti)
-
-        return self.event.as_element
-
-    @property
-    def as_element(self):
-        return self.event.as_element
+        return detail
