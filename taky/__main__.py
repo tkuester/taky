@@ -45,6 +45,8 @@ def arg_parse():
     bld_cl.add_argument('name', help="Name for client")
     bld_cl.add_argument('--p12_pw', dest='p12_pw', default="atakatak",
                        help="Password for server .p12 [%(default)s]")
+    bld_cl.add_argument('--dump_pem', dest='dump_pem', default=False, action='store_true',
+                       help="Save the .crt/.key files")
 
     args = argp.parse_args()
 
@@ -53,23 +55,27 @@ def arg_parse():
 def build_client(config, args):
     tdir = tempfile.mkdtemp(prefix='taky-cert-')
 
+    # Build zip file structure
     mdir = os.path.join(tdir, 'MANIFEST')
     os.mkdir(mdir)
     cdir = os.path.join(tdir, 'certs')
     os.mkdir(cdir)
 
+    # Copy over server p12 file
     server_p12 = config.get('ssl', 'server_p12')
     shutil.copy(server_p12, cdir)
 
+    # Build client certificates
     rotc.make_cert(
         path=cdir,
         f_name=args.name,
         hostname=args.name,
         cert_pw=args.p12_pw, # TODO: OS environ? -p is bad
         ca=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
-        dump_pem=False
+        dump_pem=args.dump_pem
     )
 
+    # Build .pref file
     hostname = config.get('taky', 'hostname')
     public_ip = config.get('taky', 'public_ip')
     port = config.getint('cot_server', 'port')
@@ -126,6 +132,7 @@ def build_client(config, args):
                                 xml_declaration=True,
                                 standalone=True))
 
+    # Build Mission Package Manifest
     cfg_params = {
         'uid': str(uuid.uuid4()),
         'name': f'{hostname}_DP',
@@ -145,6 +152,7 @@ def build_client(config, args):
         )
     mpm.append(cfg_xml)
 
+    # Build manifest.xml
     cts = etree.Element('Contents')
     for name in ['fts.pref', os.path.basename(server_p12), f'{args.name}.p12']:
         cts.append(
@@ -159,8 +167,18 @@ def build_client(config, args):
         fp.write(etree.tostring(mpm, pretty_print=True))
 
     cwd = os.getcwd()
-    os.chdir(tdir)
 
+    # Save PEM files
+    if args.dump_pem:
+        shutil.copy(os.path.join(cdir, f'{args.name}.p12'), cwd)
+        shutil.copy(os.path.join(cdir, f'{args.name}.crt'), cwd)
+        shutil.copy(os.path.join(cdir, f'{args.name}.key'), cwd)
+
+        os.unlink(os.path.join(cdir, f'{args.name}.crt'))
+        os.unlink(os.path.join(cdir, f'{args.name}.key'))
+
+    # Save temporary directory, and build ZIP file
+    os.chdir(tdir)
     zip_path = os.path.join(cwd, f"{args.name}.zip")
     fp = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(tdir):
@@ -170,6 +188,7 @@ def build_client(config, args):
 
     fp.close()
 
+    # Cleanup temporary directory
     shutil.rmtree(tdir)
 
 def setup_taky(config, args):
