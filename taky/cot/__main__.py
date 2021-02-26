@@ -22,6 +22,8 @@ def arg_parse():
                       help="Log verbosity")
     argp.add_argument('-c', action='store', dest='cfg_file', default=None,
                       help="Path to configuration file")
+    argp.add_argument('-d', action='store_true', dest='debug', default=False,
+                      help="Allow attaching to PDB")
     argp.add_argument('--version', action='version', version='%%(prog)s version %s' % __version__)
 
     args = argp.parse_args()
@@ -50,7 +52,8 @@ def main():
         logging.error("Unable to start COTServer: %s", exc)
         sys.exit(1)
 
-    signal.signal(signal.SIGUSR1, handle_pdb)
+    if args.debug:
+        signal.signal(signal.SIGUSR1, handle_pdb)
 
     try:
         while True:
