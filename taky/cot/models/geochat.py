@@ -1,11 +1,8 @@
-from datetime import datetime as dt
 import enum
-import uuid
 
 from lxml import etree
 
 from .detail import Detail
-from .takuser import TAKUser
 from .teams import Teams
 
 ALL_CHAT_ROOMS = 'All Chat Rooms'
@@ -83,63 +80,6 @@ class GeoChat(Detail):
         gch.message = remarks.text
 
         return gch
-
-    @staticmethod
-    def build_msg(src, message, dst=None, time=None):
-        '''
-        Builds a message event. dst can be a TAK User, a team, or None (for
-        broadcast). If time is not set, utcnow() is used.
-
-        @param src     The TAKUser which generated the message
-        @param message The message content (string)
-        @param dst     The destination
-        @param time    When the message was generated
-        '''
-        from .event import Event
-        if not isinstance(src, TAKUser):
-            raise ValueError("src must be cot.TAKUser")
-
-        if isinstance(dst, TAKUser):
-            chat = GeoChat(event=None, elm=None)
-            chat.chat_parent = ChatParents.ROOT.value
-            chat.dst_uid = dst.uid
-            chat.chatroom = dst.callsign
-        elif isinstance(dst, Teams):
-            chat = GeoChat(event=None, elm=None)
-            chat.chat_parent = ChatParents.TEAM.value
-            chat.dst_team = dst
-            chat.chatroom = dst.value
-        elif dst is None:
-            chat = GeoChat(event=None, elm=None)
-            chat.chat_parent = ChatParents.ROOT.value
-            chat.chatroom = ALL_CHAT_ROOMS
-        else:
-            raise ValueError("dst must be cot.TAKUser, cot.Teams, or None")
-
-        if time is None:
-            time = dt.utcnow()
-        elif not isinstance(time, dt):
-            raise ValueError("time must be datetime.datetime or None")
-
-        chat.src_uid = src.uid
-        chat.src_cs = src.callsign
-        chat.src_marker = src.marker
-        chat.message = message
-
-        uid = f'GeoChat.{chat.src_uid}.{chat.chatroom}.{uuid.uuid4()}'
-        evt = Event(
-            uid=uid,
-            etype='b-t-f',
-            how='h-g-i-g-o',
-            time=time,
-            start=time,
-            stale=time
-        )
-        evt.point = src.point
-        chat.event = evt
-        evt.detail = chat
-
-        return chat
 
     @property
     def as_element(self):

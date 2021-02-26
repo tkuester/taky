@@ -21,6 +21,8 @@ taky - A simple COT server for ATAK
  * Requires no SQlite / databases! (For now!)
  * Only one version away from having systemd scripts!
  * Tools spit backtraces out instead of giving a nice error message!
+ * Stupid fast for no good reason! Routes 1000 packets / second on an old
+   Core i5-2500k!
 
 ## Requirements
 

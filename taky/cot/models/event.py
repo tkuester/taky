@@ -3,7 +3,7 @@ import dateutil.parser
 
 from .point import Point
 from .detail import Detail
-from .geochat import GeoChat
+from . import geochat
 
 class Event:
     def __init__(self, uid=None, etype=None, how=None,
@@ -49,7 +49,7 @@ class Event:
                 ret.point = Point.from_elm(child)
             elif child.tag == 'detail':
                 if ret.etype == 'b-t-f':
-                    ret.detail = GeoChat.from_elm(child, event=ret)
+                    ret.detail = geochat.GeoChat.from_elm(child, event=ret)
                 else:
                     ret.detail = Detail.from_elm(child, event=ret)
 

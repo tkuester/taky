@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from lxml import etree
 
+from .event import Event
 from .detail import Detail
 from .teams import Teams
 from .point import Point
@@ -126,7 +127,6 @@ class TAKUser:
             now = self.last_seen
             stale = self.stale
 
-        from .event import Event
         evt = Event(
             uid=self.uid,
             etype=self.marker or 'a-f',

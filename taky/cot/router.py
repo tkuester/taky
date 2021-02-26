@@ -114,7 +114,7 @@ class COTRouter:
                 if client:
                     client.send(evt)
                 else:
-                    self.lgr.warn("No destination for %s", chat)
+                    self.lgr.warning("No destination for %s", chat)
             return
 
         # Check for Marti, use first
