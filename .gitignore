@@ -4,3 +4,8 @@ __pycache__
 build
 dist
 *.pyc
+
+*.crt
+*.key
+*.pem
+*.p12
