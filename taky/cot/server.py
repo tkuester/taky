@@ -151,6 +151,9 @@ class COTServer:
                 return
 
             client.feed(data)
+        except etree.XMLSyntaxError as exc:
+            self.lgr.debug("XML Parsing Error: %s", exc)
+            self.client_disconnect(sock, 'Malformed XML')
         except (socket.error, IOError, OSError) as exc:
             self.client_disconnect(sock, str(exc))
 

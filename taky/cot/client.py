@@ -94,11 +94,7 @@ class TAKClient:
         '''
         Feed the XML data parser with COT data
         '''
-        try:
-            self.xdc.feed(data)
-        except etree.XMLSyntaxError as exc:
-            self.lgr.warning("XML Parsing Error: %s", exc)
-            # TODO: Close client? Rebuild parser?
+        self.xdc.feed(data)
 
         for (_, elm) in self.xdc.read_events():
             try:
@@ -106,9 +102,11 @@ class TAKClient:
                 self.log_event(evt)
             except models.UnmarshalError as exc:
                 self.lgr.warning("Unable to parse Event: %s", exc)
+                self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 continue
             except Exception as exc:
                 self.lgr.error("Unhandled exception parsing Event: %s", exc)
+                self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 continue
             finally:
                 elm.clear(keep_tail=True)
