@@ -111,11 +111,11 @@ class TAKClient:
             finally:
                 elm.clear(keep_tail=True)
 
-            self.lgr.debug(evt)
-            if evt.etype.startswith('a'):
+            if evt.etype == 't-x-c-t':
+                self.pong()
+                return
+            elif evt.etype.startswith('a'):
                 self.handle_atom(evt)
-            elif evt.etype.startswith('t'):
-                self.handle_tasking(evt)
 
             self.router.route(self, evt)
 
@@ -133,15 +133,6 @@ class TAKClient:
             first_ident = self.user.update_from_evt(evt)
             if first_ident:
                 self.router.client_ident(self)
-
-    def handle_tasking(self, elm):
-        '''
-        Process COT tasking.
-
-        This is how the client knows it needs to send a TAK pong
-        '''
-        if elm.etype == 't-x-c-t':
-            self.pong()
 
     def pong(self):
         '''
