@@ -2,6 +2,7 @@ import enum
 
 from lxml import etree
 
+from .errors import UnmarshalError
 from .detail import Detail
 from .teams import Teams
 
@@ -61,7 +62,7 @@ class GeoChat(Detail):
         link = elm.find('link')
 
         if None in [chat, chatgrp, remarks, link]:
-            raise ValueError("Detail does not contain GeoChat")
+            raise UnmarshalError("Detail does not contain GeoChat")
 
         gch = GeoChat(event, elm)
         gch.chat_parent = chat.get('parent')

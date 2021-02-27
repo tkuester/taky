@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from lxml import etree
 
+from .errors import UnmarshalError
 from .event import Event
 from .detail import Detail
 from .teams import Teams
@@ -11,7 +12,7 @@ from .point import Point
 
 @dataclass
 class TAKDevice:
-    os: str = None
+    os: str = None # pylint: disable=invalid-name
     version: str = None
     device: str = None
     platform: str = None
@@ -22,7 +23,7 @@ class TAKDevice:
     @staticmethod
     def from_elm(elm):
         if elm.tag != 'takv':
-            raise ValueError("Unable to load TAKDevice from %s" % elm.tag)
+            raise UnmarshalError("Unable to load TAKDevice from %s" % elm.tag)
 
         return TAKDevice(
             os = elm.get('os'),
@@ -45,6 +46,7 @@ class TAKDevice:
     def as_xml(self):
         return etree.tostring(self.as_element)
 
+# TODO: Extend from Detail
 @dataclass
 class TAKUser:
     def __init__(self):

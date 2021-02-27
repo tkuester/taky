@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from lxml import etree
 
+from .errors import UnmarshalError
+
 @dataclass
 class Point:
     ''' An object representing the CoT Point
@@ -18,8 +20,8 @@ class Point:
     lat: float = 0.0
     lon: float = 0.0
     hae: float = 0.0
-    ce: float = 9999999.0
-    le: float = 9999999.0
+    ce: float = 9999999.0 # pylint: disable=invalid-name
+    le: float = 9999999.0 # pylint: disable=invalid-name
 
     @property
     def coords(self):
@@ -32,7 +34,7 @@ class Point:
     @staticmethod
     def from_elm(elm):
         if elm.tag != 'point':
-            raise TypeError("Cannot create Point from %s" % elm.tag)
+            raise UnmarshalError("Cannot create Point from %s" % elm.tag)
 
         return Point(
             lat=float(elm.get('lat')),

@@ -103,11 +103,15 @@ class TAKClient:
         for (_, elm) in self.xdc.read_events():
             try:
                 evt = models.Event.from_elm(elm)
-            except (ValueError, TypeError) as exc:
-                self.lgr.warning("Unable to parse element: %s", exc)
                 self.log_event(evt)
-                elm.clear(keep_tail=True)
+            except models.UnmarshalError as exc:
+                self.lgr.warning("Unable to parse Event: %s", exc)
                 continue
+            except Exception as exc:
+                self.lgr.error("Unhandled exception parsing Event: %s", exc)
+                continue
+            finally:
+                elm.clear(keep_tail=True)
 
             self.lgr.debug(evt)
             if evt.etype.startswith('a'):
@@ -115,9 +119,7 @@ class TAKClient:
             elif evt.etype.startswith('t'):
                 self.handle_tasking(evt)
 
-            self.log_event(evt)
             self.router.route(self, evt)
-            elm.clear(keep_tail=True)
 
     def handle_atom(self, evt):
         '''

@@ -1,9 +1,10 @@
 from lxml import etree
-import dateutil.parser
+from dateutil.parser import isoparse
 
+from .errors import UnmarshalError
 from .point import Point
 from .detail import Detail
-from . import geochat
+from .geochat import GeoChat
 
 class Event:
     def __init__(self, uid=None, etype=None, how=None,
@@ -21,18 +22,23 @@ class Event:
         self.detail = None
 
     def __repr__(self):
-        return '<Event uid="%s" etype="%s" time="%s">' % (self.uid, self.etype, self.time)
+        return '<Event uid="%s" etype="%s" time="%s">' % (
+            self.uid, self.etype, self.time
+        )
 
     @staticmethod
     def from_elm(elm):
         if not etree.iselement(elm):
             raise TypeError('Cannot create Event from %s' % type(elm))
         if elm.tag != 'event':
-            raise ValueError('Cannot create Event from %s' % elm.tag)
+            raise UnmarshalError('Cannot create Event from %s' % elm.tag)
 
-        time = dateutil.parser.isoparse(elm.get('time')).replace(tzinfo=None)
-        start = dateutil.parser.isoparse(elm.get('start')).replace(tzinfo=None)
-        stale = dateutil.parser.isoparse(elm.get('stale')).replace(tzinfo=None)
+        try:
+            time = isoparse(elm.get('time')).replace(tzinfo=None)
+            start = isoparse(elm.get('start')).replace(tzinfo=None)
+            stale = isoparse(elm.get('stale')).replace(tzinfo=None)
+        except (TypeError, ValueError) as exc:
+            raise UnmarshalError('Date parsing error') from exc
 
         ret = Event(
             version=elm.get('version'),
@@ -44,12 +50,20 @@ class Event:
             stale=stale
         )
 
+        if ret.uid is None:
+            raise UnmarshalError("Event must have 'uid' attribute")
+        if ret.etype is None:
+            raise UnmarshalError("Event must have 'type' attribute")
+
         for child in elm.iterchildren():
             if child.tag == 'point':
-                ret.point = Point.from_elm(child)
+                try:
+                    ret.point = Point.from_elm(child)
+                except (TypeError, ValueError) as exc:
+                    raise UnmarshalError("Point parsing error") from exc
             elif child.tag == 'detail':
                 if ret.etype == 'b-t-f':
-                    ret.detail = geochat.GeoChat.from_elm(child, event=ret)
+                    ret.detail = GeoChat.from_elm(child, event=ret)
                 else:
                     ret.detail = Detail.from_elm(child, event=ret)
 
