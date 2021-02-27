@@ -83,7 +83,7 @@ class Persistence:
         self.rds_ok = result
 
     def track(self, event):
-        ttl = int((event.stale - dt.utcnow()).total_seconds())
+        ttl = round((event.stale - dt.utcnow()).total_seconds())
         if ttl <= 0:
             return
 
