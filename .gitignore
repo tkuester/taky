@@ -9,3 +9,4 @@ dist
 *.key
 *.pem
 *.p12
+*.zip
