@@ -1,6 +1,4 @@
 import os
-import json
-from datetime import datetime as dt
 
 from flask import Flask
 
@@ -25,6 +23,6 @@ else:
     app.config['DPS_PORT'] = 8080
     # TODO: Configurable?
 
-from taky.dps import views
+from taky.dps import views # pylint: disable=wrong-import-position
 
 # /Marti/vcm - Videos on Server

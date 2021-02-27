@@ -1,16 +1,17 @@
-import sys
-#import ssl
 import multiprocessing
 import argparse
 import configparser
 
-import gunicorn.app.base
+from gunicorn.app.base import BaseApplication
 
 from taky import __version__
 from taky.config import load_config
 from taky.dps import app as taky_dps
 
-class StandaloneApplication(gunicorn.app.base.BaseApplication):
+class StandaloneApplication(BaseApplication):
+    # 'init' and 'load' methods are implemented by WSGIApplication.
+    # pylint: disable=abstract-method
+
     def __init__(self, app, options=None):
         self.options = options or {}
         self.application = app
@@ -41,23 +42,24 @@ def arg_parse():
     return (argp, args)
 
 def main():
+    '''
+    Runs the DPS, handy for avoiding a specific gunicorn setup
+    '''
     (argp, args) = arg_parse()
 
     try:
         config = load_config(args.cfg_file)
-    except (OSError, configparser.ParsingError) as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
+    except (OSError, configparser.ParsingError) as exc:
+        argp.error(exc)
 
-    ip = config.get('taky', 'bind_ip')
+    bind_ip = config.get('taky', 'bind_ip')
     port = 8443 if config.getboolean('ssl', 'enabled') else 8080
 
-    if ip is None:
-        print("ERROR: Server not configured...", file=sys.stderr)
-        sys.exit(1)
+    if bind_ip is None:
+        argp.error("Server not configured...")
 
     options = {
-        'bind': f'{ip}:{port}',
+        'bind': f'{bind_ip}:{port}',
         'workers': number_of_workers(),
         'loglevel': args.log_level,
     }
