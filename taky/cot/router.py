@@ -113,16 +113,19 @@ class COTRouter:
             else:
                 client = self.find_client(uid=chat.dst_uid)
                 if client:
+                    self.lgr.debug("%s -> %s: %s", src.user.callsign, client.user.callsign, evt)
                     client.send(evt)
                 else:
                     self.lgr.warning("No destination for %s", chat)
             return
 
         # Check for Marti, use first
-        if evt.detail and evt.detail.marti_cs:
+        if evt.has_marti:
+            self.lgr.debug("Handling marti")
             for cs in evt.detail.marti_cs:
                 client = self.find_client(callsign=cs)
                 if client:
+                    self.lgr.debug("%s -> %s (marti): %s", src.user.callsign, client.user.callsign, evt)
                     client.send(evt)
             return
 

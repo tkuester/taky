@@ -5,6 +5,8 @@ import select
 import ssl
 import logging
 
+from lxml import etree
+
 from .router import COTRouter
 from .client import SocketTAKClient, SSLState
 

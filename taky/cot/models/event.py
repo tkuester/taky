@@ -26,6 +26,15 @@ class Event:
             self.uid, self.etype, self.time
         )
 
+    @property
+    def has_marti(self):
+        if self.detail is None:
+            return False
+        if not etree.iselement(self.detail.elm):
+            return False
+
+        return self.detail.elm.find('marti') is not None
+
     @staticmethod
     def from_elm(elm):
         if not etree.iselement(elm):
