@@ -252,7 +252,10 @@ class RedisPersistence(BasePersistence):
             if xml is None:
                 return None
 
-            elm = etree.fromstring(xml)
+            parser = etree.XMLParser(resolve_entities=False)
+            parser.feed(xml)
+            elm = parser.close()
+
             evt = models.Event.from_elm(elm)
         except (models.UnmarshalError, etree.XMLSyntaxError) as exc:
             self.lgr.warning("Unable to parse Event from persistence store: %s", exc)
