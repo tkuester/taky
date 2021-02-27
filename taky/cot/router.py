@@ -125,8 +125,8 @@ class COTRouter:
         # Check for Marti, use first
         if evt.has_marti:
             self.lgr.debug("Handling marti")
-            for cs in evt.detail.marti_cs:
-                client = self.find_client(callsign=cs)
+            for callsign in evt.detail.marti_cs:
+                client = self.find_client(callsign=callsign)
                 if client:
                     self.lgr.debug("%s -> %s (marti): %s",
                         src.user.callsign, client.user.callsign, evt)

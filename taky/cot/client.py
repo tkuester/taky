@@ -8,7 +8,7 @@ import logging
 from lxml import etree
 
 from . import models
-from ..util import XMLDeclStrip
+from taky.util import XMLDeclStrip
 
 class TAKClient:
     '''

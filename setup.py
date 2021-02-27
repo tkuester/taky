@@ -27,7 +27,7 @@ setup(name='taky',
         'console_scripts': [
             'taky = taky.cot.__main__:main',
             'taky_dps = taky.dps.__main__:main',
-            'takyctl = taky.__main__:main',
+            'takyctl = taky.cli.__main__:main',
         ]
     }
 )
