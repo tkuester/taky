@@ -1,6 +1,7 @@
 class Detail:
-    elm = None
-
+    '''
+    A simple class to keep track of the Detail element
+    '''
     def __init__(self, event, elm):
         self.event = event
         self.elm = elm
@@ -10,21 +11,35 @@ class Detail:
 
     @property
     def marti_cs(self):
-        ret = []
+        '''
+        A list of callsigns in the Marti tag (if present)
+
+        Returns an empty list if not present
+        '''
         if self.elm is None:
-            return ret
+            return
 
         marti = self.elm.find('marti')
-        if marti is not None:
-            for dest in marti.iterfind('dest'):
-                ret.append(dest.get('callsign'))
+        if marti is None:
+            return
 
-        return ret
+        for dest in marti.iterfind('dest'):
+            yield dest.get('callsign')
 
     @property
     def as_element(self):
+        '''
+        Returns the element representation of the Detail object.
+
+        If the Detail object was created with from_elm(), it should always
+        return that exact element. Otherwise, the object should generate the
+        element, and return that.
+        '''
         return self.elm
 
     @staticmethod
     def from_elm(elm, event=None):
+        '''
+        Build a Detail object from an element, with the event for context
+        '''
         return Detail(event, elm)
