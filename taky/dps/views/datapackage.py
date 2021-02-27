@@ -7,6 +7,33 @@ from werkzeug.utils import secure_filename
 
 from taky.dps import app
 
+def url_for(f_hash):
+    '''
+    Returns the URL for the given hash
+    '''
+    proto = app.config['PROTO']
+    ip_addr = app.config['PUBLIC_IP']
+    port = app.config['DPS_PORT']
+
+    return f'{proto}{ip_addr}:{port}/Marti/sync/content?hash={f_hash}'
+
+def get_meta(f_hash=None, f_name=None):
+    '''
+    Gets the metadata for an assigned filename or hash
+    '''
+    if f_hash:
+        meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
+    elif f_name:
+        meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_name}.json')
+    else:
+        return {}
+
+    try:
+        with open(meta_path) as meta_fp:
+            return json.load(meta_fp)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
 @app.route('/Marti/sync/search')
 def datapackage_search():
     '''
@@ -19,25 +46,14 @@ def datapackage_search():
     ret = []
     for item in os.listdir(app.config['UPLOAD_PATH']):
         path = os.path.join(app.config['UPLOAD_PATH'], item)
-        meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{item}.json')
-
         if not os.path.isfile(path):
-            continue
-        if not os.path.isfile(meta):
-            continue
-
-        try:
-            with open(meta, 'r') as meta_fp:
-                meta = json.load(meta_fp)
-        except json.JSONDecodeError:
-            # TODO: Purge files
-            continue
-        except OSError:
             continue
 
         # TODO: Check "tool" for public / private
         # TODO: Check if keywords are in meta['Keywords'] or meta['UID']
-        ret.append(meta)
+        meta = get_meta(f_name=item)
+        if meta:
+            ret.append(meta)
 
     return {
         'resultCount': len(ret),
@@ -57,13 +73,7 @@ def datapackage_get():
     except KeyError:
         return "Must supply hash", 400
 
-    meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
-    try:
-        with open(meta, 'r') as meta_fp:
-            meta = json.load(meta_fp)
-    except (OSError, json.JSONDecodeError) as exc:
-        return str(exc), 404
-
+    meta = get_meta(f_hash=f_hash)
     name = os.path.join(app.config['UPLOAD_PATH'], meta['UID'])
 
     if not os.path.exists(name):
@@ -93,23 +103,21 @@ def datapackage_upload():
         return 'Invalid arguments', 400
 
     filename = secure_filename(f'{creator_uid}_{asset_fp.filename}')
-    file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
-    meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{filename}.json')
-    meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
 
     # Delete / unlink old files
-    try:
-        meta = {}
-        with open(meta_path, 'r') as meta_fp:
-            meta = json.load(meta_fp)
-
-        if meta['Hash'] != f_hash:
-            old_meta_hash_path = os.path.join(
-                app.config['UPLOAD_PATH'], 'meta', f'{meta.get("Hash")}.json'
-            )
+    meta = get_meta(f_name=filename)
+    if meta.get('Hash') != f_hash:
+        old_meta_hash_path = os.path.join(
+            app.config['UPLOAD_PATH'], 'meta', f'{meta.get("Hash")}.json'
+        )
+        try:
             os.unlink(old_meta_hash_path)
-    except:
-        meta = {}
+        except:
+            pass
+
+    # Save the uploaded file
+    file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
+    asset_fp.save(file_path)
 
     # TODO: Use SSL Certificate Identity to set SubmissionUser
     #       (see MissionPackageQueryResult.java#37)
@@ -123,48 +131,35 @@ def datapackage_upload():
         'CreatorUid': request.args['creatorUid'],
         'Keywords': 'kw',
         'MIMEType': asset_fp.mimetype,
-        'Size': 0 # Checked, do not fake
+        'Size': os.path.getsize(file_path) # Checked, do not fake
     }
 
-    asset_fp.save(file_path)
-
-    meta['Size'] = os.path.getsize(file_path)
-
+    # Save the file's meta/{filename}.json
+    meta_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{filename}.json')
     with open(meta_path, 'w') as meta_fp:
         json.dump(meta, meta_fp)
 
+    # Symlink the meta/{f_hash}.json to {filename}.json
+    meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
     try:
         os.symlink(f'{filename}.json', meta_hash_path)
     except FileExistsError:
         pass
 
-    ip_addr = app.config['PUBLIC_IP']
-    port = app.config['DPS_PORT']
-
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
     # This is needed for client-to-client data package transmission
-    ret = f'{app.config["PROTO"]}{ip_addr}:{port}/Marti/sync/content?hash={request.args["hash"]}'
-    return ret
+    return url_for(f_hash)
 
 @app.route('/Marti/api/sync/metadata/<f_hash>/tool', methods=['PUT'])
 def datapackage_metadata_tool(f_hash):
     '''
     Update the "tool" for the datapackage (ie: public / private)
     '''
-    meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
-    try:
-        with open(meta, 'r') as meta_fp:
-            meta = json.load(meta_fp)
-    except FileNotFoundError:
+    meta = get_meta(f_hash=f_hash)
+    if not meta:
         return f'Could not find file matching {f_hash}', 404
-    except (json.JSONDecodeError, OSError):
-        meta = {}
 
-    ip_addr = app.config['PUBLIC_IP']
-    port = app.config['DPS_PORT']
-
-    ret = f'{app.config["PROTO"]}{ip_addr}:{port}/Marti/sync/content?hash={f_hash}'
-    return ret
+    return url_for(f_hash)
 
 @app.route('/Marti/sync/missionquery')
 def datapackage_exists():
@@ -176,22 +171,11 @@ def datapackage_exists():
     '''
     try:
         f_hash = request.args['hash']
-    except:
+    except KeyError:
         return 'Must supply hash', 400
 
-    meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
-    try:
-        with open(meta_hash_path, 'r') as meta_fp:
-            meta = json.load(meta_fp)
+    meta = get_meta(f_hash)
+    if not meta:
+        return 'File not found', 404
 
-        file_path = os.path.join(app.config['UPLOAD_PATH'], meta['UID'])
-        if os.path.exists(file_path):
-            ip_addr = app.config['PUBLIC_IP']
-            port = app.config['DPS_PORT']
-
-            ret = f'{app.config["PROTO"]}{ip_addr}:{port}/Marti/sync/content?hash={request.args["hash"]}'
-            return ret
-    except:
-        pass
-
-    return 'File not found', 404
+    return url_for(f_hash)
