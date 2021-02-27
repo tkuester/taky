@@ -1,8 +1,19 @@
+from .errors import UnmarshalError
 from .event import Event
+from .point import Point
 from .detail import Detail
 from .geochat import GeoChat
-from .point import Point
-from .takuser import TAKUser, TAKDevice
 from .teams import Teams
+from .takuser import TAKUser
+from .takuser import TAKDevice
 
-__all__ = ['Event', 'Detail', 'GeoChat', 'Point', 'TAKUser', 'TAKDevice', 'Teams']
+__all__ = [
+    'UnmarshalError',
+    'Event',
+    'Point',
+    'Detail',
+    'GeoChat',
+    'Teams',
+    'TAKUser',
+    'TAKDevice'
+]
