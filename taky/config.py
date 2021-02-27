@@ -8,6 +8,8 @@ DEFAULT_CFG = {
         'node_id': 'TAKY',        # TAK Server nodeId
         'bind_ip': None,          # Defaults to all (0.0.0.0)
         'public_ip': None,        # Server's public IP address
+        'redis': None,            # If Redis is enabled. True for localhost,
+                                  # or a redis:// connect string
     },
 
     'cot_server': {

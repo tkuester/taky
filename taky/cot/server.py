@@ -24,7 +24,7 @@ class COTServer:
 
         self.config = config
         self.clients = {}
-        self.router = COTRouter()
+        self.router = COTRouter(config)
 
         self.srv = None
         self._sock_setup()

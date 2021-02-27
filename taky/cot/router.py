@@ -4,6 +4,7 @@ import logging
 
 from . import models
 from .client import TAKClient
+from .persistence import Persistence
 
 class Destination(enum.Enum):
     '''
@@ -18,10 +19,11 @@ class COTRouter:
     function would do, but currently the router needs to know what clients are
     available to send packets to.
     '''
-    def __init__(self):
+    def __init__(self, config=None):
         # TODO: self.clients as dictionary, with UID as keys?
         #     : should prohibit multiple sockets sharing a client
         self.clients = set()
+        self.persist = Persistence(config)
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
@@ -41,13 +43,11 @@ class COTRouter:
         Called by TAKClient when the client first identifies to the server
         '''
         self.lgr.debug("Sending active clients to %s", client)
-        for _client in self.clients:
-            if _client is client:
-                continue
-            if _client.user.uid is None:
+        for event in self.persist.get_all():
+            if event.uid == client.user.uid:
                 continue
 
-            client.send(_client.user.as_element)
+            client.send(event)
 
     def find_client(self, uid=None, callsign=None):
         '''
@@ -65,6 +65,7 @@ class COTRouter:
         '''
         Broadcast a message from source to all clients
         '''
+        self.persist.update(msg)
         for client in self.clients:
             if client is src:
                 continue

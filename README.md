@@ -18,11 +18,12 @@ taky - A simple COT server for ATAK
  * Does not require root to run!
  * Thread safety? Where we're going, we don't need threads!
  * Slightly less-than-broken Data Package Server
- * Requires no SQlite / databases! (For now!)
  * Only one version away from having systemd scripts!
  * Tools spit backtraces out instead of giving a nice error message!
  * Stupid fast for no good reason! Routes 1000 packets / second on an old
    Core i5-2500k!
+ * Optional redis backed object persistence storage!
+ * Still requires no SQlite / database!
 
 ## Requirements
 
