@@ -4,7 +4,7 @@ import logging
 
 from . import models
 from .client import TAKClient
-from .persistence import Persistence
+from .persistence import build_persistence
 
 class Destination(enum.Enum):
     '''
@@ -23,7 +23,7 @@ class COTRouter:
         # TODO: self.clients as dictionary, with UID as keys?
         #     : should prohibit multiple sockets sharing a client
         self.clients = set()
-        self.persist = Persistence(config)
+        self.persist = build_persistence(config)
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def client_connect(self, client):
@@ -42,7 +42,7 @@ class COTRouter:
         '''
         Called by TAKClient when the client first identifies to the server
         '''
-        self.lgr.debug("Sending active clients to %s", client)
+        self.lgr.debug("Sending persistence objects to %s", client)
         for event in self.persist.get_all():
             if event.uid == client.user.uid:
                 continue
@@ -65,7 +65,8 @@ class COTRouter:
         '''
         Broadcast a message from source to all clients
         '''
-        self.persist.update(msg)
+        self.lgr.debug("%s -> Broadcast: %s", src.user.callsign, msg)
+        self.persist.track(msg)
         for client in self.clients:
             if client is src:
                 continue
@@ -89,6 +90,7 @@ class COTRouter:
         if not isinstance(group, models.Teams):
             raise ValueError("group must be models.Teams")
 
+        self.lgr.debug("%s -> %s: %s", src.user.callsign, group, msg)
         for client in self.clients:
             if client.user is src:
                 continue
@@ -113,7 +115,8 @@ class COTRouter:
             else:
                 client = self.find_client(uid=chat.dst_uid)
                 if client:
-                    self.lgr.debug("%s -> %s: %s", src.user.callsign, client.user.callsign, evt)
+                    self.lgr.debug("%s -> %s: (geochat) %s",
+                        src.user.callsign, client.user.callsign, chat.message)
                     client.send(evt)
                 else:
                     self.lgr.warning("No destination for %s", chat)
@@ -125,7 +128,8 @@ class COTRouter:
             for cs in evt.detail.marti_cs:
                 client = self.find_client(callsign=cs)
                 if client:
-                    self.lgr.debug("%s -> %s (marti): %s", src.user.callsign, client.user.callsign, evt)
+                    self.lgr.debug("%s -> %s (marti): %s",
+                        src.user.callsign, client.user.callsign, evt)
                     client.send(evt)
             return
 

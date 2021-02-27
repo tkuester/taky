@@ -104,7 +104,7 @@ class TAKClient:
                 self.lgr.warning("Unable to parse Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 continue
-            except Exception as exc:
+            except Exception as exc: # pylint: disable=broad-except
                 self.lgr.error("Unhandled exception parsing Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 continue
