@@ -18,9 +18,11 @@ app.config['UPLOAD_PATH'] = os.path.realpath(config.get('dp_server', 'upload_pat
 app.config['PUBLIC_IP'] = config.get('taky', 'public_ip')
 app.config['COT_PORT'] = config.getint('cot_server', 'port')
 if config.getboolean('ssl', 'enabled'):
+    app.config['PROTO'] = 'https://'
     app.config['COT_CONN_STR'] = 'ssl:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
     app.config['DPS_PORT'] = 8443
 else:
+    app.config['PROTO'] = 'http://'
     app.config['COT_CONN_STR'] = 'tcp:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
     app.config['DPS_PORT'] = 8080
     # TODO: Configurable?
@@ -101,8 +103,9 @@ def marti_get_content():
     try:
         f_hash = request.args['hash']
     except:
-        abort(400, "Must supply hash")
+        return "Must supply hash", 400
 
+    print("Request for f_hash: %s" % f_hash, flush=True)
     meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
     try:
         with open(meta, 'r') as fp:
@@ -114,7 +117,10 @@ def marti_get_content():
     name = os.path.join(app.config['UPLOAD_PATH'], meta['UID'])
 
     if not os.path.exists(name):
+        print("Can't find %s", name)
         abort(404)
+
+    print(name)
 
     return send_file(name, as_attachment=True, attachment_filename=meta['Name'])
 
@@ -178,10 +184,12 @@ def marti_sync_missionupload():
 
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
     # This is needed for client-to-client data package transmission
-    return f'{ip}:{port}/Marti/api/sync/metadata/{request.args["hash"]}/tool'
+    ret = f'{app.config["PROTO"]}{ip}:{port}/Marti/sync/content?hash={request.args["hash"]}'
+    print(ret)
+    return ret
 
 @app.route('/Marti/api/sync/metadata/<f_hash>/tool', methods=['PUT'])
-def marti_api_sync_metadata(f_hash):
+def marti_api_sync_metadata_put(f_hash):
     meta = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
     try:
         with open(meta, 'r') as fp:
@@ -202,7 +210,7 @@ def marti_sync_missionquery():
     try:
         f_hash = request.args['hash']
     except:
-        abort(400)
+        return 'Must supply hash', 400
 
     meta_hash_path = os.path.join(app.config['UPLOAD_PATH'], 'meta', f'{f_hash}.json')
     print(meta_hash_path)
@@ -217,7 +225,7 @@ def marti_sync_missionquery():
     except:
         pass
 
-    abort(404)
+    return 'File not found', 404
 
 @app.route('/Marti/TracksKML', methods=['POST'])
 def marti_tracks_kml():
