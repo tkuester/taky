@@ -122,7 +122,7 @@ def setup_taky(config, args):
             f_name='server',
             hostname=args.hostname,
             cert_pw=args.p12_pw, # TODO: OS environ? -p is bad
-            ca=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
+            cert_auth=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
             dump_pem=True
         )
 

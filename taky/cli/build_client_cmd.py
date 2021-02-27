@@ -33,7 +33,7 @@ def build_client(config, args):
         f_name=args.name,
         hostname=args.name,
         cert_pw=args.p12_pw, # TODO: OS environ? -p is bad
-        ca=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
+        cert_auth=(config.get('ssl', 'ca'), config.get('ssl', 'ca_key')),
         dump_pem=args.dump_pem
     )
 
@@ -87,13 +87,13 @@ def build_client(config, args):
     # Save temporary directory, and build ZIP file
     os.chdir(tdir)
     zip_path = os.path.join(cwd, f"{args.name}.zip")
-    fp = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+    zip_fp = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(tdir): # pylint: disable=unused-variable
         root = os.path.relpath(root, tdir)
         for file in files:
-            fp.write(os.path.join(root, file))
+            zip_fp.write(os.path.join(root, file))
 
-    fp.close()
+    zip_fp.close()
 
     # Cleanup temporary directory
     shutil.rmtree(tdir)
