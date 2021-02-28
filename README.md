@@ -24,6 +24,8 @@ taky - A simple COT server for ATAK
    Core i5-2500k!
  * Optional redis backed object persistence storage!
  * Still requires no SQlite / database!
+ * A pylint score of about 9.0! (For now!)
+ * Absolutely no unit testing! (Yet!)
 
 ## Requirements
 
