@@ -40,7 +40,12 @@ def main():
 
     try:
         config = load_config(args.cfg_file)
-    except (OSError, configparser.ParsingError) as exc:
+    except (FileNotFoundError, OSError):
+        if args.cfg_file:
+            argp.error(f"Unable to load config file: '{args.cfg_file}'")
+        else:
+            argp.error("Unable to load './taky.conf' or '/etc/taky.conf'")
+    except configparser.ParsingError as exc:
         argp.error(exc)
         sys.exit(1)
 
@@ -50,6 +55,7 @@ def main():
         cot_srv = COTServer(config)
     except Exception as exc: # pylint: disable=broad-except
         logging.error("Unable to start COTServer: %s", exc)
+        logging.debug("", exc_info=exc)
         sys.exit(1)
 
     if args.debug:
