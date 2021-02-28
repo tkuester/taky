@@ -33,12 +33,14 @@ taky - A simple COT server for ATAK
  * flask
  * pyopenssl
  * gunicorn
+ * redis
 
 This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
-ATAK v4.2.0.4. It is slowly progressing towards a beta state, and should work
-for playing around.
+ATAK v4.2.0.4. It is now in a beta state, and should work relatively well.
 
-But, really. Using this is for anything important is probably a very-bad-idea (TM).
+Most of the testing so far has been with "simulated" clients, instead of real
+users. I still wouldn't recommend using this for an important exercise, but if
+you want to test it out, please let me know how it goes!
 
 ## Installation
 
@@ -58,6 +60,9 @@ $ python3 -m pip install taky
 
 ## Usage
 
+Right out of the box, with no configuration, you can build a simple COT server
+for you and your friends to play with over TCP!
+
 ```
 $ taky -h
 usage: taky [-h] [-l {debug,info,warning,error,critical}] [-c CFG_FILE] [--version]
@@ -73,68 +78,37 @@ optional arguments:
 
 # Run taky on 0.0.0.0:8087
 $ taky
+INFO:root:taky v0.7
+INFO:COTServer:Listening for tcp on :8087
 ```
 
-## More Complicated Setup
+## Deploying Taky
 
-While `taky` can run as a standalone CoT server, there are more advanced
-features that are available if the server is fully setup. Fortunately, there
-is a simple tool to make this easy! You don't even need root!
+Taky has been written with ease of administration in mind. It should be easy to
+install, upgrade, build (and run) multiple instances, manage with systemd
+scripts, and adhere to standard Linux service organization and package
+management. Additionally, there is no tie in to operating systems. This should
+be just as easy to setup on Fedora as it is on Ubuntu -- though the
+instructions have been written for Ubuntu.
 
-The only thing needed is your public IP address. The rest is configured
-automatically for your convenience.
+See the deployment guide in the `/doc` folder for instructions on deploying a
+server of your own!
 
-```
-$ takyctl setup -h
-usage: takyctl setup [-h] [--p12_pw P12_PW] [--host HOSTNAME] [--bind-ip IP] --public-ip PUBLIC_IP
-                     [--user USER] [--no-ssl]
-                     [path]
+## Development Status
 
-positional arguments:
-  path                  Optional path for taky install
+As far as the "Unicorn Test Readiness Level" goes, `taky` is not a high
+heritage space unicorn. We are somewhere between TRL 5 and 6. The horse is
+outside, and we're tentatively calling it a unicorn.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --p12_pw P12_PW       Password for server .p12 [atakatak]
-  --host HOSTNAME       Server hostname [devbox]
-  --bind-ip IP          Bind Address [0.0.0.0]
-  --public-ip PUBLIC_IP
-                        Public IP address
-  --user USER           User/group for file permissions
-  --no-ssl              Disable SSL for the server
+The COT server is the most mature part of the codebase. While some of the more
+esoteric configurations have not been tested, the standard SSL setup seems to
+be rather solid, and performs well with heavy loads.
 
-$ takyctl setup --public-ip 192.168.1.100 my_install
-$ cd my_install
-my_install $ taky
+The Data Package server (DPS) is starting to mature, but has not been as
+extensively tested. Simple client-to-client and client-to-server transfers seem
+to work well, although some features like Video and posting tracks have not
+been implemented yet.
 
-# (in another window, we'll start the data package server)
-my_install $ taky_dps
-```
-
-Taky will automatically find the config file located in `my_install`, load the
-SSL certificates, and start running. You can find user uploaded data packages
-in `my_install/dp-user`.
-
-If you are using SSL (highly recommended!), it is simple to generate client
-certificates in a zip file for the import manager. You can also run this
-through the CLI tool.
-
-```
-my_install $ takyctl build_client -h
-usage: takyctl build_client [-h] [--p12_pw P12_PW] name
-
-positional arguments:
-  name             Name for client
-
-optional arguments:
-  -h, --help       show this help message and exit
-  --p12_pw P12_PW  Password for server .p12 [atakatak]
-
-my_install $ takyctl build_client JENNY
-```
-
-Transferring the .zip file to your device is an exercise left to the reader.
-(Although, we hope to have this as a feature eventually!)
-
-This "installation" is local, and can be edited to your hearts content. When
-you are done, you can simply delete the folder and start again.
+Feel free to checkout the
+[milestones](https://github.com/tkuester/taky/milestones) page to see what is
+planned for the next version of taky! Pull requests and issues are welcome!
