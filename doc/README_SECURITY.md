@@ -52,8 +52,8 @@ enforcement, even if such a feature is implemented.
 ## Data Package Server Security
 
 Regrettably, the data package server (DPS) is in its infancy. While I have
-tried to enforce client certificates for the server, ATAK seems to not like
-this. I've submitted an issue, this may be resolved in the future.
+tried to enforce client certificates for the DPS, ATAK seems to not like this.
+I've submitted an issue to ATAK, this may be resolved in the future.
 
 As such, while all communication with the DPS is encrypted with SSL, anyone
 that can open a socket to the DPS could post large files, or download files.
@@ -67,7 +67,7 @@ a malicious datapackage bricking the Android clients with a malformed image.
 ATAK does not prompt the user to see if they want to accept the download, it
 just downloads the datapackage in the background.
 
-A simple solution is to not run the DPS, and disabling "File Sharing" in ATAK
+A simple solution is to not run the DPS, and disable "File Sharing" in ATAK
 under "Settings / Tool Preferences / Data Package Control Preferences". You may
 need to disable "Mesh Network Mode" under "Settings / Network Preferences /
 Network Connection Preferences / Enable Mesh Network Mode" as well. COT will
