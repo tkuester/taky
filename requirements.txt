@@ -1,0 +1,6 @@
+lxml
+dateutils
+Flask
+pyopenssl
+gunicorn
+redis
