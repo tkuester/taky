@@ -67,11 +67,11 @@ a malicious datapackage bricking the Android clients with a malformed image.
 ATAK does not prompt the user to see if they want to accept the download, it
 just downloads the datapackage in the background.
 
-A simple solution is to not run the DPS, disabling "File Sharing" in ATAK under
-"Settings / Tool Preferences / Data Package Control Preferences". You may need
-to disable "Mesh Network Mode" under "Settings / Network Preferences / Network
-Connection Preferences / Enable Mesh Network Mode" as well. COT will work
-without it, you just have fewer features.
+A simple solution is to not run the DPS, and disabling "File Sharing" in ATAK
+under "Settings / Tool Preferences / Data Package Control Preferences". You may
+need to disable "Mesh Network Mode" under "Settings / Network Preferences /
+Network Connection Preferences / Enable Mesh Network Mode" as well. COT will
+work without it, you just have fewer features.
 
 ## Certificate / Client Security
 
