@@ -2,6 +2,8 @@
 
 taky - A simple COT server for ATAK
 
+![pylint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tkuester/b8b273c056ed05901cfc671070e875ed/raw/taky-pylint-shieldsio.json)
+
 ## Features (and anti-Features!)
 
  * Should support multiple ATAK clients simultaneously! You can see them on the
