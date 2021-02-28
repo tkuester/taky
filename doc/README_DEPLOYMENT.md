@@ -1,7 +1,7 @@
 # Deploying / Setting up a Taky Server
 
 Primarily, there are two ways to install taky, and two ways to configure it for
-deployment. You should chose the way that best suits your needs! But if you
+deployment. You should choose the way that best suits your needs! But if you
 aren't sure, and you don't have complex needs, the "Linux System Administrator"
 method is probably the one you want to choose!
 
@@ -87,6 +87,10 @@ For all configurations, you will need to know the following things:
 
  * The system's public IP address
  * The system's hostname
+
+For now, the system's hostname is primarily "cosmetic". The public IP address
+is used in most cases, to prevent clients from having to do a DNS lookup. This
+may change in the future!
 
 ### Global Configuration
 
@@ -222,15 +226,17 @@ Step 6. Setup systemd services
 
 If you don't have root, this will let you put all the data within a single
 folder. This can also be helpful if you want to run multiple instances of taky
-on the same machine.
+on the same machine. It can even co-exist with a global installation, as if
+`taky` is not run with the `-c` option, it first checks for a local
+configuration and then a global one.
 
 Unlike the last step, we will not need to make a linux user. We will just run
 `taky` from our own account.
 
 ```
 user@bluetack:~$ takyctl setup --hostname bluetack-1     \
-                                --public-ip 192.168.1.100 \
-                                bluetack-1
+                               --public-ip 192.168.1.100 \
+                               bluetack-1
 
 user@bluetack:~$ ls -lR bluetack-1
 bluetack-1/:

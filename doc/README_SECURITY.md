@@ -4,8 +4,9 @@ So... ATAK / COT isn't the most secure ecosystem. There are some security
 measures in place, for sure! But... it's a tad like a screen door on a
 submarine.
 
-This guide contains some observations I've made about ATAK / COT security,
-and what can be done to secure your server.
+This guide contains some observations I've made about ATAK / COT security, what
+can be done to secure your server, and some of the security features written
+into `taky`.
 
 ## First Things First
 
