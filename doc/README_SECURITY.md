@@ -76,19 +76,26 @@ work without it, you just have fewer features.
 ## Certificate / Client Security
 
 This is a bit of an oddball for me. ATAK uses `.p12` files, which encrypt the
-certificate and key with a password. However, the password is included
-plaintext in the `.zip` file that you import.
+client certificate and key with a password. Funnily enough, the server
+certificate, which is public information anyways, is also encrypted with a
+`.p12` file. However, both passwords are included plaintext in the `.zip` file
+that you import.
 
-It wouldn't be too difficult to implement random passwords for each client
-certificate, but given the plaintext password shipped with the keys, it's a bit
-like leaving the key under the door mat.
+While you can distribute `.p12` files out of band and configure the unit
+manually, this is extremely tedious.
+
+`taky` allows you to specify a password, but it doesn't seem to give much more
+security. If you don't specify a password, "atakatak" is used. It wouldn't be
+too difficult to implement random passwords for each client certificate, but
+given the plaintext password shipped with the keys, it's a bit like leaving the
+key under the door mat.
 
 Android isn't particularly known for it's system security, so consider a
 malicious user stealing a user's certificate, and then attacking the COT
 server.
 
 We could implement a revocation list to lock them out of further access, but
-they will still have access to the server until. Perhaps this is a feature for
+they will still have access to the server until then. Perhaps this is a feature for
 later.
 
 ## The Conclusion of the Matter?
