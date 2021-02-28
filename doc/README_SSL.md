@@ -1,8 +1,8 @@
 # Configuring taky for SSL support
 
-NOTE: This document is... not out of date, just don't use it. I still don't
+**NOTE: This document is... not out of date, just don't use it. I still don't
 know why easy-rsa certs don't work on ATAK, but it's not a worry for now.  Just
-use `takycli` to build the certs!
+use `takycli` to build the certs!**
 
 There are a few ways of generating certificates for the server and various
 clients. Since `openssl` is tricky to use, this guide will focus on
