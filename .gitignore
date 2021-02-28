@@ -1,3 +1,4 @@
+# Python Debris
 __pycache__
 .eggs
 *.egg-info
@@ -5,6 +6,11 @@ build
 dist
 *.pyc
 
+# Python Coverage
+.coverage
+htmlcov
+
+# Grief
 *.crt
 *.key
 *.pem

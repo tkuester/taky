@@ -15,6 +15,7 @@ setup(name='taky',
     long_description_content_type="text/markdown",
     url='https://github.com/tkuester/taky',
     packages=find_packages(),
+    test_suite='tests',
     include_package_data=True,
     zip_safe=False,
     classifiers=[
