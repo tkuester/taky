@@ -92,4 +92,4 @@ later.
 
 Ooog. Use a VPN and control access tightly. Regenerate your CA and certificates
 often. If you use the DPS, consider wiping the datapackage directory clean
-between operations.
+between operations. The same if you use redis as a persistence store.
