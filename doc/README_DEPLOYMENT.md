@@ -101,7 +101,7 @@ Apache, this layout should be familiar to you.
  * Configuration files go in `/etc/taky`
  * User data goes inside `/var/taky`
 
-Needless to say, you will need to run this setup as root.
+Needless to say, you will need to be root to configure this way.
 
 Step 1. Make a user to run taky
 
@@ -233,6 +233,8 @@ configuration and then a global one.
 Unlike the last step, we will not need to make a linux user. We will just run
 `taky` from our own account.
 
+Step 1. Build the deployment configuration
+
 ```
 user@bluetack:~$ takyctl setup --hostname bluetack-1     \
                                --public-ip 192.168.1.100 \
@@ -261,14 +263,20 @@ total 60
 -rw-rw-r-- 1 user user 3009 Feb 27 20:21 server.p12
 ```
 
-From there, all we need to do is `cd` into the folder, and run `taky`.
+Step 2. Run the server
+
+From there, all we need to do is `cd` into the folder, and run `taky`.  It
+should be noted, `taky` first checks the current directory for a config file.
+All paths are relative to the site root. This means all actions should be done
+within the active config directory. This is why we start by `cd`ing into
+`bluetack-1`.
 
 Start the COT server:
 
 ```
 user@bluetack:~$ cd bluetack-1
 user@bluetack:~/bluetack-1$ taky
-INFO:root:taky v0.7.dev16+g5572cb9.d20210227
+INFO:root:taky v0.7
 INFO:load_config:Loading config file from /home/user/bluetack-1/taky.conf
 INFO:RedisPersistence:Connecting to default redis
 INFO:RedisPersistence:Tracking 3 items
@@ -290,3 +298,22 @@ INFO:COTServer:Listening for ssl on 0.0.0.0:8089
 [2021-02-27 20:31:40 -0500] [2521165] [INFO] Using worker: sync
 [2021-02-27 20:31:40 -0500] [2521167] [INFO] Booting worker with pid: 2521167
 ```
+
+Step 3. Generate some client certificates
+
+Remember, this step needs to be done from within the site deployment directory.
+And if you are using a virtualenv, don't forget to source your `bin/activate`!
+
+```
+user@bluetack:~$ cd bluetack-1
+user@bluetack:~/bluetack-1$ takyctl build_client JENNY
+admin@bluetack:~/bluetack-1$ ls -l JENNY.zip
+-rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY.zip
+```
+
+Once you've made certificates, send them over to your device, and try
+connecting to your server!
+
+Step 4. Systemd scripts
+
+<< TODO >>
