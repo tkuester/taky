@@ -54,6 +54,9 @@ class GeoChat(Detail):
 
     @staticmethod
     def from_elm(elm, event=None):
+        if elm.tag != 'detail':
+            raise UnmarshalError('Cannot create GeoChat from %s' % elm.tag)
+
         chat = elm.find('__chat')
         chatgrp = None
         if chat is not None:

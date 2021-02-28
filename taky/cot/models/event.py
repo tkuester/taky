@@ -37,8 +37,6 @@ class Event:
 
     @staticmethod
     def from_elm(elm):
-        if not etree.iselement(elm):
-            raise UnmarshalError('Cannot create Event from %s' % type(elm))
         if elm.tag != 'event':
             raise UnmarshalError('Cannot create Event from %s' % elm.tag)
 

@@ -33,9 +33,6 @@ class Point:
 
     @staticmethod
     def from_elm(elm):
-        if elm.tag != 'point':
-            raise UnmarshalError("Cannot create Point from %s" % elm.tag)
-
         return Point(
             lat=float(elm.get('lat')),
             lon=float(elm.get('lon')),

@@ -42,4 +42,7 @@ class Detail:
         '''
         Build a Detail object from an element, with the event for context
         '''
+        if elm.tag != 'detail':
+            raise UnmarshalError('Cannot create Detail from %s' % elm.tag)
+
         return Detail(event, elm)
