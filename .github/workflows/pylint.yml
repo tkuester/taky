@@ -66,8 +66,8 @@ jobs:
       uses: schneegans/dynamic-badges-action@v1.0.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
-        gistID: b8b273c056ed05901cfc671070e875ed
-        filename: taky-pylint-shieldsio.json
+        gistID: c7e215b2645a1b63b07f12eff8f13fdb
+        filename: taky-coverage-shieldsio.json
         label: pylint
         message: ${{ fromJSON(needs.build.outputs.cov-json).totals.percent_covered }}
         color: red
