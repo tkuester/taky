@@ -12,7 +12,7 @@ jobs:
     
     outputs:
       pylint-score: ${{ steps.pylint.outputs.score }}
-      cov-json: ${{ steps.tests.outputs.cov-json }}
+      cov-pct: ${{ steps.tests.outputs.cov-pct }}
       
     steps:
     - uses: actions/checkout@v2
@@ -46,8 +46,8 @@ jobs:
       name: Running unit tests, generating coverage
       run: |
         coverage run -m unittest || true
-        coverage json --include="taky/*"
-        echo "::set-output name=cov-json::$(< coverage.json)"
+        COV_PCT=$(coverage report --include="taky/**" | awk '/TOTAL/{ print $4 }')
+        echo "::set-output name=cov-pct::${COV_PCT}"
   badges:
     runs-on: ubuntu-latest
     needs: build
@@ -69,7 +69,7 @@ jobs:
         auth: ${{ secrets.GIST_SECRET }}
         gistID: c7e215b2645a1b63b07f12eff8f13fdb
         filename: taky-coverage-shieldsio.json
-        label: pylint
-        message: ${{ fromJSON(needs.build.outputs.cov-json).totals.percent_covered }}
+        label: coverage
+        message: ${{ needs.build.outputs.cov-pct }}
         color: red
 
