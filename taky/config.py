@@ -35,6 +35,12 @@ DEFAULT_CFG = {
 }
 
 def load_config(path=None):
+    '''
+    Loads a config file from the specified path. If no path is provided,
+    returns the default config object.
+
+    @param path The path of the configuration file to load
+    '''
     config = configparser.ConfigParser(allow_no_value=True)
     config.read_dict(DEFAULT_CFG)
 
@@ -47,8 +53,8 @@ def load_config(path=None):
     if path:
         lgr = logging.getLogger('load_config')
         lgr.info("Loading config file from %s", path)
-        with open(path, 'r') as fp:
-            config.read_file(fp, source=path)
+        with open(path, 'r') as cfg_fp:
+            config.read_file(cfg_fp, source=path)
 
     port = config.get('cot_server', 'port')
     if port in [None, '']:
@@ -56,11 +62,11 @@ def load_config(path=None):
     else:
         try:
             port = int(port)
-        except (TypeError, ValueError) as e:
-            raise ValueError(f"Invalid port: {port}") from e
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid port: {port}") from exc
 
         if port <= 0 or port >= 65535:
-            raise ValueError(f"Invalid port: {port}") from e
+            raise ValueError(f"Invalid port: {port}")
     config.set('cot_server', 'port', str(port))
 
     return config
