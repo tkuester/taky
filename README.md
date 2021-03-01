@@ -2,7 +2,10 @@
 
 taky - A simple COT server for ATAK
 
+![python](https://img.shields.io/badge/python-3.6%7C3.7%7C3.8-black)
 ![pylint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tkuester/b8b273c056ed05901cfc671070e875ed/raw/taky-pylint-shieldsio.json)
+![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tkuester/c7e215b2645a1b63b07f12eff8f13fdb/raw/taky-coverage-shieldsio.json)
+![PyPI](https://img.shields.io/pypi/v/taky)
 
 ## Features (and anti-Features!)
 
@@ -26,8 +29,6 @@ taky - A simple COT server for ATAK
    Core i5-2500k!
  * Optional redis backed object persistence storage!
  * Still requires no SQlite / database!
- * A pylint score of about 9.0! (For now!)
- * Absolutely no unit testing! (Yet!)
 
 ## Requirements
 

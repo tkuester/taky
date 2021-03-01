@@ -8,6 +8,7 @@ dist
 
 # Python Coverage
 .coverage
+coverage.json
 htmlcov
 
 # Grief

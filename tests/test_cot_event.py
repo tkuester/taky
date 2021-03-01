@@ -51,9 +51,6 @@ class COTTestcase(ut.TestCase):
         elm.tag = 'xxx'
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
-        # A non numeric element
-        self.assertRaises(models.UnmarshalError, models.Event.from_elm, 12345)
-
         # An otherwise valid element with an incorrect tag
         elm = etree.fromstring(XML_S)
         elm.set('start', 'xxx')
