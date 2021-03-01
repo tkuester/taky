@@ -12,7 +12,7 @@ jobs:
     
     outputs:
       pylint-score: ${{ steps.pylint.outputs.score }}
-      cov-json: ${{ steps.pylint.outputs.cov-json }}
+      cov-json: ${{ steps.tests.outputs.cov-json }}
       
     steps:
     - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
       run: |
         python3 -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('::set-output name=score::%.2f' % ret.linter.stats['global_note'])"
     - id: tests
-      name: Analyzing the code with pylint
+      name: Running unit tests, generating coverage
       run: |
         coverage run -m unittest || true
         coverage json --include="taky/*"
