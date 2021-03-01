@@ -1,14 +1,17 @@
 name: Pylint
 
-on: [push]
+on:
+  push:
+    paths:
+    - 'taky/**'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     
     outputs:
       pylint-score: ${{ steps.pylint.outputs.score }}
+      cov-json: ${{ steps.pylint.outputs.cov-json }}
       
     steps:
     - uses: actions/checkout@v2
@@ -38,12 +41,18 @@ jobs:
       name: Analyzing the code with pylint
       run: |
         python3 -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('::set-output name=score::%.2f' % ret.linter.stats['global_note'])"
+    - id: tests
+      name: Analyzing the code with pylint
+      run: |
+        coverage run -m unittest || true
+        coverage json --include="taky/*"
+        echo "::set-output name=cov-json::$(< coverage.json)"
   badges:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - id: shieldsio
-      name: Create the Badge
+    - id: shieldsio-pylint
+      name: Create the Pylint Badge
       uses: schneegans/dynamic-badges-action@v1.0.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
@@ -52,4 +61,14 @@ jobs:
         label: pylint
         message: ${{ needs.build.outputs.pylint-score }}
         color: green
+    - id: shieldsio-coverage
+      name: Create the Coverage Badge
+      uses: schneegans/dynamic-badges-action@v1.0.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: b8b273c056ed05901cfc671070e875ed
+        filename: taky-pylint-shieldsio.json
+        label: pylint
+        message: ${{ fromJSON(needs.build.outputs.cov-json).totals.percent_covered }}
+        color: red
 
