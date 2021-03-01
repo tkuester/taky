@@ -4,6 +4,7 @@ on:
   push:
     paths:
     - 'taky/**'
+  workflow_dispatch:
 
 jobs:
   build:
