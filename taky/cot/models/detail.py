@@ -1,3 +1,6 @@
+from .errors import UnmarshalError
+
+
 class Detail:
     """
     A simple class to keep track of the Detail element
