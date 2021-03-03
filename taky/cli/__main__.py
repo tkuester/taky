@@ -25,6 +25,7 @@ def arg_parse():
 
     cli.setup_taky_reg(subp)
     cli.build_client_reg(subp)
+    cli.systemd_reg(subp)
 
     args = argp.parse_args()
 
@@ -40,7 +41,11 @@ def main():
         print(exc, file=sys.stderr)
         sys.exit(1)
 
-    commands = {"setup": cli.setup_taky, "build_client": cli.build_client}
+    commands = {
+        "setup": cli.setup_taky,
+        "build_client": cli.build_client,
+        "systemd": cli.systemd,
+    }
 
     if not args.command:
         argp.print_usage()

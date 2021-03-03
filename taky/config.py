@@ -32,12 +32,13 @@ DEFAULT_CFG = {
 }
 
 
-def load_config(path=None):
+def load_config(path=None, explicit=False):
     """
     Loads a config file from the specified path. If no path is provided,
     returns the default config object.
 
-    @param path The path of the configuration file to load
+    @param path     The path of the configuration file to load
+    @param explicit Don't return a default
     """
     config = configparser.ConfigParser(allow_no_value=True)
     config.read_dict(DEFAULT_CFG)
@@ -47,12 +48,16 @@ def load_config(path=None):
             path = os.path.abspath("taky.conf")
         elif os.path.exists("/etc/taky/taky.conf"):
             path = "/etc/taky/taky.conf"
+        elif explicit:
+            return None
 
     if path:
         lgr = logging.getLogger("load_config")
         lgr.info("Loading config file from %s", path)
         with open(path, "r") as cfg_fp:
             config.read_file(cfg_fp, source=path)
+    elif explicit:
+        return None
 
     port = config.get("cot_server", "port")
     if port in [None, ""]:
@@ -66,5 +71,8 @@ def load_config(path=None):
         if port <= 0 or port >= 65535:
             raise ValueError(f"Invalid port: {port}")
     config.set("cot_server", "port", str(port))
+
+    if explicit:
+        config.set("taky", "cfg_path", path)
 
     return config
