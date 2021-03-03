@@ -1,4 +1,4 @@
-'''
+"""
 A collection of classes that implement persistence
 
 Currently, this class is only designed to track broadcast items, like markers,
@@ -28,7 +28,7 @@ UDP Like Commands
   t-x-c-t / Ping
   c - Capability
   r - Reply
-'''
+"""
 
 from datetime import datetime as dt
 import logging
@@ -39,40 +39,42 @@ import redis
 from . import models
 
 KEPT_EVENTS = [
-    'a-',
-    'b-m-p',
-    'b-r-f-h-c',
-    'u-d-c',
-    'u-d-r',
-    'u-d-f',
+    "a-",
+    "b-m-p",
+    "b-r-f-h-c",
+    "u-d-c",
+    "u-d-r",
+    "u-d-f",
 ]
 
+
 def build_persistence(config):
-    '''
+    """
     Factory method to build a Persistence object from the given config
-    '''
+    """
     try:
-        if config.getboolean('taky', 'redis'):
-            return RedisPersistence(config.get('taky', 'hostname'))
+        if config.getboolean("taky", "redis"):
+            return RedisPersistence(config.get("taky", "hostname"))
         else:
             return Persistence()
     except (AttributeError, ValueError):
         pass
 
-    conn_str = config.get('taky', 'redis')
+    conn_str = config.get("taky", "redis")
     if conn_str:
-        return RedisPersistence(config.get('taky', 'hostname'), conn_str)
+        return RedisPersistence(config.get("taky", "hostname"), conn_str)
 
     return Persistence()
+
 
 class BasePersistence:
     def __init__(self):
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def track(self, event):
-        '''
+        """
         @return False if the item should not be tracked, otherwise the TTL
-        '''
+        """
         ttl = False
         # TODO: Regex probably faster?
         for etype in KEPT_EVENTS:
@@ -91,38 +93,40 @@ class BasePersistence:
         self.track_event(event, ttl)
 
     def track_event(self, event, ttl):
-        '''
+        """
         Add the event to the database
-        '''
+        """
         raise NotImplementedError()
 
     def get_all(self):
-        '''
+        """
         Return all items tracked
-        '''
+        """
         raise NotImplementedError()
 
     def get_event(self, uid):
-        '''
+        """
         Return a specific Event by UID. Returns None if the event does not
         exist.
-        '''
+        """
         raise NotImplementedError()
 
     def event_exists(self, uid):
-        '''
+        """
         Return true if the event exists
-        '''
+        """
         raise NotImplementedError()
 
+
 class Persistence(BasePersistence):
-    '''
+    """
     A simple memory based persistence object. Events are stored as objects in a
     dictionary. Whenever the dictionary is updated or accessed, it is pruned.
 
     This object has no long term storage. If taky quits, all the objects are
     lost.
-    '''
+    """
+
     def __init__(self):
         super().__init__()
         self.events = {}
@@ -136,7 +140,7 @@ class Persistence(BasePersistence):
 
     def get_event(self, uid):
         self.prune()
-        return self.events.get('uid')
+        return self.events.get("uid")
 
     def get_all(self):
         self.prune()
@@ -145,9 +149,9 @@ class Persistence(BasePersistence):
         return ret
 
     def prune(self):
-        '''
+        """
         Go through the database, and delete items that have expired
-        '''
+        """
         uids = []
         now = dt.utcnow()
 
@@ -159,8 +163,9 @@ class Persistence(BasePersistence):
         for uid in uids:
             self.events.pop(uid)
 
+
 class RedisPersistence(BasePersistence):
-    '''
+    """
     A Redis backed persistence object, useful for keeping track of events,
     even if taky restarts. This also allows other systems which can
     communicate with Redis to access the events.
@@ -172,14 +177,15 @@ class RedisPersistence(BasePersistence):
       taky:{keyspace}:persist:{event.uid} = <xml>
 
     In most configurations, keyspace should be the hostname.
-    '''
+    """
+
     def __init__(self, keyspace=None, conn_str=None):
         super().__init__()
         self.rds_ok = True
         if keyspace:
-            self.rds_ks = f'taky:{keyspace}:persist'
+            self.rds_ks = f"taky:{keyspace}:persist"
         else:
-            self.rds_ks = 'taky:persist'
+            self.rds_ks = "taky:persist"
 
         if conn_str:
             self.lgr.info("Connecting to %s", conn_str)
@@ -196,10 +202,10 @@ class RedisPersistence(BasePersistence):
             self._redis_result(False)
 
     def _redis_result(self, result):
-        '''
+        """
         Simple set/reset latch to notify the user if the connection to the
         redis server is lost
-        '''
+        """
         if self.rds_ok and not result:
             self.lgr.warning("Lost connection to redis")
         elif not self.rds_ok and result:
@@ -209,7 +215,7 @@ class RedisPersistence(BasePersistence):
 
     def track_event(self, event, ttl):
         try:
-            key = f'{self.rds_ks}:{event.uid}'
+            key = f"{self.rds_ks}:{event.uid}"
             self.rds.set(key, etree.tostring(event.as_element))
             self.rds.expire(key, ttl)
             self._redis_result(True)
@@ -223,7 +229,7 @@ class RedisPersistence(BasePersistence):
         if uid_is_redis_key:
             key = uid
         else:
-            key = f'{self.rds_ks}:{uid}'
+            key = f"{self.rds_ks}:{uid}"
 
         exists = False
 
@@ -242,7 +248,7 @@ class RedisPersistence(BasePersistence):
         if uid_is_redis_key:
             key = uid
         else:
-            key = f'{self.rds_ks}:{uid}'
+            key = f"{self.rds_ks}:{uid}"
 
         evt = None
         purge = False
@@ -266,15 +272,17 @@ class RedisPersistence(BasePersistence):
         except redis.ConnectionError as exc:
             self._redis_result(False)
             return None
-        except Exception as exc: # pylint: disable=broad-except
-            self.lgr.error("Uhandled exception parsing Event from persistence store: %s", exc)
+        except Exception as exc:  # pylint: disable=broad-except
+            self.lgr.error(
+                "Uhandled exception parsing Event from persistence store: %s", exc
+            )
             purge = True
 
         if purge:
             self.lgr.warning("Purging key %s", key)
             try:
                 self.rds.delete(key)
-            except: # pylint: disable=bare-except
+            except:  # pylint: disable=bare-except
                 pass
             return None
 
@@ -282,7 +290,7 @@ class RedisPersistence(BasePersistence):
 
     def get_all(self):
         try:
-            for key in self.rds.keys(f'{self.rds_ks}:*'):
+            for key in self.rds.keys(f"{self.rds_ks}:*"):
                 evt = self._get_event(key, True)
                 if evt:
                     yield evt

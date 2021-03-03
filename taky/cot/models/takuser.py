@@ -10,41 +10,43 @@ from .detail import Detail
 from .teams import Teams
 from .point import Point
 
+
 @dataclass
 class TAKDevice:
-    os: str = None # pylint: disable=invalid-name
+    os: str = None  # pylint: disable=invalid-name
     version: str = None
     device: str = None
     platform: str = None
 
     def __repr__(self):
-        return '<TAKDevice %s (%s) on %s>' % (self.platform, self.version, self.device)
+        return "<TAKDevice %s (%s) on %s>" % (self.platform, self.version, self.device)
 
     @staticmethod
     def from_elm(elm):
-        if elm.tag != 'takv':
+        if elm.tag != "takv":
             raise UnmarshalError("Unable to load TAKDevice from %s" % elm.tag)
 
         return TAKDevice(
-            os = elm.get('os'),
-            device = elm.get('device'),
-            version = elm.get('version'),
-            platform = elm.get('platform')
+            os=elm.get("os"),
+            device=elm.get("device"),
+            version=elm.get("version"),
+            platform=elm.get("platform"),
         )
 
     @property
     def as_element(self):
-        ret = etree.Element('takv')
-        ret.set('os', self.os or '')
-        ret.set('device', self.device or '')
-        ret.set('version', self.version or '')
-        ret.set('platform', self.platform or '')
+        ret = etree.Element("takv")
+        ret.set("os", self.os or "")
+        ret.set("device", self.device or "")
+        ret.set("version", self.version or "")
+        ret.set("platform", self.platform or "")
 
         return ret
 
     @property
     def as_xml(self):
         return etree.tostring(self.as_element)
+
 
 # TODO: Extend from Detail
 @dataclass
@@ -75,7 +77,7 @@ class TAKUser:
         # Sanity check inputs
         if evt.detail is None:
             return False
-        if evt.detail.elm.find('takv') is None:
+        if evt.detail.elm.find("takv") is None:
             return False
 
         ret = False
@@ -92,29 +94,29 @@ class TAKUser:
         self.stale = evt.stale
 
         for elm in evt.detail.elm.iterchildren():
-            if elm.tag == 'takv':
+            if elm.tag == "takv":
                 self.device = TAKDevice.from_elm(elm)
-            elif elm.tag == 'contact':
-                self.callsign = elm.get('callsign')
-                self.phone = elm.get('phone')
-            elif elm.tag == '__group':
+            elif elm.tag == "contact":
+                self.callsign = elm.get("callsign")
+                self.phone = elm.get("phone")
+            elif elm.tag == "__group":
                 try:
-                    self.group = Teams(elm.get('name'))
+                    self.group = Teams(elm.get("name"))
                 except ValueError:
                     # TODO: How to handle unknown group? Defaults to "Cyan"
                     self.group = Teams.UNKNOWN
-                self.role = elm.get('role')
-            elif elm.tag == 'status':
-                self.battery = elm.get('battery')
-            elif elm.tag == 'track':
-                self.course = float(elm.get('course'))
-                self.speed = float(elm.get('speed'))
-            elif elm.tag == 'uid':
+                self.role = elm.get("role")
+            elif elm.tag == "status":
+                self.battery = elm.get("battery")
+            elif elm.tag == "track":
+                self.course = float(elm.get("course"))
+                self.speed = float(elm.get("speed"))
+            elif elm.tag == "uid":
                 pass
-            elif elm.tag == 'precisionlocation':
+            elif elm.tag == "precisionlocation":
                 pass
             else:
-                #self.lgr.warn("Unhandled TAKClient detail: %s", elm.tag)
+                # self.lgr.warn("Unhandled TAKClient detail: %s", elm.tag)
                 pass
 
         return ret
@@ -131,58 +133,74 @@ class TAKUser:
 
         evt = Event(
             uid=self.uid,
-            etype=self.marker or 'a-f',
-            how='m-g',
+            etype=self.marker or "a-f",
+            how="m-g",
             time=now,
             start=now,
-            stale=stale
+            stale=stale,
         )
         evt.point = self.point
-        evt.detail = Detail(evt, etree.Element('detail'))
-        evt.detail.elm = etree.Element('detail')
+        evt.detail = Detail(evt, etree.Element("detail"))
+        evt.detail.elm = etree.Element("detail")
         if self.device:
-            takv = etree.Element('takv', attrib={
-                'os': self.device.os or '30',
-                'version': self.device.version or 'unknown',
-                'device': self.device.device or 'unknown',
-                'platform': self.device.platform or 'unknown',
-            })
+            takv = etree.Element(
+                "takv",
+                attrib={
+                    "os": self.device.os or "30",
+                    "version": self.device.version or "unknown",
+                    "device": self.device.device or "unknown",
+                    "platform": self.device.platform or "unknown",
+                },
+            )
             evt.detail.elm.append(takv)
 
-            status = etree.Element('status', attrib={
-                'battery': self.battery or '100',
-            })
+            status = etree.Element(
+                "status",
+                attrib={
+                    "battery": self.battery or "100",
+                },
+            )
             evt.detail.elm.append(status)
 
-        uid = etree.Element('uid', attrib={
-            'Droid': self.callsign or 'JENNY'
-        })
+        uid = etree.Element("uid", attrib={"Droid": self.callsign or "JENNY"})
         evt.detail.elm.append(uid)
 
-        contact = etree.Element('contact', attrib={
-            'callsign': self.callsign or 'JENNY',
-            'endpoint': '*:-1:stcp',
-        })
+        contact = etree.Element(
+            "contact",
+            attrib={
+                "callsign": self.callsign or "JENNY",
+                "endpoint": "*:-1:stcp",
+            },
+        )
         if self.phone:
-            contact.set('phone', self.phone)
+            contact.set("phone", self.phone)
         evt.detail.elm.append(contact)
 
-        group = etree.Element('__group', attrib={
-            'role': self.role or 'Team Member',
-            'name': self.group.value,
-        })
+        group = etree.Element(
+            "__group",
+            attrib={
+                "role": self.role or "Team Member",
+                "name": self.group.value,
+            },
+        )
         evt.detail.elm.append(group)
 
-        track = etree.Element('track', attrib={
-            'course': '%.1f' % (self.course or 0.0),
-            'speed': '%.1f' % (self.speed or 0.0),
-        })
+        track = etree.Element(
+            "track",
+            attrib={
+                "course": "%.1f" % (self.course or 0.0),
+                "speed": "%.1f" % (self.speed or 0.0),
+            },
+        )
         evt.detail.elm.append(track)
 
-        precisloc = etree.Element('precisionlocation', attrib={
-            'altsrc': 'GPS',
-            'geopointsrc': 'GPS',
-        })
+        precisloc = etree.Element(
+            "precisionlocation",
+            attrib={
+                "altsrc": "GPS",
+                "geopointsrc": "GPS",
+            },
+        )
         evt.detail.elm.append(precisloc)
 
         return evt.as_element

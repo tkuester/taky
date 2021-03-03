@@ -10,14 +10,15 @@ import random
 
 from OpenSSL import crypto
 
+
 def make_ca(crt_path, key_path, n_years=10):
-    '''
+    """
     Build a certificate authority
 
     @param crt_path  Where to write the ca certificate
     @param key_path  Where to write the ca key
     @param n_years   How many years the CA should be valid for
-    '''
+    """
     ca_key = crypto.PKey()
     ca_key.generate_key(crypto.TYPE_RSA, 2048)
 
@@ -28,8 +29,12 @@ def make_ca(crt_path, key_path, n_years=10):
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(31536000 * n_years)
     cert.set_issuer(cert.get_subject())
-    cert.add_extensions([crypto.X509Extension(b'basicConstraints', False, b'CA:TRUE'),
-                         crypto.X509Extension(b'keyUsage', False, b'keyCertSign, cRLSign')])
+    cert.add_extensions(
+        [
+            crypto.X509Extension(b"basicConstraints", False, b"CA:TRUE"),
+            crypto.X509Extension(b"keyUsage", False, b"keyCertSign, cRLSign"),
+        ]
+    )
     cert.set_pubkey(ca_key)
     cert.sign(ca_key, "sha256")
 
@@ -47,8 +52,9 @@ def make_ca(crt_path, key_path, n_years=10):
 
     os.umask(old)
 
+
 def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=False):
-    '''
+    """
     Make an SSL certificate and p12 file
 
     @param path      The directory to create the certificate in
@@ -58,7 +64,7 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     @param cert_auth A tuple of paths to (ca_crt, ca_key)
     @param n_years   How many years the certificate should be valid for
     @param dump_pem  True if you wish to keep the .crt/.key file
-    '''
+    """
     (ca_crt, ca_key) = cert_auth
     with open(ca_key, "r") as ca_key_fp:
         cakey = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_key_fp.read())
@@ -86,7 +92,7 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     p12.set_privatekey(cli_key)
     p12.set_certificate(cert)
     p12.set_ca_certificates(chain)
-    p12data = p12.export(passphrase=bytes(cert_pw, encoding='UTF-8'))
+    p12data = p12.export(passphrase=bytes(cert_pw, encoding="UTF-8"))
 
     with open(os.path.join(path, f"{f_name}.p12"), "wb") as p12_fp:
         p12_fp.write(p12data)

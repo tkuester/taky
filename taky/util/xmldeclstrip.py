@@ -1,5 +1,5 @@
 class XMLDeclStrip:
-    '''
+    """
     Strip "<?xml" declarations from a stream of data.
 
     This is an ugly work around for several problems.
@@ -46,12 +46,12 @@ class XMLDeclStrip:
 
     TODO: Make this entire process transparent, and monkeypatch / subclass
           the XMLPullParser
-    '''
+    """
 
     def __init__(self, parser):
         # Keep the tail of the buffer if we don't have enough information to know
         # whether or not we should feed it to the client yet
-        self.tail = b''
+        self.tail = b""
         # Handle state between calls -- are we in an XML declaration right now?
         self.in_decl = False
 
@@ -64,11 +64,11 @@ class XMLDeclStrip:
         self.parser.feed(self.strip(data))
 
     def strip(self, data):
-        start_tag = b'<?xml '
-        end_tag = b'?>'
+        start_tag = b"<?xml "
+        end_tag = b"?>"
 
         ret = bytes()
-        data = (self.tail + data)
+        data = self.tail + data
         while len(data) > 0:
             if not self.in_decl:
                 # If we're not in a declaration, look for the start tag
@@ -78,23 +78,23 @@ class XMLDeclStrip:
                     # We found it, consume everything up to that point
                     self.in_decl = True
                     ret += data[:pos]
-                    data = data[pos + len(start_tag):]
+                    data = data[pos + len(start_tag) :]
                 except ValueError:
                     # We didn't find it. Let's check to see if we need to keep
                     # any part of the tail. A '<' character could be the start
                     # of an element, or the start of a declaration. We won't
                     # know until we get the next few bytes.
 
-                    pos = data.rfind(b'<')
+                    pos = data.rfind(b"<")
                     if pos < 0:
                         # We didn't find it, we can feed all of the buffer,
                         # consume all
-                        self.tail = b''
+                        self.tail = b""
                         ret += data
                     elif len(data) - pos >= len(start_tag):
                         # We found it, but far back enough that we know it's
                         # not our start condition, consume all
-                        self.tail = b''
+                        self.tail = b""
                         ret += data
                     else:
                         # We found something we're not sure about. Consume up
@@ -111,8 +111,8 @@ class XMLDeclStrip:
                     # We found the end tag, skip to it, trim the tail buffer,
                     # and continue processing.
                     self.in_decl = False
-                    data = data[pos + len(end_tag):]
-                    self.tail = b''
+                    data = data[pos + len(end_tag) :]
+                    self.tail = b""
                     continue
                 except ValueError:
                     # We didn't find our end tag... but the final characters

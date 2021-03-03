@@ -10,13 +10,14 @@ from lxml import etree
 from . import models
 from taky.util import XMLDeclStrip
 
+
 class TAKClient:
-    '''
+    """
     Holds state and information regarding a client connected to the TAK server.
     This object is designed to be somewhat agnostic as to HOW the client
     connected, and instead only focuses on what the server needs to know about
     the client.
-    '''
+    """
 
     def __init__(self, router=None, cot_log_dir=None):
         self.router = router
@@ -25,43 +26,42 @@ class TAKClient:
         self.cot_log_dir = cot_log_dir
         self.cot_fp = None
 
-        parser = etree.XMLPullParser(tag='event', resolve_entities=False)
-        parser.feed(b'<root>')
+        parser = etree.XMLPullParser(tag="event", resolve_entities=False)
+        parser.feed(b"<root>")
         self.xdc = XMLDeclStrip(parser)
 
         self.lgr = logging.getLogger(TAKClient.__name__)
 
     def __repr__(self):
-        return f'<TAKClient uid={self.user.uid} ' \
-               f'callsign={self.user.callsign}>'
+        return f"<TAKClient uid={self.user.uid} " f"callsign={self.user.callsign}>"
 
     def send(self, data):
-        '''
+        """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
-        '''
+        """
         raise NotImplementedError()
 
     def close(self):
-        ''' Close the COT log '''
+        """ Close the COT log """
         if self.cot_fp:
             try:
                 self.cot_fp.close()
-            except: # pylint: disable=bare-except
+            except:  # pylint: disable=bare-except
                 pass
             self.cot_fp = None
 
     def log_event(self, evt):
-        '''
+        """
         Writes the COT XML to the logfile, if configured.
 
         @param evt The COT Event to log
-        '''
+        """
         # Skip if we're not configured to log
         if not self.cot_log_dir:
             return
         # Skip logging of pings
-        if evt.uid.endswith('-ping'):
+        if evt.uid.endswith("-ping"):
             return
         # Don't log if we don't have a user yet
         if not self.user.uid:
@@ -71,10 +71,10 @@ class TAKClient:
         if not self.cot_fp:
             # TODO: Multiple clients with same name will fight over file
             #     : Could happen on WiFi -> LTE handoff
-            name = os.path.join(self.cot_log_dir, f'{self.user.uid}.cot')
+            name = os.path.join(self.cot_log_dir, f"{self.user.uid}.cot")
             try:
                 self.lgr.info("Opening logfile %s", name)
-                self.cot_fp = open(name, 'a+')
+                self.cot_fp = open(name, "a+")
             except OSError as exc:
                 self.lgr.warning("Unable to open COT log: %s", exc)
                 self.cot_fp = None
@@ -91,9 +91,9 @@ class TAKClient:
             self.cot_log_dir = None
 
     def feed(self, data):
-        '''
+        """
         Feed the XML data parser with COT data
-        '''
+        """
         # TODO: Specify maximum element size
         self.xdc.feed(data)
 
@@ -106,7 +106,7 @@ class TAKClient:
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 # TODO: Call log_event(elm, failed=True, comment=str(exc))
                 continue
-            except Exception as exc: # pylint: disable=broad-except
+            except Exception as exc:  # pylint: disable=broad-except
                 self.lgr.error("Unhandled exception parsing Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 # TODO: Call log_event(elm, failed=True, comment=str(exc))
@@ -114,72 +114,78 @@ class TAKClient:
             finally:
                 elm.clear(keep_tail=True)
 
-            if evt.etype == 't-x-c-t':
+            if evt.etype == "t-x-c-t":
                 self.pong()
                 return
-            elif evt.etype.startswith('a'):
+            elif evt.etype.startswith("a"):
                 self.handle_atom(evt)
 
             self.router.route(self, evt)
 
     def handle_atom(self, evt):
-        '''
+        """
         Process a COT atom.
 
         Inspects the Event to see if it is a self description, and if so,
         informs the router a client has identified itself.
-        '''
+        """
         if evt.detail is None:
             return
 
-        if evt.detail.elm.find('takv') is not None:
+        if evt.detail.elm.find("takv") is not None:
             first_ident = self.user.update_from_evt(evt)
             if first_ident:
                 self.router.client_ident(self)
 
     def pong(self):
-        '''
+        """
         Generate and send a TAK pong. Clients that do not receive a pong in
         an appropriate amount of time will disconnect.
-        '''
+        """
         now = dt.utcnow()
         pong = models.Event(
-            uid='takPong',
-            etype='t-x-c-t-r',
-            how='h-g-i-g-o',
+            uid="takPong",
+            etype="t-x-c-t-r",
+            how="h-g-i-g-o",
             time=now,
             start=now,
-            stale=now + timedelta(seconds=20)
+            stale=now + timedelta(seconds=20),
         )
         self.send(pong)
 
+
 class SSLState(enum.Enum):
-    ''' Tracks SSL state '''
+    """ Tracks SSL state """
+
     NO_SSL = 0
     SSL_WAIT = 1
     SSL_WAIT_TX = 2
     SSL_ESTAB = 4
 
+
 class SocketTAKClient(TAKClient):
-    '''
+    """
     A TAK client based on sockets
-    '''
+    """
+
     def __init__(self, router, cot_log_dir=None, addr=None):
         super().__init__(router, cot_log_dir)
         self.addr = addr
         self.ssl_hs = SSLState.NO_SSL
-        self.out_buff = b''
+        self.out_buff = b""
 
     def __repr__(self):
-        return f'<SocketTAKClient uid={self.user.uid} ' \
-               f'callsign={self.user.callsign} '        \
-               f'addr={self.addr[0]}:{self.addr[1]}>'
+        return (
+            f"<SocketTAKClient uid={self.user.uid} "
+            f"callsign={self.user.callsign} "
+            f"addr={self.addr[0]}:{self.addr[1]}>"
+        )
 
     def send(self, data):
-        '''
+        """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
-        '''
+        """
         if isinstance(data, models.Event):
             data = data.as_element
 
@@ -199,5 +205,5 @@ class SocketTAKClient(TAKClient):
 
     @property
     def has_data(self):
-        ''' Returns true if there is outbound data pending '''
+        """ Returns true if there is outbound data pending """
         return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX

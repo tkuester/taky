@@ -8,12 +8,12 @@ from .takuser import TAKUser
 from .takuser import TAKDevice
 
 __all__ = [
-    'UnmarshalError',
-    'Event',
-    'Point',
-    'Detail',
-    'GeoChat',
-    'Teams',
-    'TAKUser',
-    'TAKDevice'
+    "UnmarshalError",
+    "Event",
+    "Point",
+    "Detail",
+    "GeoChat",
+    "Teams",
+    "TAKUser",
+    "TAKDevice",
 ]

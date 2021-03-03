@@ -4,9 +4,10 @@ from lxml import etree
 
 from .errors import UnmarshalError
 
+
 @dataclass
 class Point:
-    ''' An object representing the CoT Point
+    """An object representing the CoT Point
 
     All the fields are required. If circular error (ce) or linear error (le)
     are omitted, they should be set to arbitrarily large values. (Regrettably,
@@ -15,13 +16,13 @@ class Point:
     (lat, lon) refers to WGS84 coordinates
 
     All other units are in meters.
-    '''
+    """
 
     lat: float = 0.0
     lon: float = 0.0
     hae: float = 0.0
-    ce: float = 9999999.0 # pylint: disable=invalid-name
-    le: float = 9999999.0 # pylint: disable=invalid-name
+    ce: float = 9999999.0  # pylint: disable=invalid-name
+    le: float = 9999999.0  # pylint: disable=invalid-name
 
     @property
     def coords(self):
@@ -29,25 +30,29 @@ class Point:
 
     def __repr__(self):
         return "<Point coords=(%.6f, %.6f), hae=%.1f m, ce=%.1f m>" % (
-                self.lat, self.lon, self.hae, self.ce)
+            self.lat,
+            self.lon,
+            self.hae,
+            self.ce,
+        )
 
     @staticmethod
     def from_elm(elm):
         return Point(
-            lat=float(elm.get('lat')),
-            lon=float(elm.get('lon')),
-            hae=float(elm.get('hae')),
-            ce=float(elm.get('ce')),
-            le=float(elm.get('le'))
+            lat=float(elm.get("lat")),
+            lon=float(elm.get("lon")),
+            hae=float(elm.get("hae")),
+            ce=float(elm.get("ce")),
+            le=float(elm.get("le")),
         )
 
     @property
     def as_element(self):
-        ret = etree.Element('point')
-        ret.set('lat', '%.6f' % self.lat)
-        ret.set('lon', '%.6f' % self.lon)
-        ret.set('hae', '%.1f' % self.hae)
-        ret.set('ce', '%.1f' % self.ce)
-        ret.set('le', '%.1f' % self.le)
+        ret = etree.Element("point")
+        ret.set("lat", "%.6f" % self.lat)
+        ret.set("lon", "%.6f" % self.lon)
+        ret.set("hae", "%.1f" % self.hae)
+        ret.set("ce", "%.1f" % self.ce)
+        ret.set("le", "%.1f" % self.le)
 
         return ret

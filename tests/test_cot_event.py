@@ -5,7 +5,8 @@ from lxml import etree
 from taky.cot import models
 from . import elements_equal
 
-XML_S = b'''<event version="2.0" uid="ANDROID-deadbeef" type="a-f-G-U-C" how="m-g" time="2021-02-27T20:32:24.771Z" start="2021-02-27T20:32:24.771Z" stale="2021-02-27T20:38:39.771Z"><point lat="1.234567" lon="-3.141592" hae="-25.7" ce="9.9" le="9999999.0"/><detail><takv os="29" version="4.0.0.0 (deadbeef).1234567890-CIV" device="Some Android Device" platform="ATAK-CIV"/><contact xmppUsername="xmpp@host.com" endpoint="*:-1:stcp" callsign="JENNY"/><uid Droid="JENNY"/><precisionlocation altsrc="GPS" geopointsrc="GPS"/><__group role="Team Member" name="Cyan"/><status battery="78"/><track course="80.24833892285461" speed="0.0"/></detail></event>'''
+XML_S = b"""<event version="2.0" uid="ANDROID-deadbeef" type="a-f-G-U-C" how="m-g" time="2021-02-27T20:32:24.771Z" start="2021-02-27T20:32:24.771Z" stale="2021-02-27T20:38:39.771Z"><point lat="1.234567" lon="-3.141592" hae="-25.7" ce="9.9" le="9999999.0"/><detail><takv os="29" version="4.0.0.0 (deadbeef).1234567890-CIV" device="Some Android Device" platform="ATAK-CIV"/><contact xmppUsername="xmpp@host.com" endpoint="*:-1:stcp" callsign="JENNY"/><uid Droid="JENNY"/><precisionlocation altsrc="GPS" geopointsrc="GPS"/><__group role="Team Member" name="Cyan"/><status battery="78"/><track course="80.24833892285461" speed="0.0"/></detail></event>"""
+
 
 class COTTestcase(ut.TestCase):
     def test_unmarshall(self):
@@ -13,10 +14,10 @@ class COTTestcase(ut.TestCase):
         event = models.Event.from_elm(elm)
 
         # Event
-        self.assertEqual(event.version, '2.0')
-        self.assertEqual(event.uid, 'ANDROID-deadbeef')
-        self.assertEqual(event.etype, 'a-f-G-U-C')
-        self.assertEqual(event.how, 'm-g')
+        self.assertEqual(event.version, "2.0")
+        self.assertEqual(event.uid, "ANDROID-deadbeef")
+        self.assertEqual(event.etype, "a-f-G-U-C")
+        self.assertEqual(event.how, "m-g")
         self.assertEqual(event.time, event.start)
 
         # Point
@@ -41,27 +42,27 @@ class COTTestcase(ut.TestCase):
     def test_marshall_error(self):
         # An otherwise valid element with an incorrect tag
         elm = etree.fromstring(XML_S)
-        elm.tag = 'xxx'
+        elm.tag = "xxx"
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
         # An otherwise valid element with an incorrect tag
         elm = etree.fromstring(XML_S)
-        elm.set('start', 'xxx')
+        elm.set("start", "xxx")
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
         # An invalid point
         elm = etree.fromstring(XML_S)
-        elm[0].set('lat', 'xxx')
+        elm[0].set("lat", "xxx")
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
         # An element with no UID
         elm = etree.fromstring(XML_S)
-        elm.attrib.pop('uid')
+        elm.attrib.pop("uid")
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
         # An element with no type
         elm = etree.fromstring(XML_S)
-        elm.attrib.pop('type')
+        elm.attrib.pop("type")
         self.assertRaises(models.UnmarshalError, models.Event.from_elm, elm)
 
     def test_marti_exceptions(self):
