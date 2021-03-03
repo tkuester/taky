@@ -1,6 +1,7 @@
 import sys
 import argparse
 import configparser
+import traceback
 
 from taky import __version__
 from taky.config import load_config
@@ -39,7 +40,15 @@ def main():
         argp.print_usage()
         sys.exit(1)
 
-    commands[args.command](config, args)
+    try:
+        ret = commands[args.command](config, args)
+    except Exception as exc:
+        print(f"{args.command} failed: {str(exc)}", file=sys.stderr)
+        print("Unhandled exception:", file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
+        ret = 1
+
+    sys.exit(ret)
 
 if __name__ == '__main__':
     main()

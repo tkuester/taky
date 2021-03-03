@@ -32,9 +32,10 @@ def setup_taky(config, args):
     if args.path:
         if os.path.exists(args.path):
             print("ERROR: Directory exists, refusing to run setup", file=sys.stderr)
-            sys.exit(1)
+            return 1
 
         args.path = os.path.abspath(args.path)
+        print(f"Installing site to {args.path}")
 
         dirs = [
             args.path,
@@ -59,6 +60,7 @@ def setup_taky(config, args):
 
         config.set('dp_server', 'upload_path', os.path.join('.', 'dp-user'))
     else:
+        print("Installing site to system")
         args.path = '/'
 
         dirs = [
@@ -83,8 +85,14 @@ def setup_taky(config, args):
     config.set('ssl', 'enabled', 'true' if args.use_ssl else 'false')
     config.set('ssl', 'server_p12_pw', args.p12_pw)
 
+    if os.path.exists(config_path):
+        print(f"ERROR: Config already exists at {config_path}, refusing to setup")
+        return 1
+
     with open(config_path, 'w') as cfg_fp:
         config.write(cfg_fp)
+
+    print(f" - Wrote {config_path}")
 
     if args.user:
         shutil.chown(config_path, user=args.user, group=args.user)
@@ -103,9 +111,10 @@ def setup_taky(config, args):
     if config.getboolean('ssl', 'enabled'):
         if os.path.exists(config.get('ssl', 'ca')):
             ca_path = config.get('ssl', 'ca')
-            print(f"ERROR: CA exists at {ca_path}, refusing to run setup", file=sys.stderr)
-            sys.exit(1)
+            print(f"ERROR: CA exists at {ca_path}, stopping here", file=sys.stderr)
+            return 1
 
+        print(" - Generating certificate authority")
         rotc.make_ca(crt_path=config.get('ssl', 'ca'),
                      key_path=config.get('ssl', 'ca_key'))
 
@@ -117,6 +126,7 @@ def setup_taky(config, args):
                          user=args.user,
                          group=args.user)
 
+        print(" - Generating server certificate")
         rotc.make_cert(
             path=ssl_path,
             f_name='server',
@@ -127,6 +137,7 @@ def setup_taky(config, args):
         )
 
         if args.user:
+            print(f" - Changing ownership to {args.user}")
             shutil.chown(config.get('ssl', 'cert'),
                          user=args.user,
                          group=args.user)
@@ -136,3 +147,5 @@ def setup_taky(config, args):
             shutil.chown(config.get('ssl', 'server_p12'),
                          user=args.user,
                          group=args.user)
+
+    return 0

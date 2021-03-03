@@ -97,3 +97,5 @@ def build_client(config, args):
 
     # Cleanup temporary directory
     shutil.rmtree(tdir)
+
+    return 0
