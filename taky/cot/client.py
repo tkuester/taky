@@ -94,6 +94,7 @@ class TAKClient:
         '''
         Feed the XML data parser with COT data
         '''
+        # TODO: Specify maximum element size
         self.xdc.feed(data)
 
         for (_, elm) in self.xdc.read_events():
@@ -103,10 +104,12 @@ class TAKClient:
             except models.UnmarshalError as exc:
                 self.lgr.warning("Unable to parse Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
+                # TODO: Call log_event(elm, failed=True, comment=str(exc))
                 continue
             except Exception as exc: # pylint: disable=broad-except
                 self.lgr.error("Unhandled exception parsing Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
+                # TODO: Call log_event(elm, failed=True, comment=str(exc))
                 continue
             finally:
                 elm.clear(keep_tail=True)

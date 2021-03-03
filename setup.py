@@ -20,7 +20,7 @@ setup(name='taky',
     zip_safe=False,
     classifiers=[
         "Topic :: Communications",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
     ],
