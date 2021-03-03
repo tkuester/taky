@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from .errors import UnmarshalError
-
 
 @dataclass
 class Point:

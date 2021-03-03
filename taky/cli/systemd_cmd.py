@@ -48,7 +48,7 @@ def write_cot_svc(names, config, args, using_venv=False, site_path=None):
         host = config.get("taky", "hostname")
         cot_svc.append(f"EnvironmentFile=-/etc/default/taky-{host}")
     else:
-        cot_svc.append(f"EnvironmentFile=-/etc/default/taky")
+        cot_svc.append("EnvironmentFile=-/etc/default/taky")
 
     if args.user:
         cot_svc.append(f"User={args.user}")
@@ -207,3 +207,5 @@ def systemd(config, args):
         except subprocess.CalledProcessError as exc:
             print(f"ERROR: systemctl calls failed: {exc}")
             return 1
+
+    return 0

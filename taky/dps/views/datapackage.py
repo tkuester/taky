@@ -114,7 +114,7 @@ def datapackage_upload():
         )
         try:
             os.unlink(old_meta_hash_path)
-        except:
+        except:  # pylint: disable=bare-except
             pass
 
     # Save the uploaded file

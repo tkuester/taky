@@ -221,7 +221,7 @@ class COTServer:
             client = self.clients.get(sock)
             if sock.fileno() == -1:
                 continue
-            elif sock is self.srv:
+            if sock is self.srv:
                 self.handle_accept()
             elif self.ssl_ctx and client.ssl_hs in [
                 SSLState.SSL_WAIT,
@@ -236,7 +236,7 @@ class COTServer:
             client = self.clients.get(sock)
             if sock.fileno() == -1:
                 continue
-            elif self.ssl_ctx and client.ssl_hs in [
+            if self.ssl_ctx and client.ssl_hs in [
                 SSLState.SSL_WAIT,
                 SSLState.SSL_WAIT_TX,
             ]:

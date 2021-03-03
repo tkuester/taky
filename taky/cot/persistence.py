@@ -55,8 +55,8 @@ def build_persistence(config):
     try:
         if config.getboolean("taky", "redis"):
             return RedisPersistence(config.get("taky", "hostname"))
-        else:
-            return Persistence()
+
+        return Persistence()
     except (AttributeError, ValueError):
         pass
 

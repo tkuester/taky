@@ -7,8 +7,8 @@ import logging
 
 from lxml import etree
 
-from . import models
 from taky.util import XMLDeclStrip
+from . import models
 
 
 class TAKClient:
@@ -114,10 +114,12 @@ class TAKClient:
             finally:
                 elm.clear(keep_tail=True)
 
+            # Hard stop processing on a tak ping
             if evt.etype == "t-x-c-t":
                 self.pong()
                 return
-            elif evt.etype.startswith("a"):
+
+            if evt.etype.startswith("a"):
                 self.handle_atom(evt)
 
             self.router.route(self, evt)
