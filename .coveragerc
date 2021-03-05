@@ -1,0 +1,10 @@
+[run]
+branch = True
+
+[report]
+include = taky/**
+exclude_lines =
+	def __repr__
+	raise NotImplementedError
+	except DistributionNotFound:
+	if __name__ == .__main__.:
