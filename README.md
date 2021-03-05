@@ -9,9 +9,7 @@ taky - A simple COT server for ATAK
 
 ## Features (and anti-Features!)
 
- * Should support multiple ATAK clients simultaneously! You can see them on the
-   map!
- * GeoChats are routed to appropriate groups / UIDs, unless broadcast!
+ * Supports multiple ATAK clients simultaneously! You can see them on the map!
  * SSL support with optional client keys!
  * Some design consideration for XML security!
  * Actually somewhat decent CoT routing uses Marti for other items. If
@@ -22,13 +20,12 @@ taky - A simple COT server for ATAK
  * Server shuts down with only one Ctrl+C!
  * Does not require root to run!
  * Thread safety? Where we're going, we don't need threads!
- * Slightly less-than-broken Data Package Server
- * Only one version away from having systemd scripts!
- * Tools spit backtraces out instead of giving a nice error message!
- * Stupid fast for no good reason! Routes 1000 packets / second on an old
-   Core i5-2500k!
+ * Slightly less-than-broken Data Package Server!
+ * Handy CLI utilities for generating systemd service files and client keys!
+ * Stupid fast for no good reason! Routes 1000 packets / second on an old Core
+   i5-2500k!
  * Optional redis backed object persistence storage!
- * Still requires no SQlite / database!
+ * Still no requirement for SQlite / database!
 
 ## Requirements
 
@@ -41,11 +38,13 @@ taky - A simple COT server for ATAK
  * redis
 
 This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
-ATAK v4.2.0.4. It is now in a beta state, and should work relatively well.
+ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and should work relatively
+well.
 
 Most of the testing so far has been with "simulated" clients, instead of real
-users. I still wouldn't recommend using this for an important exercise, but if
-you want to test it out, please let me know how it goes!
+users. I still wouldn't recommend using this for an important exercise where
+lives are at stake, but if you want to test it out, please let me know how it
+goes!
 
 ## Installation
 
