@@ -7,18 +7,19 @@ from .test_cot_event import XML_S
 
 
 class TAKClientTest(ut.TestCase):
-    def test_load(self):
-        cfg = load_config()
+    def setUp(self):
+        cfg = load_config("/dev/null")
         cfg.set("taky", "redis", "false")
         router = cot.COTRouter(cfg)
-        tk = cot.TAKClient(router)
+        self.tk = cot.TAKClient(router)
 
-        tk.feed(XML_S)
+    def test_ident(self):
+        self.tk.feed(XML_S)
 
-        self.assertEqual(tk.user.callsign, "JENNY")
-        self.assertEqual(tk.user.uid, "ANDROID-deadbeef")
-        self.assertEqual(tk.user.device.os, "29")
-        self.assertEqual(tk.user.device.device, "Some Android Device")
-        self.assertEqual(tk.user.group, cot.Teams.CYAN)
-        self.assertEqual(tk.user.battery, "78")
-        self.assertEqual(tk.user.role, "Team Member")
+        self.assertEqual(self.tk.user.callsign, "JENNY")
+        self.assertEqual(self.tk.user.uid, "ANDROID-deadbeef")
+        self.assertEqual(self.tk.user.device.os, "29")
+        self.assertEqual(self.tk.user.device.device, "Some Android Device")
+        self.assertEqual(self.tk.user.group, cot.Teams.CYAN)
+        self.assertEqual(self.tk.user.battery, "78")
+        self.assertEqual(self.tk.user.role, "Team Member")
