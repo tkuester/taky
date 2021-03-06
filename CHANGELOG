@@ -1,0 +1,87 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.7] - 2021-03-05
+The system administrator's release, aimed at easing deployment of taky, and
+improving CI. Officially moving from alpha to beta!
+
+### Added
+ - takyctl can now generate systemd scripts
+ - dps now supports video URL endpoints
+ - Object persistence with optional redis backend!
+ - Preliminary unit testing
+
+### Changed
+ - Greater resillience to malformed COT messages
+ - Added some unit tests and GitHub automation
+ - Code structure and documentation improvements
+
+### Fixed
+ - Corrected the DPS url for client->client transfers
+
+## [0.6] - 2021-02-26
+The single threaded release! Huge fix for the SSL deadlock! The first really
+usable release.
+
+### Added
+ - Optional flag to allows pdb to attach to the COT server
+ - takyctl can optionally export the .crt/.key files for key generation
+
+### Changed
+ - Code is now single threaded
+
+### Fixed
+ - SSL handshake deadlock
+
+## [0.5.3] - 2021-02-18
+### Added
+ - COT server can optionally log COT messages from the client
+
+### Fixed
+ - Correct the dps path when in a virtualenv
+ - Fix the followup URL for a client->client upload
+
+## [0.5.2] - 2021-02-17
+### Added
+ - `takyctl setup` builds configurations for deployments
+
+### Fixed
+ - The configuration parser left the port undefined in some scenarios
+
+## [0.5.1] - 2021-02-15
+### Fixed
+ - Uploaded an sdist file to PyPi, oops
+
+## [0.5] - 2021-02-15
+The Data Package Server was introduced with this release, in a very preliminary
+state!
+
+### Added
+ - Preliminary Data Package Server
+ - Taky now operates on a config file
+
+## [0.4] - 2021-01-23
+### Added
+ - First release on PyPi
+
+## [0.3] - 2021-01-23
+### Added
+ - COT server can now run with SSL
+ - Using Marti to route packets
+
+## [0.2] - 2021-01-23
+### Added
+ - GeoChat handling
+ - Added rudimentary persistence for TAKClients
+
+### Security
+ - XML is no longer parsed with `resolve_entities`
+
+## [0.1] - 2021-01-18
+### Added
+ - Initial release
