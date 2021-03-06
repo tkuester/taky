@@ -220,7 +220,25 @@ stickytak@bluetack:~$ taky_dps
 
 Step 6. Setup systemd services
 
- << TODO >>
+**This step is still under development, so use with caution!**
+
+From the command line, run
+
+```
+admin@bluetack:~$ takyctl systemd -u stickytak
+[sudo] password for admin:
+Building systemd services
+ - Detected system-wide site install
+   - Writing taky-cot.service
+   - Writing taky-dps.service
+   - Writing taky.service
+ - Reloading systemctl services
+ - Enabling service
+ - Starting service
+```
+
+Now, you can start and stop your service with `systemctl <start|stop> taky`!
+The systemd scripts are installed to `/etc/systemd/system`.
 
 ### Site Installation
 
@@ -307,7 +325,7 @@ And if you are using a virtualenv, don't forget to source your `bin/activate`!
 ```
 user@bluetack:~$ cd bluetack-1
 user@bluetack:~/bluetack-1$ takyctl build_client JENNY
-admin@bluetack:~/bluetack-1$ ls -l JENNY.zip
+user@bluetack:~/bluetack-1$ ls -l JENNY.zip
 -rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY.zip
 ```
 
@@ -316,4 +334,33 @@ connecting to your server!
 
 Step 4. Systemd scripts
 
-<< TODO >>
+**This step is still under development, so use with caution!**
+
+```
+user@bluetack:~/bluetack-1$ sudo takyctl systemd -u user
+[sudo] password for user:
+Building systemd services
+ - Detected site install: /home/user/bluetack-1
+   - Writing taky-bluetack-1-cot.service
+   - Writing taky-bluetack-1-dps.service
+   - Writing taky-bluetack-1.service
+ - Reloading systemctl services
+ - Enabling service
+ - Starting service
+```
+
+Now, you can start and stop your service with `systemctl <start|stop>
+taky-bluetack-1`! The systemd scripts are installed to `/etc/systemd/system`.
+
+**NOTE:** Running this in a virtual environment is slightly more challenging.
+You must call `takyctl` explicitly from your virtual environment. Check the
+output to make sure it detected everything correctly!
+
+```
+(my_venv) user@bluetack:~/bluetack-1$ sudo ~/my_venv/bin/takyctl systemd -u user
+Building systemd services
+ - Detected virtualenv: /home/user/my_venv
+   Service files will be built for this virutalenv
+ - Detected site install: /home/user/bluetack-1
+ [ ... ]
+```
