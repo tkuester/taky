@@ -20,7 +20,7 @@ $ sudo apt install python3 python3-pip redis-server
 $ python3 --version
 Python 3.8.5
 
-# If necessary, upgrade pip
+# Upgrade pip -- the vendor's distribution may be outdated
 $ sudo -H python3 -m pip install --upgrade pip
 ```
 
@@ -55,7 +55,7 @@ $ sudo apt install python3 python3-pip redis-server
 $ python3 --version
 Python 3.8.5
 
-# If necessary, upgrade pip
+# Upgrade pip -- the vendor's distribution may be outdated
 $ sudo -H python3 -m pip install --upgrade pip
 
 # Install virtualenv
