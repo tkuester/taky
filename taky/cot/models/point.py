@@ -1,9 +1,6 @@
-from dataclasses import dataclass
-
 from lxml import etree
 
 
-@dataclass
 class Point:
     """An object representing the CoT Point
 
@@ -16,11 +13,12 @@ class Point:
     All other units are in meters.
     """
 
-    lat: float = 0.0
-    lon: float = 0.0
-    hae: float = 0.0
-    ce: float = 9999999.0  # pylint: disable=invalid-name
-    le: float = 9999999.0  # pylint: disable=invalid-name
+    def __init__(self, lat=0.0, lon=0.0, hae=0.0, ce=9999999.0, le=9999999.0):
+        self.lat = lat
+        self.lon = lon
+        self.hae = hae
+        self.ce = ce  # pylint: disable=invalid-name
+        self.le = le  # pylint: disable=invalid-name
 
     @property
     def coords(self):

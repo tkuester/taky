@@ -1,6 +1,5 @@
 from datetime import datetime as dt
 from datetime import timedelta
-from dataclasses import dataclass
 
 from lxml import etree
 
@@ -11,12 +10,12 @@ from .teams import Teams
 from .point import Point
 
 
-@dataclass
 class TAKDevice:
-    os: str = None  # pylint: disable=invalid-name
-    version: str = None
-    device: str = None
-    platform: str = None
+    def __init__(self, os=None, version=None, device=None, platform=None):
+        self.os = os  # pylint: disable=invalid-name
+        self.version = version
+        self.device = device
+        self.platform = platform
 
     def __repr__(self):
         return "<TAKDevice %s (%s) on %s>" % (self.platform, self.version, self.device)
@@ -48,8 +47,6 @@ class TAKDevice:
         return etree.tostring(self.as_element)
 
 
-# TODO: Extend from Detail
-@dataclass
 class TAKUser:
     def __init__(self):
         self.uid = None
