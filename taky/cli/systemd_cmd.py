@@ -181,6 +181,7 @@ def systemd(config, args):
             print(f"ERROR: Refusing to overwite service file: {path}", file=sys.stderr)
             return 1
 
+    print(f" - Writing services to {args.path}")
     try:
         print(f"   - Writing {svcs['cot']}")
         write_cot_svc(svcs, config, args, using_venv, site_path)
