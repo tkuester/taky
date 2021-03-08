@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2021-03-07
+
+### Changed
+ - Removed dependency on dataclasses (to keep python 3.6 support)
+
 ## [0.7] - 2021-03-05
 The system administrator's release, aimed at easing deployment of taky, and
 improving CI. Officially moving from alpha to beta!
