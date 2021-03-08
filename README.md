@@ -12,8 +12,7 @@ taky - A simple COT server for ATAK
  * Supports multiple ATAK clients simultaneously! You can see them on the map!
  * SSL support with optional client keys!
  * Some design consideration for XML security!
- * Actually somewhat decent CoT routing uses Marti for other items. If
-   unspecified, packets are considered broadcast.
+ * Actually somewhat decent CoT routing, with Marti support!
  * A hacked up XML parser written by someone who barely understands XML!
  * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
    industry experience in implementing CoT technology!
@@ -26,20 +25,21 @@ taky - A simple COT server for ATAK
    i5-2500k!
  * Optional redis backed object persistence storage!
  * Still no requirement for SQlite / database!
+ * Tested for easy deployment on Ubuntu and CentOS!
 
 ## Requirements
 
- * Python 3.6 or greater (strongly recommend 3.7+)
- * lxml
- * dateutil
- * flask
- * pyopenssl
+ * Python 3.6 or greater
+ * lxml (BSD)
+ * dateutil (Apache 2.0 / BSD 3-clause)
+ * flask (BSD 3-clause)
+ * pyopenssl (Apache 2.0)
  * gunicorn
- * redis
+ * redis (MIT)
 
 This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
-ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and should work relatively
-well.
+ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and has even been tested
+on a CentOS 8 docker image!
 
 Most of the testing so far has been with "simulated" clients, instead of real
 users. I still wouldn't recommend using this for an important exercise where
