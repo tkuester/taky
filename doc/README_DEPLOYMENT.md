@@ -5,6 +5,37 @@ deployment. You should choose the way that best suits your needs! But if you
 aren't sure, and you don't have complex needs, the "Linux System Administrator"
 method is probably the one you want to choose!
 
+## Shut up and take my money!
+
+Ok, geez! Hold your horses! This assumes:
+
+1. You have sudo privilegs
+2. You don't mind installing things globally
+3. You want to run under the user "bluetack"
+
+```
+# Become root
+bluetack $ sudo -i
+
+# Install Dependencies -- yum for CentOS
+root # apt install python3 python3-pip
+root # python3 -m pip install --upgrade pip
+
+# Install taky
+root # python3 -m pip install taky
+
+# Generate config + CA + Certs
+root # takyctl setup --host <hostname> --public-ip 123.45.67.89 --user bluetack
+
+# Install systemd Services
+root # tackyctl systemd --user bluetack
+root # ^D
+
+# Build your first client certificate
+bluetack $ takyctl build_client JENNY
+bluetack $ ls JENNY.zip
+```
+
 ## Installation
 
 ### The Linux System Administrator Way
