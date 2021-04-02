@@ -1,5 +1,6 @@
 # pylint: disable=missing-module-docstring
 import os
+import time
 import enum
 from datetime import datetime as dt
 from datetime import timedelta
@@ -22,6 +23,7 @@ class TAKClient:
     def __init__(self, router=None, cot_log_dir=None):
         self.router = router
         self.user = models.TAKUser()
+        self.connected = time.time()
 
         self.cot_log_dir = cot_log_dir
         self.cot_fp = None
