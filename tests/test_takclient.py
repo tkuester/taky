@@ -1,3 +1,4 @@
+import os
 import unittest as ut
 
 from taky import cot
@@ -8,7 +9,7 @@ from .test_cot_event import XML_S
 
 class TAKClientTest(ut.TestCase):
     def setUp(self):
-        cfg = load_config("/dev/null")
+        cfg = load_config(os.devnull)
         cfg.set("taky", "redis", "false")
         router = cot.COTRouter(cfg)
         self.tk = cot.TAKClient(router)

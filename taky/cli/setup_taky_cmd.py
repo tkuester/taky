@@ -45,7 +45,7 @@ def setup_taky_reg(subp):
 
 
 def setup_taky(config, args):
-    config = load_config("/dev/null")
+    config = load_config(os.devnull)
     if args.path:
         if os.path.exists(args.path):
             print("ERROR: Directory exists, refusing to run setup", file=sys.stderr)

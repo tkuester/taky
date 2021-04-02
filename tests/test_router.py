@@ -1,3 +1,4 @@
+import os
 import queue
 import unittest as ut
 from datetime import datetime as dt
@@ -21,7 +22,7 @@ class UnittestTAKClient(cot.TAKClient):
 
 class RouterTestcase(ut.TestCase):
     def setUp(self):
-        cfg = load_config("/dev/null")
+        cfg = load_config(os.devnull)
         cfg.set("taky", "redis", "false")
         cfg.set("cot_server", "cot_log", None)
         self.router = cot.COTRouter(cfg)
