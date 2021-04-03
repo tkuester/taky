@@ -44,11 +44,24 @@ routing. However, malformed documents may linger in Redis persistence,
 poisoning all new clients that connect. This is an interesting attack vector
 which I have not considered much.
 
+A recent discussion in Discord showed that some TAK Servers were not relaying
+custom extensions in the `<detail>` element. The servers were interpreting the
+COT detail, discarding what was not understood, and only relaying what passed
+through a filter. While this does result in a "safer" COT experience, it
+decreases interoperability with closed source extensions.
+
 Another concern is that clients may spoof their UID or Callsign. While the
 server can investigate the client certificate to enforce a username, that
 feature has not been implemented yet. Additionally, given how little `taky`
 understands about COT, there may be some fields that slip by the username
 enforcement, even if such a feature is implemented.
+
+Given the tribal nature of COT and the desire for custom user extensions -- it
+is an impossible task to authenticate and sanitize the COT messages. I think
+the solution is to delegate this aspect of security to the user via access
+control. `taky` should act as a "dumb" router, and only have a naive
+understanding of the message content. The end user is responsible for ensuring
+the clients
 
 ## Data Package Server Security
 
