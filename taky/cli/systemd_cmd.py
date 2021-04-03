@@ -87,7 +87,7 @@ def write_dps_svc(names, config, args, using_venv=False, site_path=None):
     if using_venv:
         taky_path = os.path.join(sys.prefix, "bin", "taky_dps")
     else:
-        taky_path = "taky"
+        taky_path = "taky_dps"
 
     dps_svc.append(f"ExecStart={taky_path}")
 
