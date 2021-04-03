@@ -77,7 +77,7 @@ def write_dps_svc(names, config, args, using_venv=False, site_path=None):
         f"PartOf={names['taky']}",
         "",
         "[Service]",
-        "type=simple",
+        "Type=simple",
     ]
     if args.user:
         dps_svc.append(f"User={args.user}")
