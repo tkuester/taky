@@ -72,7 +72,11 @@ class COTRouter:
         """
         Broadcast a message from source to all clients
         """
-        self.lgr.debug("%s -> Broadcast: %s", src.user.callsign, msg)
+        if src.user:
+            self.lgr.debug("%s -> Broadcast: %s", src.user.callsign, msg)
+        else:
+            self.lgr.debug("Anonymous Broadcast: %s", msg)
+
         self.persist.track(msg)
         for client in self.clients:
             if client is src:
@@ -86,18 +90,22 @@ class COTRouter:
 
         If group is not specified, the source's group is used.
         """
+        if isinstance(src, TAKClient):
+            src = src.user
+
         if group is None:
-            if isinstance(src, models.TAKUser):
-                group = src.group
-            elif isinstance(src, TAKClient):
-                group = src.user.group
-            else:
+            if src is None:
                 raise ValueError("Unable to determine group to send to")
+            group = src.group
 
         if not isinstance(group, models.Teams):
             raise ValueError("group must be models.Teams")
 
-        self.lgr.debug("%s -> %s: %s", src.user.callsign, group, msg)
+        if src:
+            self.lgr.debug("%s -> %s: %s", src.callsign, group, msg)
+        else:
+            self.lgr.debug("Anonymous -> %s: %s", group, msg)
+
         for client in self.clients:
             if client.user is src:
                 continue
@@ -124,7 +132,7 @@ class COTRouter:
                 if client:
                     self.lgr.debug(
                         "%s -> %s: (geochat) %s",
-                        src.user.callsign,
+                        chat.src_cs,
                         client.user.callsign,
                         chat.message,
                     )
@@ -139,12 +147,20 @@ class COTRouter:
             for callsign in evt.detail.marti_cs:
                 client = self.find_client(callsign=callsign)
                 if client:
-                    self.lgr.debug(
-                        "%s -> %s (marti): %s",
-                        src.user.callsign,
-                        client.user.callsign,
-                        evt,
-                    )
+                    if src.user:
+                        self.lgr.debug(
+                            "%s -> %s (marti): %s",
+                            src.user.callsign,
+                            client.user.callsign,
+                            evt,
+                        )
+                    else:
+                        self.lgr.debug(
+                            "Anonymous -> %s (marti): %s",
+                            src.user.callsign,
+                            client.user.callsign,
+                            evt,
+                        )
                     client.send(evt)
             return
 

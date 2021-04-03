@@ -35,7 +35,10 @@ class TAKClient:
         self.lgr = logging.getLogger(TAKClient.__name__)
 
     def __repr__(self):
-        return f"<TAKClient uid={self.user.uid} " f"callsign={self.user.callsign}>"
+        if self.user:
+            return f"<TAKClient uid={self.user.uid} " f"callsign={self.user.callsign}>"
+
+        return f"<TAKClient uid=None callsign=None>"
 
     def send(self, data):
         """
@@ -66,7 +69,7 @@ class TAKClient:
         if evt.uid.endswith("-ping"):
             return
         # Don't log if we don't have a user yet
-        if not self.user.uid:
+        if self.user is None:
             return
 
         # Open the COT file if it's the first run
