@@ -38,7 +38,7 @@ class TAKClient:
         if self.user:
             return f"<TAKClient uid={self.user.uid} " f"callsign={self.user.callsign}>"
 
-        return f"<TAKClient uid=None callsign=None>"
+        return "<TAKClient uid=None callsign=None>"
 
     def send(self, data):
         """

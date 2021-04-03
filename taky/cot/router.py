@@ -157,7 +157,6 @@ class COTRouter:
                     else:
                         self.lgr.debug(
                             "Anonymous -> %s (marti): %s",
-                            src.user.callsign,
                             client.user.callsign,
                             evt,
                         )
