@@ -1,12 +1,8 @@
-from datetime import datetime as dt
-from datetime import timedelta
-
 from lxml import etree
 
 from .errors import UnmarshalError
 from .detail import Detail
 from .teams import Teams
-from .point import Point
 
 
 class TAKDevice:

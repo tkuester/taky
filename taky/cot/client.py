@@ -187,12 +187,12 @@ class SocketTAKClient(TAKClient):
                 f"callsign={self.user.callsign} "
                 f"addr={self.addr[0]}:{self.addr[1]}>"
             )
-        else:
-            return (
-                f"<SocketTAKClient uid=None "
-                f"callsign=None "
-                f"addr={self.addr[0]}:{self.addr[1]}>"
-            )
+
+        return (
+            f"<SocketTAKClient uid=None "
+            f"callsign=None "
+            f"addr={self.addr[0]}:{self.addr[1]}>"
+        )
 
     def send(self, data):
         """

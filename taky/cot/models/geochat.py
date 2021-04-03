@@ -49,18 +49,19 @@ class GeoChat(Detail):
                 ALL_CHAT_ROOMS,
                 self.message,
             )
-        elif self.dst_team:
+
+        if self.dst_team:
             return '<GeoChat src="%s", dst="%s", msg="%s">' % (
                 self.src_cs,
                 self.dst_team,
                 self.message,
             )
-        else:
-            return '<GeoChat src="%s", dst_uid="%s", msg="%s">' % (
-                self.src_cs,
-                self.dst_uid,
-                self.message,
-            )
+
+        return '<GeoChat src="%s", dst_uid="%s", msg="%s">' % (
+            self.src_cs,
+            self.dst_uid,
+            self.message,
+        )
 
     @property
     def broadcast(self):
