@@ -95,8 +95,8 @@ management. Additionally, there is no tie in to operating systems. This should
 be just as easy to setup on Fedora as it is on Ubuntu -- though the
 instructions have been written for Ubuntu.
 
-See the deployment guide in the `/doc` folder for instructions on deploying a
-server of your own!
+See the README_QUICKSTART.md guide in the `/doc` folder to get up and running!
+For more advanced setups, look at the README_DEPLOYMENT.md file!
 
 ## Development Status
 
