@@ -69,7 +69,7 @@ class TAKClient:
         if evt.uid.endswith("-ping"):
             return
         # Don't log if we don't have a user yet
-        if self.user is None:
+        if self.user is None or self.user.uid is None:
             return
 
         # Open the COT file if it's the first run
@@ -105,29 +105,29 @@ class TAKClient:
         for (_, elm) in self.xdc.read_events():
             try:
                 evt = models.Event.from_elm(elm)
+                if evt.etype == "t-x-c-t":
+                    self.pong()
+                    continue
+
+                if evt.etype.startswith("a"):
+                    self.handle_atom(evt)
+
                 self.log_event(evt)
+                self.router.route(self, evt)
             except models.UnmarshalError as exc:
                 self.lgr.warning("Unable to parse Event: %s", exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 # TODO: Call log_event(elm, failed=True, comment=str(exc))
                 continue
             except Exception as exc:  # pylint: disable=broad-except
-                self.lgr.error("Unhandled exception parsing Event: %s", exc)
+                self.lgr.error(
+                    "Unhandled exception parsing Event: %s", exc, exc_info=exc
+                )
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
                 # TODO: Call log_event(elm, failed=True, comment=str(exc))
                 continue
             finally:
                 elm.clear(keep_tail=True)
-
-            # Hard stop processing on a tak ping
-            if evt.etype == "t-x-c-t":
-                self.pong()
-                return
-
-            if evt.etype.startswith("a"):
-                self.handle_atom(evt)
-
-            self.router.route(self, evt)
 
     def handle_atom(self, evt):
         """
