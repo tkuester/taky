@@ -48,7 +48,7 @@ class COTRouter:
         """
         self.lgr.debug("Sending persistence objects to %s", client)
         for event in self.persist.get_all():
-            if event.uid == client.user.uid:
+            if client.user and event.uid == client.user.uid:
                 continue
 
             client.send(event)
@@ -58,6 +58,9 @@ class COTRouter:
         Search the client database for a requested client
         """
         for client in self.clients:
+            if client.user is None:
+                continue
+
             if uid and client.user.uid == uid:
                 return client
             if callsign and client.user.callsign == callsign:

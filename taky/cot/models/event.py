@@ -5,6 +5,10 @@ from .errors import UnmarshalError
 from .point import Point
 from .detail import Detail
 from .geochat import GeoChat
+from .takuser import TAKUser
+
+TAKUSER_TAGS = set(["takv", "contact", "__group"])
+GEOCHAT_TAGS = set(["__chat", "remarks", "link"])
 
 
 class Event:
@@ -79,7 +83,10 @@ class Event:
                 except (TypeError, ValueError) as exc:
                     raise UnmarshalError("Point parsing error") from exc
             elif child.tag == "detail":
-                if ret.etype == "b-t-f":
+                d_tags = set([d_elm.tag for d_elm in child.iterchildren()])
+                if TAKUSER_TAGS.issubset(d_tags):
+                    ret.detail = TAKUser.from_elm(child, event=ret)
+                elif GEOCHAT_TAGS.issubset(d_tags):
                     ret.detail = GeoChat.from_elm(child, event=ret)
                 else:
                     ret.detail = Detail.from_elm(child, event=ret)

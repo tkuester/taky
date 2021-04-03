@@ -22,7 +22,7 @@ class TAKClient:
 
     def __init__(self, router=None, cot_log_dir=None):
         self.router = router
-        self.user = models.TAKUser()
+        self.user = None
         self.connected = time.time()
 
         self.cot_log_dir = cot_log_dir
@@ -136,10 +136,13 @@ class TAKClient:
         if evt.detail is None:
             return
 
-        if evt.detail.elm.find("takv") is not None:
-            first_ident = self.user.update_from_evt(evt)
-            if first_ident:
+        if isinstance(evt.detail, models.TAKUser):
+            print(self.user)
+            if self.user is None:
+                self.user = evt.detail
                 self.router.client_ident(self)
+            else:
+                self.user = evt.detail
 
     def pong(self):
         """
@@ -179,11 +182,18 @@ class SocketTAKClient(TAKClient):
         self.out_buff = b""
 
     def __repr__(self):
-        return (
-            f"<SocketTAKClient uid={self.user.uid} "
-            f"callsign={self.user.callsign} "
-            f"addr={self.addr[0]}:{self.addr[1]}>"
-        )
+        if self.user:
+            return (
+                f"<SocketTAKClient uid={self.user.uid} "
+                f"callsign={self.user.callsign} "
+                f"addr={self.addr[0]}:{self.addr[1]}>"
+            )
+        else:
+            return (
+                f"<SocketTAKClient uid=None "
+                f"callsign=None "
+                f"addr={self.addr[0]}:{self.addr[1]}>"
+            )
 
     def send(self, data):
         """
