@@ -137,7 +137,6 @@ class TAKClient:
             return
 
         if isinstance(evt.detail, models.TAKUser):
-            print(self.user)
             if self.user is None:
                 self.user = evt.detail
                 self.router.client_ident(self)
