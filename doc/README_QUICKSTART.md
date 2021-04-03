@@ -41,6 +41,12 @@ bluetack $ sudo tackyctl systemd --user bluetack
 Created symlink /etc/systemd/system/multi-user.target.wants/taky.service → /etc/systemd/system/taky.service.
  - Starting service
 
+# Make sure the services are running
+bluetack $ ps aux | grep taky
+bluetack  107862  5.5  0.4  57852 34292 ?        Ss   16:32   0:00 /usr/bin/python3 /usr/local/bin/taky -l info
+bluetack  107863  7.4  0.5  69092 43384 ?        Ss   16:32   0:00 /usr/bin/python3 /usr/local/bin/taky_dps
+[...]
+
 # Build your first client certificate
 bluetack $ takyctl build_client JENNY
 bluetack $ ls -l JENNY.zip
