@@ -50,3 +50,15 @@ class Detail:
             raise UnmarshalError("Cannot create Detail from %s" % elm.tag)
 
         return Detail(event, elm)
+
+    @property
+    def uid(self):
+        if not self.event:
+            return None
+        return self.event.uid
+
+    @property
+    def point(self):
+        if not self.event:
+            return None
+        return self.event.point
