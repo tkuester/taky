@@ -43,6 +43,8 @@ def write_cot_svc(names, config, args, using_venv=False, site_path=None):
         "",
         "[Service]",
         'Environment="LOG_LEVEL=info"',
+        "Restart=always",
+        "RestartSec=3",
     ]
     if site_path:
         host = config.get("taky", "hostname")
@@ -78,6 +80,8 @@ def write_dps_svc(names, config, args, using_venv=False, site_path=None):
         "",
         "[Service]",
         "Type=simple",
+        "Restart=always",
+        "RestartSec=3",
     ]
     if args.user:
         dps_svc.append(f"User={args.user}")
