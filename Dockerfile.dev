@@ -1,0 +1,13 @@
+FROM python:3.9-slim-buster
+# git and the .git dir are needed by pip to determine the package version
+RUN apt-get -qq update && apt-get -qq install git
+RUN python -m pip install supervisor
+
+WORKDIR /src/taky
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
