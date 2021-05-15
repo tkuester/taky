@@ -23,7 +23,7 @@ def make_ca(crt_path, key_path, n_years=10):
     ca_key.generate_key(crypto.TYPE_RSA, 2048)
 
     cert = crypto.X509()
-    cert.get_subject().CN = "CA"
+    cert.get_subject().CN = "TAKY CA"
     cert.set_serial_number(0)
     cert.set_version(2)
     cert.gmtime_adj_notBefore(0)
@@ -84,10 +84,21 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(31536000 * n_years)
     cert.set_issuer(capem.get_subject())
+
+    # SAN is checked for https:// links
+    if hostname[:2].isnumeric():
+        subjectAltName = b"IP.1:"+hostname.encode()
+    else:
+        subjectAltName = b"DNS:"+hostname.encode()
+    cert.add_extensions(
+        [
+            crypto.X509Extension(b'subjectAltName', False, subjectAltName)
+        ]
+    )
+
     cert.set_pubkey(cli_key)
     cert.set_version(2)
     cert.sign(cakey, "sha256")
-
     p12 = crypto.PKCS12()
     p12.set_privatekey(cli_key)
     p12.set_certificate(cert)
