@@ -13,6 +13,6 @@ cp user.zip $TAKY_SERVER/taky_dp
 
 # Comment this line to NOT serve your certificates insecurely via HTTP :1664
 # It will serve the certs for 15 minutes only. After that you need to sideload the .zip
-timeout 15m dpserver.py $TAKY_SERVER/taky_dp &
+timeout 15m python3 dpserver.py $TAKY_SERVER/taky_dp &
 taky -c $TAKY_SERVER/taky.conf
 
