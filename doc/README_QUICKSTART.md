@@ -21,6 +21,17 @@ bluetack $ sudo python3 -m pip install --upgrade pip
 bluetack $ sudo python3 -m pip install taky
 [...]
 
+# Short on time? Run servernow.sh
+If you are not interested in understanding certificates but just want a server now, run the ./servernow.sh script located in ./taky/util/servernow.sh.
+
+This will generate 10 year certificates, an SSL server config and an IP based (vs domain name based) server in /tmp/takyserver listening on SSL :8089
+The .zip data package(s) for clients will be offered via a web server on TCP:1664 for a 15 minute window. If you miss the provisioning window you can sideload the .zip.
+
+To add a client in ATAK, click "Import Manager" then "HTTP URL" and enter the http:// URL for your .zip which will be shown in the console.
+
+Download the .zip and expect to see a red "server disconnected" icon appear.
+Visit settings > Network connections and enable the server by checking the box.
+
 # Generate config + CA + Certs
 bluetack $ sudo takyctl setup --host <hostname> --public-ip 123.45.67.89 --user bluetack
 Installing site to system

@@ -70,7 +70,7 @@ def build_client(config, args):
         },
     }
 
-    with open(os.path.join(cdir, "fts.pref"), "wb") as pref_fp:
+    with open(os.path.join(cdir, "taky.pref"), "wb") as pref_fp:
         datapackage.build_pref(pref_fp, prefs)
 
     # Build Mission Package Manifest
@@ -79,7 +79,7 @@ def build_client(config, args):
         "name": f"{hostname}_DP",
         "onReceiveDelete": "true",
     }
-    man_cts = ["fts.pref", os.path.basename(server_p12), f"{args.name}.p12"]
+    man_cts = ["taky.pref", os.path.basename(server_p12), f"{args.name}.p12"]
 
     with open(os.path.join(mdir, "manifest.xml"), "wb") as man_fp:
         datapackage.build_manifest(man_fp, cfg_params, man_cts)
