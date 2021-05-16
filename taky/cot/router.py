@@ -5,7 +5,7 @@ import logging
 from . import models
 from .client import TAKClient
 from .persistence import build_persistence
-
+from pprint import pprint
 
 class Destination(enum.Enum):
     """
@@ -29,6 +29,12 @@ class COTRouter:
         self.clients = set()
         self.persist = build_persistence(config)
         self.lgr = logging.getLogger(self.__class__.__name__)
+        self.strangers = False
+        self.responders = None
+        if "hide_strangers" in config.options("cot_server"):
+          self.strangers = config.get("cot_server", "hide_strangers")
+        if "show_uids" in config.options("cot_server"):
+          self.responders = config.get("cot_server", "show_uids")
 
     def client_connect(self, client):
         """
@@ -120,6 +126,21 @@ class COTRouter:
         if not isinstance(evt, models.Event):
             raise ValueError(f"Unable to route {type(evt)}")
 
+        src_uid = "?"
+        dst_uid = "?"
+
+        if isinstance(evt.detail, models.GeoChat):
+            src_uid = evt.detail.src_uid
+            dst_uid = evt.detail.dst_uid
+        if isinstance(evt.detail, models.TAKUser):
+            src_uid = evt.detail.uid
+            
+       
+        # Stranger danger!
+        if self.strangers is True and src_uid not in self.responders and dst_uid not in self.responders:
+            self.lgr.debug("Stranger danger averted with src_uid %s dst_uid %s: %s" % (src_uid,dst_uid,evt.detail))
+            return
+
         # Special handling for chat messages
         if isinstance(evt.detail, models.GeoChat):
             chat = evt.detail
@@ -165,3 +186,4 @@ class COTRouter:
 
         # Assume broadcast
         self.broadcast(src, evt)
+

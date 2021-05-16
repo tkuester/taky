@@ -96,6 +96,8 @@ def setup_taky(config, args):
     config.set("taky", "public_ip", args.public_ip)
     config.set("taky", "hostname", args.hostname)
     config.set("cot_server", "port", "8089" if args.use_ssl else "8087")
+    config.set("cot_server", "hide_strangers", "False")
+    config.set("cot_server", "show_uids", "[]")
     config.set("ssl", "enabled", "true" if args.use_ssl else "false")
     config.set("ssl", "server_p12_pw", args.p12_pw)
 

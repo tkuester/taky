@@ -7,7 +7,7 @@ IP=`ifconfig $NIC | grep 'inet ' | awk '{print $2}'`
 TAKY_SERVER="/tmp/takyserver"
 
 takyctl setup --public-ip $IP --host $IP $TAKY_SERVER
-takyctl -c $TAKY_SERVER/taky.conf build_client user
+takyctl -c $TAKY_SERVER/taky.conf build_client --dump_pem user
 mkdir $TAKY_SERVER/taky_dp
 cp user.zip $TAKY_SERVER/taky_dp
 

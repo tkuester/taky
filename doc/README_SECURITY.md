@@ -112,6 +112,20 @@ We could implement a revocation list to lock them out of further access, but
 they will still have access to the server until then. Perhaps this is a feature for
 later.
 
+## Anonymous mode
+
+If you want to host a public server so people can get access to your network plugins you might not want strangers popping up on the map or in the chat. To make your server anonymous, set hide_strangers = True
+To enable some users to show up, enter their device UID in the show_uids list.
+ 
+```
+[cot_server]
+port = 8089
+log_cot
+hide_strangers = True
+show_uids = ["ANDROID-1234"]
+```
+
+
 ## The Conclusion of the Matter?
 
 Ooog. Use a VPN and control access tightly. Regenerate your CA and certificates

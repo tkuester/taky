@@ -92,8 +92,9 @@ def build_client(config, args):
         shutil.copy(os.path.join(cdir, f"{args.name}.crt"), cwd)
         shutil.copy(os.path.join(cdir, f"{args.name}.key"), cwd)
 
-        os.unlink(os.path.join(cdir, f"{args.name}.crt"))
-        os.unlink(os.path.join(cdir, f"{args.name}.key"))
+	# Need these for other clients
+        #os.unlink(os.path.join(cdir, f"{args.name}.crt"))
+        #os.unlink(os.path.join(cdir, f"{args.name}.key"))
 
     # Save temporary directory, and build ZIP file
     os.chdir(tdir)
