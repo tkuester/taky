@@ -4,6 +4,8 @@ from .errors import UnmarshalError
 from .detail import Detail
 from .teams import Teams
 
+TAKUSER_TAGS = set(["takv", "contact", "__group"])
+
 
 class TAKDevice:
     def __init__(self, os=None, version=None, device=None, platform=None):
@@ -59,6 +61,10 @@ class TAKUser(Detail):
 
     def __repr__(self):
         return f"<TAKUser uid={self.uid}, callsign={self.callsign}, group={self.group}>"
+
+    @staticmethod
+    def is_type(tags):
+        return TAKUSER_TAGS.issubset(tags)
 
     @staticmethod
     def from_elm(elm, event=None):

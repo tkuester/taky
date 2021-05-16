@@ -7,6 +7,7 @@ from .detail import Detail
 from .teams import Teams
 
 ALL_CHAT_ROOMS = "All Chat Rooms"
+GEOCHAT_TAGS = set(["__chat", "remarks", "link"])
 
 
 class ChatParents(enum.Enum):
@@ -67,6 +68,10 @@ class GeoChat(Detail):
     def broadcast(self):
         """ Returns true if message is sent to all chat rooms """
         return self.chatroom == ALL_CHAT_ROOMS
+
+    @staticmethod
+    def is_type(tags):
+        return GEOCHAT_TAGS.issubset(tags)
 
     @staticmethod
     def from_elm(elm, event=None):
