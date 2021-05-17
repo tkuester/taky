@@ -1,4 +1,5 @@
 import multiprocessing
+import ssl
 import argparse
 import configparser
 
@@ -83,10 +84,11 @@ def main():
         "loglevel": args.log_level,
     }
     if config.getboolean("ssl", "enabled"):
-        options["ca-certs"] = config.get("ssl", "ca")
+        options["ca_certs"] = config.get("ssl", "ca")
         options["certfile"] = config.get("ssl", "cert")
         options["keyfile"] = config.get("ssl", "key")
-        # options['cert_reqs'] = ssl.VerifyMode.CERT_REQUIRED
+        options['cert_reqs'] = ssl.VerifyMode.CERT_REQUIRED
+        options["do_handshake_on_connect"] = True
 
     StandaloneApplication(taky_dps, options).run()
     print("DONE")
