@@ -37,6 +37,17 @@ def get_meta(f_hash=None, f_name=None):
         return {}
 
 
+def put_meta(meta):
+    """
+    Updates the metadata - the supplied hash is used to find the target file
+    """
+    f_hash = meta.get("Hash")
+    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
+
+    with open(meta_path, "w") as meta_fp:
+        json.dump(meta, meta_fp)
+
+
 @app.route("/Marti/sync/search")
 def datapackage_search():
     """
@@ -52,10 +63,9 @@ def datapackage_search():
         if not os.path.isfile(path):
             continue
 
-        # TODO: Check "tool" for public / private
         # TODO: Check if keywords are in meta['Keywords'] or meta['UID']
         meta = get_meta(f_name=item)
-        if meta:
+        if meta and meta.get("Visibility", "public") == "public":
             ret.append(meta)
 
     return {"resultCount": len(ret), "results": ret}
@@ -134,6 +144,7 @@ def datapackage_upload():
         "Keywords": "kw",
         "MIMEType": asset_fp.mimetype,
         "Size": os.path.getsize(file_path),  # Checked, do not fake
+        "Visibility": "public"
     }
 
     # Save the file's meta/{filename}.json
@@ -161,6 +172,12 @@ def datapackage_metadata_tool(f_hash):
     meta = get_meta(f_hash=f_hash)
     if not meta:
         return f"Could not find file matching {f_hash}", 404
+
+    visibility = "private" if request.get_data().decode("utf-8") == "private" else "public"
+
+    if meta.get("Visibility", "public") != visibility:
+        meta["Visibility"] = visibility
+        put_meta(meta)
 
     return url_for(f_hash)
 
