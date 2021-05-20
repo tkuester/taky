@@ -39,13 +39,22 @@ def get_meta(f_hash=None, f_name=None):
 
 def put_meta(meta):
     """
-    Updates the metadata - the supplied hash is used to find the target file
+    Updates the metadata - the supplied hash/UID is used to find the target file
     """
+    filename = meta.get("UID")
     f_hash = meta.get("Hash")
-    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
 
+    # Save the file's meta/{filename}.json
+    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
     with open(meta_path, "w") as meta_fp:
         json.dump(meta, meta_fp)
+
+    # Symlink the meta/{f_hash}.json to {filename}.json
+    meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
+    try:
+        os.symlink(f"{filename}.json", meta_hash_path)
+    except FileExistsError:
+        pass
 
 
 @app.route("/Marti/sync/search")
@@ -136,28 +145,18 @@ def datapackage_upload():
     meta = {
         "UID": filename,  # What the file will be saved as
         "Name": asset_fp.filename,  # File name on the server
-        "Hash": request.args["hash"],  # SHA-256, checked
+        "Hash": f_hash,  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
         "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
         "SubmissionUser": "SubUser",
-        "CreatorUid": request.args["creatorUid"],
+        "CreatorUid": creator_uid,
         "Keywords": "kw",
         "MIMEType": asset_fp.mimetype,
         "Size": os.path.getsize(file_path),  # Checked, do not fake
         "Visibility": "private"
     }
 
-    # Save the file's meta/{filename}.json
-    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
-    with open(meta_path, "w") as meta_fp:
-        json.dump(meta, meta_fp)
-
-    # Symlink the meta/{f_hash}.json to {filename}.json
-    meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
-    try:
-        os.symlink(f"{filename}.json", meta_hash_path)
-    except FileExistsError:
-        pass
+    put_meta(meta)
 
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
     # This is needed for client-to-client data package transmission
