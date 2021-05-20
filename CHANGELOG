@@ -6,11 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+ - Data packages marked private do not show up in search listings
+ - New data packages are assumed private until the client specifies public
+
 ### Fixed
  - Improvements for Windows compatibility
  - Send the detail as received from the user
  - Use restart for systemd scripts
  - Correct the path for the DPS outside of systemd
+
+### Contributors
+ - @doug-fitzmaurice-rowden
 
 ## [0.7.1] - 2021-03-07
 
