@@ -58,7 +58,7 @@ class COTRouter:
         Search the client database for a requested client
         """
         for client in self.clients:
-            if client.user is None:
+            if not client.user:
                 continue
 
             if uid and client.user.uid == uid:

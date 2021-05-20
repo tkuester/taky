@@ -1,6 +1,7 @@
 import enum
 
 from lxml import etree
+from dateutil.parser import isoparse
 
 from .errors import UnmarshalError
 from .detail import Detail
@@ -24,8 +25,8 @@ class GeoChat(Detail):
     attempts to unify the field names and meanings.
     """
 
-    def __init__(self, event, elm):
-        super().__init__(event, elm)
+    def __init__(self, elm):
+        super().__init__(elm)
 
         self.chatroom = None  # detail/__chat.chatroom
         self.chat_parent = None  # detail/__chat.parent
@@ -36,6 +37,7 @@ class GeoChat(Detail):
         self.src_cs = None  # detail/__chat.senderCallsign
         self.src_marker = None  # detail/link.type
         self.message = None  # detail/remarks
+        self.message_ts = None  # detail/remarks.time
 
         # These fields are inferred
         # The UID (string) of the recipient (if an individual user, otherwise None)
@@ -74,7 +76,7 @@ class GeoChat(Detail):
         return GEOCHAT_TAGS.issubset(tags)
 
     @staticmethod
-    def from_elm(elm, event=None):
+    def from_elm(elm):
         if elm.tag != "detail":
             raise UnmarshalError("Cannot create GeoChat from %s" % elm.tag)
 
@@ -88,7 +90,7 @@ class GeoChat(Detail):
         if None in [chat, chatgrp, remarks, link]:
             raise UnmarshalError("Detail does not contain GeoChat")
 
-        gch = GeoChat(event, elm)
+        gch = GeoChat(elm)
         gch.chat_parent = chat.get("parent")
         gch.group_owner = chat.get("groupOwner") == "true"
         gch.src_uid = link.get("uid")
@@ -103,6 +105,7 @@ class GeoChat(Detail):
             gch.dst_uid = chat.get("id")
 
         gch.message = remarks.text
+        gch.message_ts = isoparse(remarks.get("time")).replace(tzinfo=None)
 
         return gch
 
@@ -149,7 +152,7 @@ class GeoChat(Detail):
             attrib={
                 "source": rmk_src,
                 "to": dst_uid,
-                "time": self.event.time.isoformat(timespec="milliseconds") + "Z",
+                "time": self.message_ts.isoformat(timespec="milliseconds") + "Z",
             },
         )
         remarks.text = self.message

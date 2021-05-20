@@ -82,11 +82,11 @@ class Event:
             elif child.tag == "detail":
                 d_tags = set([d_elm.tag for d_elm in child.iterchildren()])
                 if TAKUser.is_type(d_tags):
-                    ret.detail = TAKUser.from_elm(child, event=ret)
+                    ret.detail = TAKUser.from_elm(child, uid=ret.uid)
                 elif GeoChat.is_type(d_tags):
-                    ret.detail = GeoChat.from_elm(child, event=ret)
+                    ret.detail = GeoChat.from_elm(child)
                 else:
-                    ret.detail = Detail.from_elm(child, event=ret)
+                    ret.detail = Detail.from_elm(child)
 
         return ret
 
