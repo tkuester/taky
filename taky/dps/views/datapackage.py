@@ -144,7 +144,7 @@ def datapackage_upload():
         "Keywords": "kw",
         "MIMEType": asset_fp.mimetype,
         "Size": os.path.getsize(file_path),  # Checked, do not fake
-        "Visibility": "public"
+        "Visibility": "private"
     }
 
     # Save the file's meta/{filename}.json
@@ -173,9 +173,9 @@ def datapackage_metadata_tool(f_hash):
     if not meta:
         return f"Could not find file matching {f_hash}", 404
 
-    visibility = "private" if request.get_data().decode("utf-8") == "private" else "public"
+    visibility = "public" if request.get_data().decode("utf-8") == "public" else "private"
 
-    if meta.get("Visibility", "public") != visibility:
+    if meta.get("Visibility", "private") != visibility:
         meta["Visibility"] = visibility
         put_meta(meta)
 
