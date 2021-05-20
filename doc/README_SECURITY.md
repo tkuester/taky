@@ -65,27 +65,28 @@ the clients
 
 ## Data Package Server Security
 
-Regrettably, the data package server (DPS) is in its infancy. While I have
-tried to enforce client certificates for the DPS, ATAK seems to not like this.
-I've submitted an issue to ATAK, this may be resolved in the future.
+The data package server (DPS) is in its infancy. However, as of 0.8, the DPS
+only allows clients which present the certificate from the client .zip file.
+This means that you can run the DPS on the public internet, and not have to
+worry about anonymous users uploading malicious data packages.
 
-As such, while all communication with the DPS is encrypted with SSL, anyone
-that can open a socket to the DPS could post large files, or download files.
-
-While ATAK seems to indicate a "public" and "private" setting for files, I
-haven't had a chance to implement that feature yet. Consider all data uploaded
-as accessible to anyone.
+Additionally, the DPS now supports "public" and "private" datapackages. This
+means if you send a data package between users, it will not show up in the
+search index. However, anyone with the link to the datapackage and a client
+certificate will still be able to access it. The "privacy" feature is more for
+convenience, than for security.
 
 Also, there is no "virus scan" for the data packages. I have heard one story of
 a malicious datapackage bricking the Android clients with a malformed image.
 ATAK does not prompt the user to see if they want to accept the download, it
-just downloads the datapackage in the background.
+just downloads the datapackage in the background. In the future, we may
+implement a packet filter that drops these packets.
 
-A simple solution is to not run the DPS, and disable "File Sharing" in ATAK
-under "Settings / Tool Preferences / Data Package Control Preferences". You may
-need to disable "Mesh Network Mode" under "Settings / Network Preferences /
-Network Connection Preferences / Enable Mesh Network Mode" as well. COT will
-work without it, you just have fewer features.
+Until then, a simple solution is to not run the DPS, and disable "File Sharing"
+in ATAK under "Settings / Tool Preferences / Data Package Control Preferences".
+You may need to disable "Mesh Network Mode" under "Settings / Network
+Preferences / Network Connection Preferences / Enable Mesh Network Mode" as
+well. COT will work without it, you just have fewer features.
 
 ## Certificate / Client Security
 
