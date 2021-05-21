@@ -1,5 +1,6 @@
-import multiprocessing
+import os
 import ssl
+import multiprocessing
 import argparse
 import configparser
 
@@ -76,7 +77,11 @@ def main():
     port = 8443 if config.getboolean("ssl", "enabled") else 8080
 
     if bind_ip is None:
-        argp.error("Server not configured...")
+        bind_ip = ""
+
+    dp_path = config.get("dp_server", "upload_path")
+    if not os.path.exists(dp_path):
+        argp.error(f"Upload path for datapackages does not exist: {dp_path}")
 
     options = {
         "bind": f"{bind_ip}:{port}",
