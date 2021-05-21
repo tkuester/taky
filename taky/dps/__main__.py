@@ -99,7 +99,7 @@ def main():
         options["ca_certs"] = config.get("ssl", "ca")
         options["certfile"] = config.get("ssl", "cert")
         options["keyfile"] = config.get("ssl", "key")
-        options["cert_reqs"] = ssl.VerifyMode.CERT_REQUIRED
+        options["cert_reqs"] = ssl.CERT_REQUIRED
         options["do_handshake_on_connect"] = True
 
     StandaloneApplication(taky_dps, options).run()
