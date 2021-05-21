@@ -1,4 +1,5 @@
 # pylint: disable=missing-module-docstring
+import time
 import enum
 import logging
 
@@ -28,7 +29,14 @@ class COTRouter:
         #     : should prohibit multiple sockets sharing a client
         self.clients = set()
         self.persist = build_persistence(config)
+        self.last_prune = 0
         self.lgr = logging.getLogger(self.__class__.__name__)
+
+    def prune(self):
+        now = time.time()
+        if (now - self.last_prune) > 10:
+            self.last_prune = now
+            self.persist.prune()
 
     def client_connect(self, client):
         """
