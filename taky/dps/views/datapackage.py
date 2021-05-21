@@ -140,15 +140,14 @@ def datapackage_upload():
     file_path = os.path.join(app.config["UPLOAD_PATH"], filename)
     asset_fp.save(file_path)
 
-    # TODO: Use SSL Certificate Identity to set SubmissionUser
-    #       (see MissionPackageQueryResult.java#37)
+    sub_user = request.headers.get("X-USER", "Anonymous")
     meta = {
         "UID": filename,  # What the file will be saved as
         "Name": asset_fp.filename,  # File name on the server
         "Hash": f_hash,  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
         "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
-        "SubmissionUser": "SubUser",
+        "SubmissionUser": sub_user,
         "CreatorUid": creator_uid,
         "Keywords": "kw",
         "MIMEType": asset_fp.mimetype,
