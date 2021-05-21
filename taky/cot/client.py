@@ -5,6 +5,7 @@ import enum
 from datetime import datetime as dt
 from datetime import timedelta
 import logging
+import traceback
 
 from lxml import etree
 
@@ -56,7 +57,7 @@ class TAKClient:
                 pass
             self.cot_fp = None
 
-    def log_event(self, evt):
+    def log_event(self, evt=None, elm=None, exc=None):
         """
         Writes the COT XML to the logfile, if configured.
 
@@ -66,10 +67,12 @@ class TAKClient:
         if not self.cot_log_dir:
             return
         # Skip logging of pings
-        if evt.uid.endswith("-ping"):
+        if evt and evt.uid and evt.uid.endswith("-ping"):
             return
         # Don't log if we don't have a user yet
         if self.user is None or self.user.uid is None:
+            return
+        if evt is None and elm is None:
             return
 
         # Open the COT file if it's the first run
@@ -78,7 +81,7 @@ class TAKClient:
             #     : Could happen on WiFi -> LTE handoff
             name = os.path.join(self.cot_log_dir, f"{self.user.uid}.cot")
             try:
-                self.lgr.info("Opening logfile %s", name)
+                self.lgr.debug("Opening logfile %s", name)
                 self.cot_fp = open(name, "a+")
             except OSError as exc:
                 self.lgr.warning("Unable to open COT log: %s", exc)
@@ -87,8 +90,21 @@ class TAKClient:
                 return
 
         try:
-            elm = evt.as_element
-            self.cot_fp.write(etree.tostring(elm, pretty_print=True).decode())
+            if elm is None:
+                elm = evt.as_element
+
+            if exc:
+                taky_err = etree.Element("__taky_err")
+                taky_err.append(etree.Comment(exc))
+                elm.append(taky_err)
+
+            doc = etree.tostring(elm, pretty_print=True).decode()
+        except Exception as exc:
+            self.lgr.warning("Unable to build packet string for logfile", exc_info=exc)
+            return
+
+        try:
+            self.cot_fp.write(doc)
             self.cot_fp.flush()
         except (IOError, OSError) as exc:
             self.lgr.warning("Unable to write to COT log: %s", exc)
@@ -112,19 +128,19 @@ class TAKClient:
                 if evt.etype.startswith("a"):
                     self.handle_atom(evt)
 
-                self.log_event(evt)
                 self.router.route(self, evt)
+                self.log_event(evt)
             except models.UnmarshalError as exc:
-                self.lgr.warning("Unable to parse Event: %s", exc)
+                self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
-                # TODO: Call log_event(elm, failed=True, comment=str(exc))
+                self.log_event(elm=elm, exc=traceback.format_exc())
                 continue
             except Exception as exc:  # pylint: disable=broad-except
                 self.lgr.error(
                     "Unhandled exception parsing Event: %s", exc, exc_info=exc
                 )
-                self.lgr.debug(etree.tostring(elm, pretty_print=True))
-                # TODO: Call log_event(elm, failed=True, comment=str(exc))
+                self.lgr.error(etree.tostring(elm, pretty_print=True))
+                self.log_event(elm=elm, exc=traceback.format_exc())
                 continue
             finally:
                 elm.clear(keep_tail=True)
