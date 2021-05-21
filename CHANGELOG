@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+ - COT messages that fail to parse are logged
+
 ### Changed
  - Data packages marked private do not show up in search listings
  - New data packages are assumed private until the client specifies public
@@ -15,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Send the detail as received from the user
  - Use restart for systemd scripts
  - Correct the path for the DPS outside of systemd
+ - Stale SSL sockets and the persistence dare are occasionally pruned
 
 ### Contributors
  - @doug-fitzmaurice-rowden
