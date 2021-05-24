@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # pylint: disable=missing-module-docstring
+import time
 import socket
 import select
 import ssl
@@ -243,6 +244,19 @@ class COTServer:
                 self.ssl_handshake(sock, client)
             else:
                 self.client_tx(sock, client)
+
+        # Prune the persistence database
+        self.router.prune()
+
+        # Prune sockets that have not finished the SSL handshake
+        prune_sox = list(self.clients.items())
+        now = time.time()
+        for (sock, client) in prune_sox:
+            if client.ssl_hs in [SSLState.NO_SSL, SSLState.SSL_ESTAB]:
+                continue
+
+            if (now - client.connected) > 10:
+                self.client_disconnect(sock, "SSL Handshake timeout")
 
     def shutdown(self):
         """

@@ -17,7 +17,7 @@ class TAKUserTestcase(ut.TestCase):
         self.answer = elm.find("detail")
 
     def test_as_element(self):
-        tak_u = models.TAKUser(None, None)
+        tak_u = models.TAKUser(None)
 
         tak_u.callsign = "JENNY"
         tak_u.marker = "a"

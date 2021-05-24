@@ -7,9 +7,6 @@ from .detail import Detail
 from .geochat import GeoChat
 from .takuser import TAKUser
 
-TAKUSER_TAGS = set(["takv", "contact", "__group"])
-GEOCHAT_TAGS = set(["__chat", "remarks", "link"])
-
 
 class Event:
     def __init__(
@@ -76,20 +73,20 @@ class Event:
         if ret.etype is None:
             raise UnmarshalError("Event must have 'type' attribute")
 
-        for child in elm.iterchildren():
-            if child.tag == "point":
-                try:
+        try:
+            for child in elm.iterchildren():
+                if child.tag == "point":
                     ret.point = Point.from_elm(child)
-                except (TypeError, ValueError) as exc:
-                    raise UnmarshalError("Point parsing error") from exc
-            elif child.tag == "detail":
-                d_tags = set([d_elm.tag for d_elm in child.iterchildren()])
-                if TAKUSER_TAGS.issubset(d_tags):
-                    ret.detail = TAKUser.from_elm(child, event=ret)
-                elif GEOCHAT_TAGS.issubset(d_tags):
-                    ret.detail = GeoChat.from_elm(child, event=ret)
-                else:
-                    ret.detail = Detail.from_elm(child, event=ret)
+                elif child.tag == "detail":
+                    d_tags = set([d_elm.tag for d_elm in child.iterchildren()])
+                    if TAKUser.is_type(d_tags):
+                        ret.detail = TAKUser.from_elm(child, uid=ret.uid)
+                    elif GeoChat.is_type(d_tags):
+                        ret.detail = GeoChat.from_elm(child)
+                    else:
+                        ret.detail = Detail.from_elm(child)
+        except (TypeError, ValueError, AttributeError) as exc:
+            raise UnmarshalError(f"Issue parsing {child.tag}") from exc
 
         return ret
 

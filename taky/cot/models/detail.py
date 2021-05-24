@@ -6,12 +6,19 @@ class Detail:
     A simple class to keep track of the Detail element
     """
 
-    def __init__(self, event, elm):
-        self.event = event
+    def __init__(self, elm):
         self.elm = elm
 
     def __repr__(self):
         "<GenericDetail>"
+
+    @staticmethod
+    def is_type(tags):
+        """
+        Examines the tags in a detail to determine if it belongs to this class
+        """
+        # Always return true for base class
+        return True
 
     @property
     def marti_cs(self):
@@ -42,23 +49,11 @@ class Detail:
         return self.elm
 
     @staticmethod
-    def from_elm(elm, event=None):
+    def from_elm(elm):
         """
         Build a Detail object from an element, with the event for context
         """
         if elm.tag != "detail":
             raise UnmarshalError("Cannot create Detail from %s" % elm.tag)
 
-        return Detail(event, elm)
-
-    @property
-    def uid(self):
-        if not self.event:
-            return None
-        return self.event.uid
-
-    @property
-    def point(self):
-        if not self.event:
-            return None
-        return self.event.point
+        return Detail(elm)

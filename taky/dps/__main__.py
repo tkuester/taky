@@ -1,8 +1,13 @@
+import os
+import sys
+import ssl
 import multiprocessing
 import argparse
 import configparser
+import ssl
 
 from gunicorn.app.base import BaseApplication
+from gunicorn.workers.sync import SyncWorker
 
 from taky import __version__
 from taky.config import load_config
@@ -30,6 +35,22 @@ class StandaloneApplication(BaseApplication):
     def load(self):
         return self.application
 
+
+# Based on code from
+# https://eugene.kovalev.systems/blog/flask_client_auth
+class ClientCertificateWorker(SyncWorker):
+    """Worker for putting certificate information into the X-USER header variable of the request."""
+    def handle_request(self, listener, req, client, addr):
+        subject = dict([i for subtuple in client.getpeercert().get('subject') for i in subtuple])
+        issuer = dict([i for subtuple in client.getpeercert().get('issuer') for i in subtuple])
+        headers = dict(req.headers)
+        headers['X-USER'] = subject['commonName']
+        headers['X-ISSUER'] = issuer['commonName']
+        headers['X-NOT_BEFORE'] = ssl.cert_time_to_seconds(client.getpeercert().get('notBefore'))
+        headers['X-NOT_AFTER'] = ssl.cert_time_to_seconds(client.getpeercert().get('notAfter'))
+
+        req.headers = list(headers.items())
+        super().handle_request(listener, req, client, addr)
 
 def number_of_workers():
     return (multiprocessing.cpu_count() * 2) + 1
@@ -75,7 +96,17 @@ def main():
     port = 8443 if config.getboolean("ssl", "enabled") else 8080
 
     if bind_ip is None:
-        argp.error("Server not configured...")
+        bind_ip = ""
+
+    dp_path = config.get("dp_server", "upload_path")
+    if not os.path.exists(dp_path):
+        print("-" * 30, file=sys.stderr)
+        print("[ WARNING ] Datapackage directory does not exist!", file=sys.stderr)
+        print("            Please create it, or check permissions.", file=sys.stderr)
+        print("Current Settings:", file=sys.stderr)
+        print("  [dp_server]", file=sys.stderr)
+        print(f"  upload_path = {dp_path}", file=sys.stderr)
+        print("-" * 30, file=sys.stderr)
 
     options = {
         "bind": f"{bind_ip}:{port}",
@@ -83,10 +114,12 @@ def main():
         "loglevel": args.log_level,
     }
     if config.getboolean("ssl", "enabled"):
-        options["ca-certs"] = config.get("ssl", "ca")
+        options["ca_certs"] = config.get("ssl", "ca")
         options["certfile"] = config.get("ssl", "cert")
         options["keyfile"] = config.get("ssl", "key")
-        # options['cert_reqs'] = ssl.VerifyMode.CERT_REQUIRED
+        options["cert_reqs"] = ssl.CERT_REQUIRED
+        options["do_handshake_on_connect"] = True
+        options["worker_class"] = "taky.dps.__main__.ClientCertificateWorker"
 
     StandaloneApplication(taky_dps, options).run()
     print("DONE")

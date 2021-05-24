@@ -117,6 +117,13 @@ class BasePersistence:
         """
         raise NotImplementedError()
 
+    def prune(self):
+        """
+        Prune the collection
+        """
+        # In this case, assume nothing needs to be done
+        return
+
 
 class Persistence(BasePersistence):
     """

@@ -10,7 +10,7 @@ taky - A simple COT server for ATAK
 ## Features (and anti-Features!)
 
  * Supports multiple ATAK clients simultaneously! You can see them on the map!
- * SSL support with optional client keys!
+ * SSL support with client keys!
  * Some design consideration for XML security!
  * Actually somewhat decent CoT routing, with Marti support!
  * A hacked up XML parser written by someone who barely understands XML!
@@ -19,10 +19,11 @@ taky - A simple COT server for ATAK
  * Server shuts down with only one Ctrl+C!
  * Does not require root to run!
  * Thread safety? Where we're going, we don't need threads!
- * Slightly less-than-broken Data Package Server!
+ * Data Package Server now with privacy and client key checking!
  * Handy CLI utilities for generating systemd service files and client keys!
  * Stupid fast for no good reason! Routes 1000 packets / second on an old Core
    i5-2500k!
+ * Advanced usage of synchronous I/O multiplexing avoids `time.sleep`!
  * Optional redis backed object persistence storage!
  * Still no requirement for SQlite / database!
  * Tested for easy deployment on Ubuntu and CentOS!
@@ -34,7 +35,7 @@ taky - A simple COT server for ATAK
  * dateutil (Apache 2.0 / BSD 3-clause)
  * flask (BSD 3-clause)
  * pyopenssl (Apache 2.0)
- * gunicorn
+ * gunicorn (MIT)
  * redis (MIT)
 
 This application was developed with Python 3.8 on Ubuntu 20.04, and tested with

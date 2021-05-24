@@ -37,6 +37,26 @@ def get_meta(f_hash=None, f_name=None):
         return {}
 
 
+def put_meta(meta):
+    """
+    Updates the metadata - the supplied hash/UID is used to find the target file
+    """
+    filename = meta.get("UID")
+    f_hash = meta.get("Hash")
+
+    # Save the file's meta/{filename}.json
+    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
+    with open(meta_path, "w") as meta_fp:
+        json.dump(meta, meta_fp)
+
+    # Symlink the meta/{f_hash}.json to {filename}.json
+    meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
+    try:
+        os.symlink(f"{filename}.json", meta_hash_path)
+    except FileExistsError:
+        pass
+
+
 @app.route("/Marti/sync/search")
 def datapackage_search():
     """
@@ -52,10 +72,9 @@ def datapackage_search():
         if not os.path.isfile(path):
             continue
 
-        # TODO: Check "tool" for public / private
         # TODO: Check if keywords are in meta['Keywords'] or meta['UID']
         meta = get_meta(f_name=item)
-        if meta:
+        if meta and meta.get("Visibility", "public") == "public":
             ret.append(meta)
 
     return {"resultCount": len(ret), "results": ret}
@@ -121,32 +140,22 @@ def datapackage_upload():
     file_path = os.path.join(app.config["UPLOAD_PATH"], filename)
     asset_fp.save(file_path)
 
-    # TODO: Use SSL Certificate Identity to set SubmissionUser
-    #       (see MissionPackageQueryResult.java#37)
+    sub_user = request.headers.get("X-USER", "Anonymous")
     meta = {
         "UID": filename,  # What the file will be saved as
         "Name": asset_fp.filename,  # File name on the server
-        "Hash": request.args["hash"],  # SHA-256, checked
+        "Hash": f_hash,  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
         "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
-        "SubmissionUser": "SubUser",
-        "CreatorUid": request.args["creatorUid"],
+        "SubmissionUser": sub_user,
+        "CreatorUid": creator_uid,
         "Keywords": "kw",
         "MIMEType": asset_fp.mimetype,
         "Size": os.path.getsize(file_path),  # Checked, do not fake
+        "Visibility": "private",
     }
 
-    # Save the file's meta/{filename}.json
-    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
-    with open(meta_path, "w") as meta_fp:
-        json.dump(meta, meta_fp)
-
-    # Symlink the meta/{f_hash}.json to {filename}.json
-    meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
-    try:
-        os.symlink(f"{filename}.json", meta_hash_path)
-    except FileExistsError:
-        pass
+    put_meta(meta)
 
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
     # This is needed for client-to-client data package transmission
@@ -161,6 +170,14 @@ def datapackage_metadata_tool(f_hash):
     meta = get_meta(f_hash=f_hash)
     if not meta:
         return f"Could not find file matching {f_hash}", 404
+
+    visibility = (
+        "public" if request.get_data().decode("utf-8") == "public" else "private"
+    )
+
+    if meta.get("Visibility", "private") != visibility:
+        meta["Visibility"] = visibility
+        put_meta(meta)
 
     return url_for(f_hash)
 

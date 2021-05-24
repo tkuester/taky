@@ -4,6 +4,8 @@ from .errors import UnmarshalError
 from .detail import Detail
 from .teams import Teams
 
+TAKUSER_TAGS = set(["takv", "contact", "__group"])
+
 
 class TAKDevice:
     def __init__(self, os=None, version=None, device=None, platform=None):
@@ -39,9 +41,10 @@ class TAKDevice:
 
 
 class TAKUser(Detail):
-    def __init__(self, event, elm):
-        super().__init__(event, elm)
+    def __init__(self, elm):
+        super().__init__(elm)
 
+        self.uid = None
         self.callsign = None
         self.marker = None
         self.group = None
@@ -58,11 +61,16 @@ class TAKUser(Detail):
         self.device = TAKDevice()
 
     def __repr__(self):
-        return f"<TAKUser uid={self.uid}, callsign={self.callsign}, group={self.group}>"
+        return f"<TAKUser callsign={self.callsign}, group={self.group}>"
 
     @staticmethod
-    def from_elm(elm, event=None):
-        ret = TAKUser(event, elm)
+    def is_type(tags):
+        return TAKUSER_TAGS.issubset(tags)
+
+    @staticmethod
+    def from_elm(elm, uid):
+        ret = TAKUser(elm)
+        ret.uid = uid
 
         for d_elm in elm.iterchildren():
             if d_elm.tag == "takv":
