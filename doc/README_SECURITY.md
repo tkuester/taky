@@ -115,6 +115,9 @@ later.
 
 ## The Conclusion of the Matter?
 
-Ooog. Use a VPN and control access tightly. Regenerate your CA and certificates
-often. If you use the DPS, consider wiping the datapackage directory clean
-between operations. The same if you use redis as a persistence store.
+Use SSL, and control access to who gets certificates. Until CRL's are
+implemented, you'll need to regenerate your CA and certificates in the event
+you want to revoke someone's keys.
+
+If you use the DPS, consider wiping the datapackage directory clean between
+operations. The same if you use redis as a persistence store.
