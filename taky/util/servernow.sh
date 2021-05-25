@@ -7,9 +7,10 @@ IP=`ifconfig $NIC | grep 'inet ' | awk '{print $2}'`
 TAKY_SERVER="/tmp/takyserver"
 
 takyctl setup --public-ip $IP --host $IP $TAKY_SERVER
-takyctl -c $TAKY_SERVER/taky.conf build_client user
+takyctl -c $TAKY_SERVER/taky.conf build_client --dump_pem user
 mkdir $TAKY_SERVER/taky_dp
 cp user.zip $TAKY_SERVER/taky_dp
+cp user.* $TAKY_SERVER/ssl
 
 # Comment this line to NOT serve your certificates insecurely via HTTP :1664
 # It will serve the certs for 15 minutes only. After that you need to sideload the .zip

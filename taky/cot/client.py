@@ -226,6 +226,11 @@ class SocketTAKClient(TAKClient):
             return
 
         if etree.iselement(data):
+            # Not all CoT messages contain a uid. Bizarrely.
+            whois = etree.Element(
+            "whois", attrib={"uid": self.user.uid}
+            )
+            data.append(whois)
             self.out_buff += etree.tostring(data)
         elif isinstance(data, bytes):
             # Only accepting events may make it easier to address things
