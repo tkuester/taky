@@ -168,7 +168,7 @@ class COTRouter:
                             client.user.callsign,
                             evt,
                         )
-                    client.send(evt)
+                    client.send(evt,src) # tag all with src uid for whois 
             return
 
         # Assume broadcast

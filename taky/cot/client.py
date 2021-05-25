@@ -213,7 +213,7 @@ class SocketTAKClient(TAKClient):
             f"addr={self.addr[0]}:{self.addr[1]}>"
         )
 
-    def send(self, data):
+    def send(self, data, src=None):
         """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
@@ -226,11 +226,12 @@ class SocketTAKClient(TAKClient):
             return
 
         if etree.iselement(data):
-            # Not all CoT messages contain a uid. Bizarrely.
-            whois = etree.Element(
-            "whois", attrib={"uid": self.user.uid}
-            )
-            data.append(whois)
+            if src is not None:
+              # Not all CoT messages contain a uid. Bizarrely.
+              whois = etree.Element(
+              "whois", attrib={"uid": src.user.uid, "callsign": src.user.callsign}
+              )
+              data.append(whois)
             self.out_buff += etree.tostring(data)
         elif isinstance(data, bytes):
             # Only accepting events may make it easier to address things
