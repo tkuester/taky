@@ -16,7 +16,7 @@ class UnittestTAKClient(cot.TAKClient):
         super().__init__(*args, **kwargs)
         self.queue = queue.Queue()
 
-    def send(self, msg):
+    def send_event(self, msg):
         self.queue.put(msg)
 
 

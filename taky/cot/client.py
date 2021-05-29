@@ -40,7 +40,7 @@ class SocketClient:
     def addr(self):
         try:
             addr = self.sock.getpeername()
-            if addr is "":
+            if addr == "":
                 return ("unix", "")
             return addr
         except:  # pylint: disable=bare-except
@@ -154,10 +154,9 @@ class TAKClient:
 
         return "<TAKClient uid=None callsign=None>"
 
-    def send(self, data):
+    def send_event(self, event):
         """
-        Send a CoT event to the client. Data should be a cot Event object,
-        or an XML element, or a byte string.
+        Send a CoT event to the client.
         """
         raise NotImplementedError()
 
@@ -291,7 +290,7 @@ class TAKClient:
             start=now,
             stale=now + timedelta(seconds=20),
         )
-        self.send(pong)
+        self.send_event(pong)
 
 
 class SocketTAKClient(TAKClient, SocketClient):
@@ -316,26 +315,17 @@ class SocketTAKClient(TAKClient, SocketClient):
             f"addr={self.addr[0]}:{self.addr[1]}>"
         )
 
-    def send(self, data):
+    def send_event(self, event):
         """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
         """
 
-        # TODO: Make only CoT Events
-        if isinstance(data, models.Event):
-            data = data.as_element
+        if not isinstance(event, models.Event):
+            raise TypeError("Must send a COTEvent")
 
         # Silently drop data if the SSL handshake is not ready yet
         if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
             return
 
-        if etree.iselement(data):
-            self.out_buff += etree.tostring(data)
-        elif isinstance(data, bytes):
-            # Only accepting events may make it easier to address things
-            # later like QoS. Can check server load / client data rate, and
-            # decide if this packet can be dropped.
-            self.out_buff += data
-        else:
-            raise ValueError("Can only send Event / XML to TAKClient!")
+        self.out_buff += etree.tostring(event.as_element)

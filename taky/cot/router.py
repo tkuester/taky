@@ -59,7 +59,7 @@ class COTRouter:
             if client.user and event.uid == client.user.uid:
                 continue
 
-            client.send(event)
+            client.send_event(event)
 
     def find_client(self, uid=None, callsign=None):
         """
@@ -90,7 +90,7 @@ class COTRouter:
             if client is src:
                 continue
 
-            client.send(msg)
+            client.send_event(msg)
 
     def group_broadcast(self, src, msg, group=None):
         """
@@ -119,7 +119,7 @@ class COTRouter:
                 continue
 
             if client.user.group == group:
-                client.send(msg)
+                client.send_event(msg)
 
     def route(self, src, evt):
         """
@@ -144,7 +144,7 @@ class COTRouter:
                         client.user.callsign,
                         chat.message,
                     )
-                    client.send(evt)
+                    client.send_event(evt)
                 else:
                     self.lgr.warning("No destination for %s", chat)
             return
@@ -168,7 +168,7 @@ class COTRouter:
                             client.user.callsign,
                             evt,
                         )
-                    client.send(evt)
+                    client.send_event(evt)
             return
 
         # Assume broadcast
