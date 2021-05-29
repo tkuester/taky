@@ -10,6 +10,7 @@ DEFAULT_CFG = {
         "public_ip": None,  # Server's public IP address
         "redis": None,  # If Redis is enabled. True for localhost,
         # or a redis:// connect string
+        "root_dir": "/var/taky",  # Where the root taky directory lies
     },
     "cot_server": {
         "port": None,  # Defaults to 8087 (or 8089 if SSL)
