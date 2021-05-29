@@ -25,6 +25,8 @@ class TAKClient:
         self.router = router
         self.user = None
         self.connected = time.time()
+        self.num_rx = 0
+        self.last_rx = 0
 
         self.cot_log_dir = cot_log_dir
         self.cot_fp = None
@@ -37,7 +39,7 @@ class TAKClient:
 
     def __repr__(self):
         if self.user:
-            return f"<TAKClient uid={self.user.uid} " f"callsign={self.user.callsign}>"
+            return f"<TAKClient uid={self.user.uid} callsign={self.user.callsign}>"
 
         return "<TAKClient uid=None callsign=None>"
 
@@ -119,6 +121,8 @@ class TAKClient:
         self.xdc.feed(data)
 
         for (_, elm) in self.xdc.read_events():
+            self.num_rx += 1
+            self.last_rx = time.time()
             try:
                 evt = models.Event.from_elm(elm)
                 if evt.etype == "t-x-c-t":
