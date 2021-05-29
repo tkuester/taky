@@ -1,5 +1,5 @@
-#!/usr/bin/python3
 # pylint: disable=missing-module-docstring
+import os
 import time
 import socket
 import select
@@ -9,7 +9,8 @@ import logging
 from lxml import etree
 
 from .router import COTRouter
-from .client import SocketTAKClient, SSLState
+from .client import TAKClient, SocketTAKClient, SSLState
+from .mgmt import MgmtClient
 
 
 class COTServer:
@@ -30,6 +31,7 @@ class COTServer:
         self.clients = {}
         self.router = COTRouter(config)
 
+        self.mgmt = None
         self.srv = None
         self._sock_setup()
 
@@ -37,6 +39,14 @@ class COTServer:
         """
         Build the server socket
         """
+        self.started = time.time()
+        self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        mgmt_sock_path = os.path.join(
+            self.config.get("taky", "root_dir"), "taky-mgmt.sock"
+        )
+        self.mgmt.bind(mgmt_sock_path)
+        self.mgmt.listen()
+
         ip_addr = self.config.get("taky", "bind_ip")
         port = self.config.getint("cot_server", "port")
 
@@ -104,23 +114,41 @@ class COTServer:
 
         return ssl_ctx
 
+    def handle_mgmt_accept(self):
+        """
+        Accept a new client on the management socket
+        """
+        try:
+            (sock, _) = self.mgmt.accept()
+        except (socket.error, OSError) as exc:
+            self.lgr.info("Dropping management client: %s", exc)
+            return
+
+        self.lgr.info("New management client")
+        self.clients[sock] = MgmtClient(self)
+
     def handle_accept(self):
         """
         Accept a new client on the server socket
         """
+        ip_addr = None
+        port = None
+
         try:
             (sock, addr) = self.srv.accept()
+            (ip_addr, port) = addr[0:2]
+
             if self.ssl_ctx:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
                 sock.setblocking(False)
-        except (ssl.SSLError, socket.error, OSError) as exc:
-            (ip_addr, port) = addr[0:2]
+        except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
+        except (socket.error, OSError) as exc:
+            self.lgr.info("Client connect failed %s:%s (%s)", ip_addr, port, exc)
             return
 
-        (ip_addr, port) = addr[0:2]
         self.lgr.info("New client from %s:%s", ip_addr, port)
         self.clients[sock] = SocketTAKClient(
             self.router,
@@ -187,15 +215,18 @@ class COTServer:
             sock.shutdown(socket.SHUT_RDWR)
         except:  # pylint: disable=bare-except
             pass
-        sock.close()
+        finally:
+            sock.close()
 
         client = self.clients.pop(sock)
         if reason:
             self.lgr.info("Client disconnect: %s (%s)", client, reason)
         else:
             self.lgr.info("Client disconnect: %s", client)
-        self.router.client_disconnect(client)
-        client.close()
+
+        if isinstance(client, TAKClient):
+            self.router.client_disconnect(client)
+            client.close()
 
     def loop(self):
         """
@@ -203,6 +234,7 @@ class COTServer:
         """
         rd_clients = list(self.clients)
         rd_clients.append(self.srv)
+        rd_clients.append(self.mgmt)
         wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
@@ -224,6 +256,8 @@ class COTServer:
                 continue
             if sock is self.srv:
                 self.handle_accept()
+            elif sock is self.mgmt:
+                self.handle_mgmt_accept()
             elif self.ssl_ctx and client.ssl_hs in [
                 SSLState.SSL_WAIT,
                 SSLState.SSL_WAIT_TX,
@@ -266,11 +300,27 @@ class COTServer:
         for sock in list(self.clients):
             self.client_disconnect(sock, "Server shutting down")
 
-        try:
-            self.srv.shutdown(socket.SHUT_RDWR)
-        except:  # pylint: disable=bare-except
-            pass
+        if self.srv:
+            try:
+                self.srv.shutdown(socket.SHUT_RDWR)
+            except:  # pylint: disable=bare-except
+                pass
+            finally:
+                self.srv.close()
+            self.srv = None
 
-        self.srv.close()
-        self.srv = None
+        if self.mgmt:
+            mgmt_sock_path = os.path.join(
+                self.config.get("taky", "root_dir"), "taky-mgmt.sock"
+            )
+            try:
+                self.mgmt.shutdown(socket.SHUT_RDWR)
+            except:  # pylint: disable=bare-except
+                pass
+            finally:
+                self.mgmt.close()
+                os.remove(mgmt_sock_path)
+
+            self.mgmt = None
+
         self.lgr.info("Stopped")
