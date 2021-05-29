@@ -53,6 +53,8 @@ def main():
 
     try:
         ret = commands[args.command](config, args)
+    except KeyboardInterrupt:
+        ret = 1
     except Exception as exc:
         print(f"{args.command} failed: {str(exc)}", file=sys.stderr)
         print("Unhandled exception:", file=sys.stderr)
