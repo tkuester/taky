@@ -4,6 +4,8 @@ import time
 import enum
 from datetime import datetime as dt
 from datetime import timedelta
+import socket
+import ssl
 import logging
 import traceback
 
@@ -11,6 +13,109 @@ from lxml import etree
 
 from taky.util import XMLDeclStrip
 from . import models
+
+
+class SSLState(enum.Enum):
+    """ Tracks SSL state """
+
+    NO_SSL = 0
+    SSL_WAIT = 1
+    SSL_WAIT_TX = 2
+    SSL_ESTAB = 4
+
+
+class SocketClient:
+    def __init__(self, sock, ssl=False):
+        self.sock = sock
+        self.ssl = ssl
+        self.ssl_hs = SSLState.SSL_WAIT if ssl else SSLState.NO_SSL
+        self.out_buff = b""
+
+        (ip, port) = self.addr[0:2]
+        lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
+        self.lgr = logging.getLogger(lgr_name)
+
+    @property
+    def addr(self):
+        try:
+            return self.socket.getpeername()
+        except:
+            return (None, None)
+
+    @property
+    def is_closed(self):
+        return self.sock.fileno() == -1
+
+    @property
+    def has_data(self):
+        return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX
+
+    def __repr__(self):
+        (ip, port) = self.addr[0:2]
+        return f"<{self.__class__.__name__} addr={ip}:{port} ssl={self.ssl}>"
+
+    def feed(self, data):
+        raise NotImplementedError()
+
+    def ssl_handshake(self):
+        """ Preform the SSL handshake on the socket """
+        if not self.ssl or self.ssl_hs is SSLState.SSL_ESTAB:
+            return
+
+        try:
+            self.sock.do_handshake()
+            self.ssl_hs = SSLState.SSL_ESTAB
+            self.setblocking(True)
+            # TODO: Check SSL certs here
+        except ssl.SSLWantReadError:
+            self.ssl_hs = SSLState.SSL_WAIT
+        except ssl.SSLWantWriteError:
+            self.ssl_hs = SSLState.SSL_WAIT_TX
+        except (ssl.SSLError, socket.error, IOError, OSError) as exc:
+            self.client_disconnect(sock, str(exc))
+
+    def client_rx(self):
+        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+            self.ssl_handshake()
+            return
+
+        try:
+            data = self.sock.recv(4096)
+
+            if len(self.data) == 0:
+                self.client_disconnect(sock, "Disconnected")
+                return
+
+            self.feed(data)
+        except (ssl.SSLError, socket.error, IOError, OSError) as exc:
+            self.client_disconnect(str(exc))
+
+    def client_tx(self, data):
+        """
+        Transmit data to client socket
+
+        If the client is SSL enabled, and the handshake has not yet taken
+        place, we fail silently.
+        """
+        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+            self.ssl_handshake()
+            return
+
+        try:
+            sent = self.sock.send(self.out_buff[0:4096])
+            self.out_buff = self.out_buff[sent:]
+        except (socket.error, IOError, OSError) as exc:
+            self.client_disconnect(str(exc))
+
+    def client_disconnect(self, reason=None):
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except:  # pylint: disable=bare-except
+            pass
+        finally:
+            self.sock.close()
+
+        self.lgr.info("Client disconnect: %s", reason)
 
 
 class TAKClient:
@@ -181,15 +286,6 @@ class TAKClient:
             stale=now + timedelta(seconds=20),
         )
         self.send(pong)
-
-
-class SSLState(enum.Enum):
-    """ Tracks SSL state """
-
-    NO_SSL = 0
-    SSL_WAIT = 1
-    SSL_WAIT_TX = 2
-    SSL_ESTAB = 4
 
 
 class SocketTAKClient(TAKClient):

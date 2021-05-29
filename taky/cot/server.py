@@ -125,7 +125,7 @@ class COTServer:
             return
 
         self.lgr.info("New management client")
-        self.clients[sock] = MgmtClient(self)
+        self.clients[sock] = MgmtClient(sock, self)
 
     def handle_accept(self):
         """

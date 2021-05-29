@@ -1,29 +1,24 @@
 import time
 import json
-from .client import TAKClient, SSLState
+from .client import SocketClient, TAKClient
 
 
-class MgmtClient:
+class MgmtClient(SocketClient):
     """
     MgmtClient implements a socket client that handles connections to taky's
     management socket. This socket communicates with null terminated JSON,
     in the style of {"cmd": "..."}\\0
     """
 
-    def __init__(self, server):
+    def __init__(self, socket, server):
+        super().__init__(socket)
         self.server = server
         self.buff = b""
-        self.out_buff = b""
-        # XXX: Ugly hack
-        self.ssl_hs = SSLState.NO_SSL
-
-    def __repr__(self):
-        return "<MgmtClient>"
 
     @property
     def has_data(self):
         self.handle_rx()
-        return len(self.out_buff) > 0
+        return super().has_data
 
     def feed(self, data):
         self.buff += data
