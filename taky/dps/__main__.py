@@ -1,6 +1,5 @@
 import os
 import sys
-import ssl
 import multiprocessing
 import argparse
 import configparser
@@ -40,17 +39,27 @@ class StandaloneApplication(BaseApplication):
 # https://eugene.kovalev.systems/blog/flask_client_auth
 class ClientCertificateWorker(SyncWorker):
     """Worker for putting certificate information into the X-USER header variable of the request."""
+
     def handle_request(self, listener, req, client, addr):
-        subject = dict([i for subtuple in client.getpeercert().get('subject') for i in subtuple])
-        issuer = dict([i for subtuple in client.getpeercert().get('issuer') for i in subtuple])
+        subject = dict(
+            [i for subtuple in client.getpeercert().get("subject") for i in subtuple]
+        )
+        issuer = dict(
+            [i for subtuple in client.getpeercert().get("issuer") for i in subtuple]
+        )
         headers = dict(req.headers)
-        headers['X-USER'] = subject['commonName']
-        headers['X-ISSUER'] = issuer['commonName']
-        headers['X-NOT_BEFORE'] = ssl.cert_time_to_seconds(client.getpeercert().get('notBefore'))
-        headers['X-NOT_AFTER'] = ssl.cert_time_to_seconds(client.getpeercert().get('notAfter'))
+        headers["X-USER"] = subject["commonName"]
+        headers["X-ISSUER"] = issuer["commonName"]
+        headers["X-NOT_BEFORE"] = ssl.cert_time_to_seconds(
+            client.getpeercert().get("notBefore")
+        )
+        headers["X-NOT_AFTER"] = ssl.cert_time_to_seconds(
+            client.getpeercert().get("notAfter")
+        )
 
         req.headers = list(headers.items())
         super().handle_request(listener, req, client, addr)
+
 
 def number_of_workers():
     return (multiprocessing.cpu_count() * 2) + 1
