@@ -10,10 +10,10 @@ class MgmtClient(SocketClient):
     in the style of {"cmd": "..."}\\0
     """
 
-    def __init__(self, socket, server):
-        super().__init__(socket)
+    def __init__(self, server, **kwargs):
         self.server = server
         self.buff = b""
+        super().__init__(**kwargs)
 
     @property
     def has_data(self):

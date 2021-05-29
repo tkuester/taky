@@ -6,8 +6,6 @@ import select
 import ssl
 import logging
 
-from lxml import etree
-
 from .router import COTRouter
 from .client import TAKClient, SocketTAKClient, SSLState
 from .mgmt import MgmtClient
@@ -114,7 +112,7 @@ class COTServer:
 
         return ssl_ctx
 
-    def handle_mgmt_accept(self):
+    def mgmt_accept(self):
         """
         Accept a new client on the management socket
         """
@@ -125,9 +123,9 @@ class COTServer:
             return
 
         self.lgr.info("New management client")
-        self.clients[sock] = MgmtClient(sock, self)
+        self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
 
-    def handle_accept(self):
+    def srv_accept(self):
         """
         Accept a new client on the server socket
         """
@@ -151,82 +149,24 @@ class COTServer:
 
         self.lgr.info("New client from %s:%s", ip_addr, port)
         self.clients[sock] = SocketTAKClient(
-            self.router,
+            sock=sock,
+            use_ssl=(self.ssl_ctx is not None),
+            router=self.router,
             cot_log_dir=self.config.get("cot_server", "log_cot"),
-            addr=addr[0:2],
         )
         if self.ssl_ctx:
             self.clients[sock].ssl_hs = SSLState.SSL_WAIT
         self.router.client_connect(self.clients[sock])
 
-    def ssl_handshake(self, sock, client):
-        """ Preform the SSL handshake on the socket """
-        if not self.ssl_ctx or client.ssl_hs is SSLState.SSL_ESTAB:
-            return
-
-        try:
-            sock.do_handshake()
-            client.ssl_hs = SSLState.SSL_ESTAB
-            sock.setblocking(True)
-            # TODO: Check SSL certs here
-        except ssl.SSLWantReadError:
-            client.ssl_hs = SSLState.SSL_WAIT
-        except ssl.SSLWantWriteError:
-            client.ssl_hs = SSLState.SSL_WAIT_TX
-        except (ssl.SSLError, OSError) as exc:
-            self.client_disconnect(sock, str(exc))
-
-    def client_rx(self, sock, client):
-        """
-        Receive data from client socket, and feed to TAKClient
-        """
-        try:
-            data = sock.recv(4096)
-
-            if len(data) == 0:
-                self.client_disconnect(sock, "Disconnected")
-                return
-
-            client.feed(data)
-        except etree.XMLSyntaxError as exc:
-            self.lgr.debug("XML Parsing Error: %s", exc)
-            self.client_disconnect(sock, "Malformed XML")
-        except (socket.error, IOError, OSError) as exc:
-            self.client_disconnect(sock, str(exc))
-
-    def client_tx(self, sock, client):
-        """
-        Transmit data to client socket
-
-        If the client is SSL enabled, and the handshake has not yet taken
-        place, we fail silently.
-        """
-        try:
-            sent = sock.send(client.out_buff[0:4096])
-            client.out_buff = client.out_buff[sent:]
-        except (socket.error, IOError, OSError) as exc:
-            self.client_disconnect(sock, str(exc))
-
-    def client_disconnect(self, sock, reason=None):
+    def client_disconnect(self, client, reason=None):
         """
         Disconnect a client from the server
         """
-        try:
-            sock.shutdown(socket.SHUT_RDWR)
-        except:  # pylint: disable=bare-except
-            pass
-        finally:
-            sock.close()
-
-        client = self.clients.pop(sock)
-        if reason:
-            self.lgr.info("Client disconnect: %s (%s)", client, reason)
-        else:
-            self.lgr.info("Client disconnect: %s", client)
+        client.disconnect(reason)
+        client = self.clients.pop(client.sock)
 
         if isinstance(client, TAKClient):
             self.router.client_disconnect(client)
-            client.close()
 
     def loop(self):
         """
@@ -244,61 +184,48 @@ class COTServer:
 
         # Process exception sockets
         for sock in s_ex:
-            if sock is self.srv:
+            if sock in [self.srv, self.mgmt]:
                 raise RuntimeError("Server socket exceptional condition")
 
-            self.client_disconnect(sock, "Exceptional condition")
+            client = self.clients.get(sock)
+            self.client_disconnect(client, "Exceptional condition")
 
         # Process sockets with incoming data
         for sock in s_rd:
-            client = self.clients.get(sock)
-            if sock.fileno() == -1:
-                continue
             if sock is self.srv:
-                self.handle_accept()
+                self.srv_accept()
             elif sock is self.mgmt:
-                self.handle_mgmt_accept()
-            elif self.ssl_ctx and client.ssl_hs in [
-                SSLState.SSL_WAIT,
-                SSLState.SSL_WAIT_TX,
-            ]:
-                self.ssl_handshake(sock, client)
+                self.mgmt_accept()
             else:
-                self.client_rx(sock, client)
+                client = self.clients.get(sock)
+                client.socket_rx()
 
         # Process sockets with outgoing data
-        for sock in filter(lambda x: x.fileno() != -1, s_wr):
+        for sock in s_wr:
             client = self.clients.get(sock)
-            if sock.fileno() == -1:
-                continue
-            if self.ssl_ctx and client.ssl_hs in [
-                SSLState.SSL_WAIT,
-                SSLState.SSL_WAIT_TX,
-            ]:
-                self.ssl_handshake(sock, client)
-            else:
-                self.client_tx(sock, client)
+            client.socket_tx()
 
         # Prune the persistence database
         self.router.prune()
 
         # Prune sockets that have not finished the SSL handshake
-        prune_sox = list(self.clients.items())
         now = time.time()
+        prune_sox = list(self.clients.items())
         for (sock, client) in prune_sox:
-            if client.ssl_hs in [SSLState.NO_SSL, SSLState.SSL_ESTAB]:
-                continue
+            if client.is_closed:
+                self.client_disconnect(client, "Is closed")
 
-            if (now - client.connected) > 10:
-                self.client_disconnect(sock, "SSL Handshake timeout")
+            if client.ssl_hs not in [SSLState.NO_SSL, SSLState.SSL_ESTAB]:
+                if (now - client.connected) > 10:
+                    self.client_disconnect(client, "SSL Handshake timeout")
 
     def shutdown(self):
         """
         Disconnect all clients, close server socket.
         """
         self.lgr.info("Sending disconnect to clients")
-        for sock in list(self.clients):
-            self.client_disconnect(sock, "Server shutting down")
+        for client in list(self.clients.values()):
+            self.client_disconnect(client, "Server shutting down")
 
         if self.srv:
             try:

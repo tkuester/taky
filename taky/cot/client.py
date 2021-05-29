@@ -25,21 +25,25 @@ class SSLState(enum.Enum):
 
 
 class SocketClient:
-    def __init__(self, sock, ssl=False):
+    def __init__(self, sock, use_ssl=False, **kwargs):
         self.sock = sock
-        self.ssl = ssl
-        self.ssl_hs = SSLState.SSL_WAIT if ssl else SSLState.NO_SSL
+        self.ssl = use_ssl
+        self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
 
-        (ip, port) = self.addr[0:2]
+        (ip, port) = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
         self.lgr = logging.getLogger(lgr_name)
+        super().__init__(**kwargs)
 
     @property
     def addr(self):
         try:
-            return self.socket.getpeername()
-        except:
+            addr = self.sock.getpeername()
+            if addr is "":
+                return ("unix", "")
+            return addr
+        except:  # pylint: disable=bare-except
             return (None, None)
 
     @property
@@ -65,16 +69,16 @@ class SocketClient:
         try:
             self.sock.do_handshake()
             self.ssl_hs = SSLState.SSL_ESTAB
-            self.setblocking(True)
+            self.sock.setblocking(True)
             # TODO: Check SSL certs here
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:
             self.ssl_hs = SSLState.SSL_WAIT_TX
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
-            self.client_disconnect(sock, str(exc))
+            self.disconnect(str(exc))
 
-    def client_rx(self):
+    def socket_rx(self):
         if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
             self.ssl_handshake()
             return
@@ -82,15 +86,15 @@ class SocketClient:
         try:
             data = self.sock.recv(4096)
 
-            if len(self.data) == 0:
-                self.client_disconnect(sock, "Disconnected")
+            if len(data) == 0:
+                self.disconnect("Client disconnected")
                 return
 
             self.feed(data)
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
-            self.client_disconnect(str(exc))
+            self.disconnect(str(exc))
 
-    def client_tx(self, data):
+    def socket_tx(self):
         """
         Transmit data to client socket
 
@@ -104,18 +108,19 @@ class SocketClient:
         try:
             sent = self.sock.send(self.out_buff[0:4096])
             self.out_buff = self.out_buff[sent:]
-        except (socket.error, IOError, OSError) as exc:
-            self.client_disconnect(str(exc))
+        except (ssl.SSLError, socket.error, IOError, OSError) as exc:
+            self.disconnect(str(exc))
 
-    def client_disconnect(self, reason=None):
+    def disconnect(self, reason=None):
+        if not self.is_closed:
+            self.lgr.info("Socket disconnect: %s", reason)
+
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
         except:  # pylint: disable=bare-except
             pass
         finally:
             self.sock.close()
-
-        self.lgr.info("Client disconnect: %s", reason)
 
 
 class TAKClient:
@@ -126,7 +131,7 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, router=None, cot_log_dir=None):
+    def __init__(self, router=None, cot_log_dir=None, **kwargs):
         self.router = router
         self.user = None
         self.connected = time.time()
@@ -140,7 +145,8 @@ class TAKClient:
         parser.feed(b"<root>")
         self.xdc = XMLDeclStrip(parser)
 
-        self.lgr = logging.getLogger(TAKClient.__name__)
+        self.lgr = logging.getLogger(self.__class__.__name__)
+        super().__init__(**kwargs)
 
     def __repr__(self):
         if self.user:
@@ -206,7 +212,7 @@ class TAKClient:
                 elm.append(taky_err)
 
             doc = etree.tostring(elm, pretty_print=True).decode()
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.lgr.warning("Unable to build packet string for logfile", exc_info=exc)
             return
 
@@ -288,16 +294,13 @@ class TAKClient:
         self.send(pong)
 
 
-class SocketTAKClient(TAKClient):
+class SocketTAKClient(TAKClient, SocketClient):
     """
     A TAK client based on sockets
     """
 
-    def __init__(self, router, cot_log_dir=None, addr=None):
-        super().__init__(router, cot_log_dir)
-        self.addr = addr
-        self.ssl_hs = SSLState.NO_SSL
-        self.out_buff = b""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         if self.user:
@@ -318,6 +321,8 @@ class SocketTAKClient(TAKClient):
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
         """
+
+        # TODO: Make only CoT Events
         if isinstance(data, models.Event):
             data = data.as_element
 
@@ -334,8 +339,3 @@ class SocketTAKClient(TAKClient):
             self.out_buff += data
         else:
             raise ValueError("Can only send Event / XML to TAKClient!")
-
-    @property
-    def has_data(self):
-        """ Returns true if there is outbound data pending """
-        return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX
