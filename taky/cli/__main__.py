@@ -26,6 +26,7 @@ def arg_parse():
     cli.setup_taky_reg(subp)
     cli.build_client_reg(subp)
     cli.systemd_reg(subp)
+    cli.status_reg(subp)
 
     args = argp.parse_args()
 
@@ -45,6 +46,7 @@ def main():
         "setup": cli.setup_taky,
         "build_client": cli.build_client,
         "systemd": cli.systemd,
+        "status": cli.status,
     }
 
     if not args.command:
@@ -54,6 +56,7 @@ def main():
     try:
         ret = commands[args.command](config, args)
     except KeyboardInterrupt:
+        # TODO: Teardown function?
         ret = 1
     except Exception as exc:
         print(f"{args.command} failed: {str(exc)}", file=sys.stderr)
