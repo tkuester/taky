@@ -282,7 +282,11 @@ class COTServer:
                 pass
             finally:
                 self.mgmt.close()
+
+            try:
                 os.remove(mgmt_sock_path)
+            except FileNotFoundError:
+                pass
 
             self.mgmt = None
 
