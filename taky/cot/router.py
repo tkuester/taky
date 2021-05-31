@@ -19,9 +19,7 @@ class Destination(enum.Enum):
 
 class COTRouter:
     """
-    Simple class to route packets. A class is a bit over kill when a simple
-    function would do, but currently the router needs to know what clients are
-    available to send packets to.
+    A class to keep track of clients, and ensure packets get routed properly.
     """
 
     def __init__(self, config=None):

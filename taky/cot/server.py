@@ -1,4 +1,3 @@
-# pylint: disable=missing-module-docstring
 import os
 import time
 import socket
@@ -225,12 +224,14 @@ class COTServer:
                 self.mgmt_accept()
             else:
                 client = self.clients.get(sock)
-                client.socket_rx()
+                if not client.is_closed:
+                    client.socket_rx()
 
         # Process sockets with outgoing data
         for sock in s_wr:
             client = self.clients.get(sock)
-            client.socket_tx()
+            if not client.is_closed:
+                client.socket_tx()
 
         # Prune the persistence database
         self.router.prune()

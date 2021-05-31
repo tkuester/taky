@@ -25,6 +25,11 @@ class SSLState(enum.Enum):
 
 
 class SocketClient:
+    """
+    A class to simplify tracking connection details for a select() based
+    server, such as SSL handshake state, and an outgoing data buffer.
+    """
+
     def __init__(self, sock, use_ssl=False, **kwargs):
         self.sock = sock
         self.ssl = use_ssl
@@ -48,10 +53,14 @@ class SocketClient:
 
     @property
     def is_closed(self):
+        """ Returns true if the socket is closed """
         return self.sock.fileno() == -1
 
     @property
     def has_data(self):
+        """
+        Returns true if the socket wants to be considered for transmitting
+        """
         return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX
 
     def __repr__(self):
@@ -59,6 +68,9 @@ class SocketClient:
         return f"<{self.__class__.__name__} addr={ip}:{port} ssl={self.ssl}>"
 
     def feed(self, data):
+        """
+        Implemented in a subclass to handle reception of data
+        """
         raise NotImplementedError()
 
     def ssl_handshake(self):
@@ -79,6 +91,11 @@ class SocketClient:
             self.disconnect(str(exc))
 
     def socket_rx(self):
+        """
+        Call this whenever a socket indicates it has data to receive.
+
+        If the socket is SSL based, this may be part of the handshake.
+        """
         if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
             self.ssl_handshake()
             return
@@ -96,7 +113,8 @@ class SocketClient:
 
     def socket_tx(self):
         """
-        Transmit data to client socket
+        Transmit data to client socket. (Check has_data to see if this needs
+        to be called.)
 
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
