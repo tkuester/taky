@@ -199,7 +199,7 @@ class COTServer:
         rd_clients.append(self.mgmt)
         wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
-        (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 10)
+        (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 1)
 
         # At each stage, we will need to re-check to make sure the previous
         # stage did not close our socket.
