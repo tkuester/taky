@@ -14,6 +14,8 @@ DEFAULT_CFG = {
     },
     "cot_server": {
         "port": None,  # Defaults to 8087 (or 8089 if SSL)
+        "mon_ip": None,
+        "mon_port": None,
         "log_cot": None,  # Path to log COT files to
     },
     "dp_server": {
@@ -72,6 +74,23 @@ def load_config(path=None, explicit=False):
         if port <= 0 or port >= 65535:
             raise ValueError(f"Invalid port: {port}")
     config.set("cot_server", "port", str(port))
+
+    if not config.getboolean("ssl", "enabled"):
+        # Disable monitor port
+        config.set("cot_server", "mon_ip", None)
+    else:
+        port = config.get("cot_server", "mon_port")
+        if port in [None, ""]:
+            port = 8087 if config.getboolean("ssl", "enabled") else None
+        else:
+            try:
+                port = int(port)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Invalid port: {port}") from exc
+
+            if port <= 0 or port >= 65535:
+                raise ValueError(f"Invalid port: {port}")
+        config.set("cot_server", "mon_port", str(port))
 
     if explicit:
         config.set("taky", "cfg_path", path)

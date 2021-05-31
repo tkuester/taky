@@ -11,6 +11,30 @@ from .client import TAKClient, SocketTAKClient, SSLState
 from .mgmt import MgmtClient
 
 
+def build_srv(ip_addr, port):
+    if ip_addr is None:
+        ip_addr = ""
+        sock_fam = socket.AF_INET
+        bind_args = ("", port)
+    else:
+        try:
+            addr_info = socket.getaddrinfo(ip_addr, port, type=socket.SOCK_STREAM)
+            if len(addr_info) > 1:
+                logging.warning("Multiple address entities for %s:%s", ip_addr, port)
+            (sock_fam, _, _, _, bind_args) = addr_info[0]
+        except socket.gaierror as exc:
+            raise ValueError(
+                f"Unable to determine address info for bind_ip: {ip_addr}"
+            ) from exc
+
+    sock = socket.socket(sock_fam, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(bind_args)
+    sock.listen()
+
+    return sock
+
+
 class COTServer:
     """
     COTServer is an object which hosts the server socket, handles client
@@ -30,14 +54,19 @@ class COTServer:
         self.router = COTRouter(config)
 
         self.mgmt = None
+        self.mon = None
         self.srv = None
-        self._sock_setup()
+        self.ssl_ctx = None
 
-    def _sock_setup(self):
+        self.started = -1
+
+    def sock_setup(self):
         """
         Build the server socket
         """
         self.started = time.time()
+
+        # Setup the Management Socket
         self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         mgmt_sock_path = os.path.join(
             self.config.get("taky", "root_dir"), "taky-mgmt.sock"
@@ -45,36 +74,29 @@ class COTServer:
         self.mgmt.bind(mgmt_sock_path)
         self.mgmt.listen()
 
+        # Build the SSL Context
+        self.ssl_ctx = self._ssl_setup()
+
+        # Setup the Server Socket
         ip_addr = self.config.get("taky", "bind_ip")
         port = self.config.getint("cot_server", "port")
 
-        if ip_addr is None:
-            ip_addr = ""
-            sock_fam = socket.AF_INET
-            bind_args = ("", port)
-        else:
-            try:
-                addr_info = socket.getaddrinfo(ip_addr, port, type=socket.SOCK_STREAM)
-                if len(addr_info) > 1:
-                    self.lgr.warning(
-                        "Multiple address entities for %s:%s", ip_addr, port
-                    )
-                (sock_fam, _, _, _, bind_args) = addr_info[0]
-            except socket.gaierror as exc:
-                raise ValueError(
-                    f"Unable to determine address info for bind_ip: {ip_addr}"
-                ) from exc
-
-        self.ssl_ctx = self._ssl_setup()
-
-        self.srv = socket.socket(sock_fam, socket.SOCK_STREAM)
-        self.srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.srv.bind(bind_args)
-
         mode = "ssl" if self.ssl_ctx else "tcp"
-
         self.lgr.info("Listening for %s on %s:%s", mode, ip_addr, port)
-        self.srv.listen()
+        self.srv = build_srv(ip_addr, port)
+
+        # Setup the Monitor Socket
+        if mode == "tcp":
+            return
+
+        ip_addr = self.config.get("cot_server", "mon_ip")
+        port = self.config.getint("cot_server", "mon_port")
+
+        if ip_addr is None:
+            return
+
+        self.lgr.info("Monitor listening for tcp on %s:%s", ip_addr, port)
+        self.mon = build_srv(ip_addr, port)
 
     def _ssl_setup(self):
         """
@@ -125,37 +147,38 @@ class COTServer:
         self.lgr.info("New management client")
         self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
 
-    def srv_accept(self):
+    def srv_accept(self, sock, force_tcp=False):
         """
-        Accept a new client on the server socket
+        Accept a new client from a server socket
         """
         ip_addr = None
         port = None
 
         try:
-            (sock, addr) = self.srv.accept()
+            (sock, addr) = sock.accept()
             (ip_addr, port) = addr[0:2]
+            stype = "tcp"
 
-            if self.ssl_ctx:
+            if self.ssl_ctx and not force_tcp:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
                 sock.setblocking(False)
+                stype = "ssl"
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
         except (socket.error, OSError) as exc:
             self.lgr.info("Client connect failed %s:%s (%s)", ip_addr, port, exc)
             return
 
-        self.lgr.info("New client from %s:%s", ip_addr, port)
+        self.lgr.info("New %s client from %s:%s", stype, ip_addr, port)
         self.clients[sock] = SocketTAKClient(
             sock=sock,
-            use_ssl=(self.ssl_ctx is not None),
+            use_ssl=(self.ssl_ctx and not force_tcp),
             router=self.router,
             cot_log_dir=self.config.get("cot_server", "log_cot"),
         )
-        if self.ssl_ctx:
-            self.clients[sock].ssl_hs = SSLState.SSL_WAIT
+
         self.router.client_connect(self.clients[sock])
 
     def client_disconnect(self, client, reason=None):
@@ -174,6 +197,8 @@ class COTServer:
         """
         rd_clients = list(self.clients)
         rd_clients.append(self.srv)
+        if self.mon:
+            rd_clients.append(self.mon)
         rd_clients.append(self.mgmt)
         wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
@@ -193,7 +218,9 @@ class COTServer:
         # Process sockets with incoming data
         for sock in s_rd:
             if sock is self.srv:
-                self.srv_accept()
+                self.srv_accept(sock)
+            elif sock is self.mon:
+                self.srv_accept(sock, force_tcp=True)
             elif sock is self.mgmt:
                 self.mgmt_accept()
             else:
@@ -235,6 +262,16 @@ class COTServer:
             finally:
                 self.srv.close()
             self.srv = None
+
+        if self.mon:
+            try:
+                self.mon.shutdown(socket.SHUT_RDWR)
+            except:  # pylint: disable=bare-except
+                pass
+            finally:
+                self.mon.close()
+
+            self.mon = None
 
         if self.mgmt:
             mgmt_sock_path = os.path.join(

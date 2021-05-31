@@ -64,6 +64,8 @@ class MgmtClient(SocketClient):
                 "connected": client.connected,
             }
             if client.user:
+                if isinstance(client, SocketClient):
+                    cli_meta["ip"] = client.addr[0]
                 cli_meta["uid"] = client.user.uid
                 cli_meta["callsign"] = client.user.callsign
                 cli_meta["group"] = str(client.user.group)

@@ -70,16 +70,17 @@ def main():
         sys.exit(1)
 
     # TODO: Check for ipv6 support
+    if args.debug:
+        signal.signal(signal.SIGUSR1, handle_pdb)
 
+    cot_srv = COTServer(config)
     try:
-        cot_srv = COTServer(config)
+        cot_srv.sock_setup()
     except Exception as exc:  # pylint: disable=broad-except
         logging.error("Unable to start COTServer: %s", exc)
         logging.debug("", exc_info=exc)
+        cot_srv.shutdown()
         sys.exit(1)
-
-    if args.debug:
-        signal.signal(signal.SIGUSR1, handle_pdb)
 
     try:
         while True:
@@ -94,6 +95,7 @@ def main():
         cot_srv.shutdown()
     except Exception as exc:  # pylint: disable=broad-except
         logging.critical("Exception during shutdown", exc_info=exc)
+        ret = 1
 
     sys.exit(ret)
 
