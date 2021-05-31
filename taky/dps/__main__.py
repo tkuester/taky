@@ -80,6 +80,7 @@ def arg_parse():
         action="store",
         dest="log_level",
         default="INFO",
+        choices=["debug", "info", "warning", "error", "critical"],
         help="Path to configuration file",
     )
     argp.add_argument(
@@ -122,6 +123,7 @@ def main():
         "bind": f"{bind_ip}:{port}",
         "workers": number_of_workers(),
         "loglevel": args.log_level,
+        "accesslog": "-",
     }
     if app_config.getboolean("ssl", "enabled"):
         options["ca_certs"] = app_config.get("ssl", "ca")
