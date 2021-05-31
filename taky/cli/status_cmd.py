@@ -38,7 +38,7 @@ def print_status(stat):
     if len(clients) == 0:
         return
 
-    Row = namedtuple("Row", ["Callsign", "UID", "Connected"])
+    Row = namedtuple("Row", ["Callsign", "UID", "Connected", "IP", "LastRx"])
     table = []
     now = time.time()
     for client in clients:
@@ -50,7 +50,21 @@ def print_status(stat):
             cs = client.get("callsign")
             uid = client.get("uid")
 
-        table.append(Row(Callsign=cs, UID=uid, Connected=seconds_to_human(conn_len)))
+        last_rx = client.get("last_rx", 0)
+        if last_rx > 0:
+            last_rx = seconds_to_human(now - last_rx)
+        else:
+            last_rx = "never"
+
+        table.append(
+            Row(
+                Callsign=cs,
+                UID=uid,
+                Connected=seconds_to_human(conn_len),
+                IP=client.get("ip"),
+                LastRx=last_rx,
+            )
+        )
 
     pprinttable(table)
 
