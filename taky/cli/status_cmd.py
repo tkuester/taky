@@ -6,6 +6,7 @@ import json
 from collections import namedtuple
 
 from taky.util import pprinttable, seconds_to_human
+from taky.config import app_config as config
 
 
 def status_reg(subp):
@@ -54,7 +55,7 @@ def print_status(stat):
     pprinttable(table)
 
 
-def status(config, args):
+def status(args):
     if args.socket is None:
         args.socket = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
 

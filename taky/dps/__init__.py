@@ -3,8 +3,9 @@ import os
 from flask import Flask
 
 from taky.config import load_config
+from taky.config import app_config as config
 
-config = load_config(os.environ.get("TAKY_CONFIG"))
+load_config(os.environ.get("TAKY_CONFIG"))
 
 application = app = Flask(__name__)
 app.config["HOSTNAME"] = config.get("taky", "hostname")
@@ -24,5 +25,3 @@ else:
     # TODO: Configurable?
 
 from taky.dps import views  # pylint: disable=wrong-import-position
-
-# /Marti/vcm - Videos on Server

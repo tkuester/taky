@@ -37,7 +37,7 @@ def main():
     (argp, args) = arg_parse()
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as exc:
         print(exc, file=sys.stderr)
         sys.exit(1)
@@ -54,11 +54,11 @@ def main():
         sys.exit(1)
 
     try:
-        ret = commands[args.command](config, args)
+        ret = commands[args.command](args)
     except KeyboardInterrupt:
         # TODO: Teardown function?
         ret = 1
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         print(f"{args.command} failed: {str(exc)}", file=sys.stderr)
         print("Unhandled exception:", file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)

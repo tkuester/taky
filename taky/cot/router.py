@@ -22,11 +22,11 @@ class COTRouter:
     A class to keep track of clients, and ensure packets get routed properly.
     """
 
-    def __init__(self, config=None):
+    def __init__(self):
         # TODO: self.clients as dictionary, with UID as keys?
         #     : should prohibit multiple sockets sharing a client
         self.clients = set()
-        self.persist = build_persistence(config)
+        self.persist = build_persistence()
         self.last_prune = 0
         self.lgr = logging.getLogger(self.__class__.__name__)
 

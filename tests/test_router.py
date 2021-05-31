@@ -7,7 +7,7 @@ from datetime import timedelta
 from lxml import etree
 
 from taky import cot
-from taky.config import load_config
+from taky.config import load_config, app_config
 from .test_cot_event import XML_S
 
 
@@ -22,10 +22,10 @@ class UnittestTAKClient(cot.TAKClient):
 
 class RouterTestcase(ut.TestCase):
     def setUp(self):
-        cfg = load_config(os.devnull)
-        cfg.set("taky", "redis", "false")
-        cfg.set("cot_server", "cot_log", None)
-        self.router = cot.COTRouter(cfg)
+        load_config(os.devnull)
+        app_config.set("taky", "redis", "false")
+        app_config.set("cot_server", "cot_log", None)
+        self.router = cot.COTRouter()
         self.tk1 = UnittestTAKClient(self.router)
         self.tk2 = UnittestTAKClient(self.router)
 

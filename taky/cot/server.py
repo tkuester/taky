@@ -5,6 +5,7 @@ import select
 import ssl
 import logging
 
+from taky.config import app_config as config
 from .router import COTRouter
 from .client import TAKClient, SocketTAKClient, SSLState
 from .mgmt import MgmtClient
@@ -42,15 +43,14 @@ class COTServer:
     In the simplest usage, create the object, and call loop()
     """
 
-    def __init__(self, config):
+    def __init__(self):
         """
         Construct the COTServer object, and build the server socket
         """
         self.lgr = logging.getLogger(self.__class__.__name__)
 
-        self.config = config
         self.clients = {}
-        self.router = COTRouter(config)
+        self.router = COTRouter()
 
         self.mgmt = None
         self.mon = None
@@ -67,9 +67,7 @@ class COTServer:
 
         # Setup the Management Socket
         self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        mgmt_sock_path = os.path.join(
-            self.config.get("taky", "root_dir"), "taky-mgmt.sock"
-        )
+        mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
         self.mgmt.bind(mgmt_sock_path)
         self.mgmt.listen()
 
@@ -77,8 +75,8 @@ class COTServer:
         self.ssl_ctx = self._ssl_setup()
 
         # Setup the Server Socket
-        ip_addr = self.config.get("taky", "bind_ip")
-        port = self.config.getint("cot_server", "port")
+        ip_addr = config.get("taky", "bind_ip")
+        port = config.getint("cot_server", "port")
 
         mode = "ssl" if self.ssl_ctx else "tcp"
         self.lgr.info("Listening for %s on %s:%s", mode, ip_addr, port)
@@ -88,8 +86,8 @@ class COTServer:
         if mode == "tcp":
             return
 
-        ip_addr = self.config.get("cot_server", "mon_ip")
-        port = self.config.getint("cot_server", "mon_port")
+        ip_addr = config.get("cot_server", "mon_ip")
+        port = config.getint("cot_server", "mon_port")
 
         if ip_addr is None:
             return
@@ -101,12 +99,12 @@ class COTServer:
         """
         Build the SSL context
         """
-        if not self.config.getboolean("ssl", "enabled"):
+        if not config.getboolean("ssl", "enabled"):
             return None
 
         ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
-        if self.config.getboolean("ssl", "client_cert_required"):
+        if config.getboolean("ssl", "client_cert_required"):
             ssl_ctx.verify_mode = ssl.CERT_REQUIRED
         else:
             self.lgr.info("Clients will not need to present a certificate")
@@ -114,7 +112,7 @@ class COTServer:
 
         # Load up CA certificates
         try:
-            ca_cert = self.config.get("ssl", "ca")
+            ca_cert = config.get("ssl", "ca")
             if ca_cert:
                 self.lgr.info("Loading CA certificate from %s", ca_cert)
                 ssl_ctx.load_verify_locations(ca_cert)
@@ -123,9 +121,9 @@ class COTServer:
                 ssl_ctx.load_default_certs()
 
             ssl_ctx.load_cert_chain(
-                certfile=self.config.get("ssl", "cert"),
-                keyfile=self.config.get("ssl", "key"),
-                password=self.config.get("ssl", "key_pw"),
+                certfile=config.get("ssl", "cert"),
+                keyfile=config.get("ssl", "key"),
+                password=config.get("ssl", "key_pw"),
             )
         except (ssl.SSLError, OSError) as exc:
             self.lgr.error("Unable to load SSL certificate: %s", exc)
@@ -175,7 +173,7 @@ class COTServer:
             sock=sock,
             use_ssl=(self.ssl_ctx and not force_tcp),
             router=self.router,
-            cot_log_dir=self.config.get("cot_server", "log_cot"),
+            cot_log_dir=config.get("cot_server", "log_cot"),
         )
 
         self.router.client_connect(self.clients[sock])
@@ -276,7 +274,7 @@ class COTServer:
 
         if self.mgmt:
             mgmt_sock_path = os.path.join(
-                self.config.get("taky", "root_dir"), "taky-mgmt.sock"
+                config.get("taky", "root_dir"), "taky-mgmt.sock"
             )
             try:
                 self.mgmt.shutdown(socket.SHUT_RDWR)

@@ -59,7 +59,7 @@ def main():
     logging.info("taky v%s", __version__)
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (FileNotFoundError, OSError):
         if args.cfg_file:
             argp.error(f"Unable to load config file: '{args.cfg_file}'")
@@ -73,7 +73,7 @@ def main():
     if args.debug:
         signal.signal(signal.SIGUSR1, handle_pdb)
 
-    cot_srv = COTServer(config)
+    cot_srv = COTServer()
     try:
         cot_srv.sock_setup()
     except Exception as exc:  # pylint: disable=broad-except

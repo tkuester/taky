@@ -4,6 +4,7 @@ import configparser
 import subprocess
 
 from taky.config import load_config
+from taky.config import app_config as config
 
 
 def systemd_reg(subp):
@@ -34,7 +35,7 @@ def systemd_reg(subp):
     )
 
 
-def write_cot_svc(names, config, args, using_venv=False, site_path=None):
+def write_cot_svc(names, args, using_venv=False, site_path=None):
     """ Build the cot server service """
     cot_svc = [
         "[Unit]",
@@ -71,7 +72,7 @@ def write_cot_svc(names, config, args, using_venv=False, site_path=None):
         svc_fp.write("\n")
 
 
-def write_dps_svc(names, config, args, using_venv=False, site_path=None):
+def write_dps_svc(names, args, using_venv=False, site_path=None):
     """ Build the data package server service """
     dps_svc = [
         "[Unit]",
@@ -108,7 +109,7 @@ def write_dps_svc(names, config, args, using_venv=False, site_path=None):
         svc_fp.write("\n")
 
 
-def write_uni_svc(names, config, args, using_venv=False, site_path=None):
+def write_uni_svc(names, args):
     """ Build the service that unites the COT and DPS services """
     uni_svc = [
         "[Unit]",
@@ -137,11 +138,11 @@ def write_uni_svc(names, config, args, using_venv=False, site_path=None):
         svc_fp.write("\n")
 
 
-def systemd(config, args):
+def systemd(args):
     """ Build and install systemd scripts for the server """
     try:
-        config = load_config(args.cfg_file, explicit=True)
-    except (OSError, configparser.ParsingError) as exc:
+        load_config(args.cfg_file, explicit=True)
+    except (FileNotFoundError, configparser.ParsingError, OSError) as exc:
         print(exc, file=sys.stderr)
         return 1
 
@@ -188,12 +189,12 @@ def systemd(config, args):
     print(f" - Writing services to {args.path}")
     try:
         print(f"   - Writing {svcs['cot']}")
-        write_cot_svc(svcs, config, args, using_venv, site_path)
+        write_cot_svc(svcs, args, using_venv, site_path)
         if args.dps:
             print(f"   - Writing {svcs['dps']}")
-            write_dps_svc(svcs, config, args, using_venv, site_path)
+            write_dps_svc(svcs, args, using_venv, site_path)
         print(f"   - Writing {svcs['taky']}")
-        write_uni_svc(svcs, config, args, using_venv, site_path)
+        write_uni_svc(svcs, args)
     except PermissionError as exc:
         print(f"ERROR: Unable to write service files to {args.path}", file=sys.stderr)
         return 1

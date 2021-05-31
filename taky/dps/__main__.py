@@ -10,6 +10,7 @@ from gunicorn.workers.sync import SyncWorker
 
 from taky import __version__
 from taky.config import load_config
+from taky.config import app_config
 from taky.dps import app as taky_dps
 
 
@@ -97,17 +98,17 @@ def main():
     (argp, args) = arg_parse()
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as exc:
         argp.error(exc)
 
-    bind_ip = config.get("taky", "bind_ip")
-    port = 8443 if config.getboolean("ssl", "enabled") else 8080
+    bind_ip = app_config.get("taky", "bind_ip")
+    port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
 
     if bind_ip is None:
         bind_ip = ""
 
-    dp_path = config.get("dp_server", "upload_path")
+    dp_path = app_config.get("dp_server", "upload_path")
     if not os.path.exists(dp_path):
         print("-" * 30, file=sys.stderr)
         print("[ WARNING ] Datapackage directory does not exist!", file=sys.stderr)
@@ -122,10 +123,10 @@ def main():
         "workers": number_of_workers(),
         "loglevel": args.log_level,
     }
-    if config.getboolean("ssl", "enabled"):
-        options["ca_certs"] = config.get("ssl", "ca")
-        options["certfile"] = config.get("ssl", "cert")
-        options["keyfile"] = config.get("ssl", "key")
+    if app_config.getboolean("ssl", "enabled"):
+        options["ca_certs"] = app_config.get("ssl", "ca")
+        options["certfile"] = app_config.get("ssl", "cert")
+        options["keyfile"] = app_config.get("ssl", "key")
         options["cert_reqs"] = ssl.CERT_REQUIRED
         options["do_handshake_on_connect"] = True
         options["worker_class"] = "taky.dps.__main__.ClientCertificateWorker"

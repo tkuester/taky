@@ -187,7 +187,7 @@ class TAKClient:
                 pass
             self.cot_fp = None
 
-    def log_event(self, evt=None, elm=None, exc=None):
+    def log_event(self, evt=None, elm=None, _exc=None):
         """
         Writes the COT XML to the logfile, if configured.
 
@@ -223,9 +223,9 @@ class TAKClient:
             if elm is None:
                 elm = evt.as_element
 
-            if exc:
+            if _exc:
                 taky_err = etree.Element("__taky_err")
-                taky_err.append(etree.Comment(exc))
+                taky_err.append(etree.Comment(_exc))
                 elm.append(taky_err)
 
             doc = etree.tostring(elm, pretty_print=True).decode()
@@ -265,14 +265,14 @@ class TAKClient:
             except models.UnmarshalError as exc:
                 self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))
-                self.log_event(elm=elm, exc=traceback.format_exc())
+                self.log_event(elm=elm, _exc=traceback.format_exc())
                 continue
             except Exception as exc:  # pylint: disable=broad-except
                 self.lgr.error(
                     "Unhandled exception parsing Event: %s", exc, exc_info=exc
                 )
                 self.lgr.error(etree.tostring(elm, pretty_print=True))
-                self.log_event(elm=elm, exc=traceback.format_exc())
+                self.log_event(elm=elm, _exc=traceback.format_exc())
                 continue
             finally:
                 elm.clear(keep_tail=True)
