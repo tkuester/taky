@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
  - Management socket + status command
+ - TCP Monitor socket
+
+### Changed
+ - Overhaul of config object to be a global variable
+ - Refactor of client objects for code reuse
+
+### Fixed
+ - Allowing for a proper shutdown from SIGTERM
 
 ## [0.8] - 2021-05-24
 
