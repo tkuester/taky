@@ -1,7 +1,10 @@
-# pylint: disable=missing-module-docstring
+import sys
 import time
 import enum
 import logging
+from pkg_resources import iter_entry_points
+
+import taky.cot.router_plugins as plugins
 
 from . import models
 from .client import TAKClient
@@ -29,6 +32,8 @@ class COTRouter:
         self.persist = build_persistence()
         self.last_prune = 0
         self.lgr = logging.getLogger(self.__class__.__name__)
+
+        self.plugins = plugins.load_plugins(self)
 
     def prune(self):
         now = time.time()
@@ -130,6 +135,15 @@ class COTRouter:
         """
         if not isinstance(evt, models.Event):
             raise ValueError(f"Unable to route {type(evt)}")
+
+        for plugin in self.plugins:
+            try:
+                if plugin.pre_process(src, None, evt):
+                    return
+            except NotImplementedError:
+                pass
+            except Exception as exc:
+                self.lgr.error("Routing plugin error", exc_info=exc)
 
         # Special handling for chat messages
         if isinstance(evt.detail, models.GeoChat):

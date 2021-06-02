@@ -19,6 +19,7 @@ DEFAULT_CFG = {
         "mon_ip": None,
         "mon_port": None,
         "log_cot": None,  # Path to log COT files to
+        "plugins": None,
     },
     "dp_server": {
         "upload_path": "/var/taky/dp-user",
