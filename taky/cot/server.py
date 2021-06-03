@@ -35,6 +35,35 @@ def build_srv(ip_addr, port):
     return sock
 
 
+def check_socket(mgmt_sock_path):
+    """Checks if the management socket is available for binding"""
+    if not os.path.exists(mgmt_sock_path):
+        return True
+
+    if not ping_socket(mgmt_sock_path):
+        os.remove(mgmt_sock_path)
+        return True
+
+    return False
+
+
+def ping_socket(mgmt_sock_path):
+    """Attemps to send a ping to the management socket to check for a running server"""
+    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        client.connect(mgmt_sock_path)
+        client.sendall(b'{"cmd": "ping"}\0')
+        client.settimeout(1)
+        recv = client.recv(4096)
+        if len(recv.decode()) > 0:
+            return True
+    except socket.error:
+        return False
+    finally:
+        client.close()
+    return False
+
+
 class COTServer:
     """
     COTServer is an object which hosts the server socket, handles client
@@ -66,12 +95,15 @@ class COTServer:
         self.started = time.time()
 
         # Setup the Management Socket
-        self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
-        if os.path.exists(mgmt_sock_path):
-            os.remove(mgmt_sock_path)
-        self.mgmt.bind(mgmt_sock_path)
-        self.mgmt.listen()
+        if check_socket(mgmt_sock_path):
+            self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.mgmt.bind(mgmt_sock_path)
+            self.mgmt.listen()
+        else:
+            raise RuntimeError(
+                f"Taky already appears to be running via {mgmt_sock_path}"
+            )
 
         # Build the SSL Context
         self.ssl_ctx = self._ssl_setup()
