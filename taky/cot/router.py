@@ -113,7 +113,7 @@ class COTRouter:
             self.lgr.debug("Anonymous -> %s: %s", group, msg)
 
         for client in self.clients:
-            if client.user is src:
+            if not client.user or (client.user is src):
                 continue
 
             if client.user.group == group:
