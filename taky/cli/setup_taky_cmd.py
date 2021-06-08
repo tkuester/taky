@@ -69,13 +69,13 @@ def setup_taky(args):
         ssl_path = "ssl"
         config_path = "taky.conf"
 
-        config.set("ssl", "ca", os.path.join(".", "ssl", "ca.crt"))
-        config.set("ssl", "ca_key", os.path.join(".", "ssl", "ca.key"))
-        config.set("ssl", "server_p12", os.path.join(".", "ssl", "server.p12"))
-        config.set("ssl", "cert", os.path.join(".", "ssl", "server.crt"))
-        config.set("ssl", "key", os.path.join(".", "ssl", "server.key"))
+        config.set("ssl", "ca", os.path.join(args.path, "ssl", "ca.crt"))
+        config.set("ssl", "ca_key", os.path.join(args.path, "ssl", "ca.key"))
+        config.set("ssl", "server_p12", os.path.join(args.path, "ssl", "server.p12"))
+        config.set("ssl", "cert", os.path.join(args.path, "ssl", "server.crt"))
+        config.set("ssl", "key", os.path.join(args.path, "ssl", "server.key"))
 
-        config.set("dp_server", "upload_path", os.path.join(".", "dp-user"))
+        config.set("dp_server", "upload_path", os.path.join(args.path, "dp-user"))
     else:
         print("Installing site to system")
         args.path = "/"
@@ -99,6 +99,8 @@ def setup_taky(args):
     config.set("taky", "public_ip", args.public_ip)
     config.set("taky", "hostname", args.hostname)
     config.set("cot_server", "port", "8089" if args.use_ssl else "8087")
+    config.set("cot_server", "hide_strangers", "False")
+    config.set("cot_server", "show_uids", "[]")
     config.set("ssl", "enabled", "true" if args.use_ssl else "false")
     config.set("ssl", "server_p12_pw", args.p12_pw)
 

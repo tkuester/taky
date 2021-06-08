@@ -71,7 +71,7 @@ def build_client(args):
         },
     }
 
-    with open(os.path.join(cdir, "fts.pref"), "wb") as pref_fp:
+    with open(os.path.join(cdir, "taky.pref"), "wb") as pref_fp:
         datapackage.build_pref(pref_fp, prefs)
 
     # Build Mission Package Manifest
@@ -80,7 +80,7 @@ def build_client(args):
         "name": f"{hostname}_DP",
         "onReceiveDelete": "true",
     }
-    man_cts = ["fts.pref", os.path.basename(server_p12), f"{args.name}.p12"]
+    man_cts = ["taky.pref", os.path.basename(server_p12), f"{args.name}.p12"]
 
     with open(os.path.join(mdir, "manifest.xml"), "wb") as man_fp:
         datapackage.build_manifest(man_fp, cfg_params, man_cts)
@@ -93,8 +93,9 @@ def build_client(args):
         shutil.copy(os.path.join(cdir, f"{args.name}.crt"), cwd)
         shutil.copy(os.path.join(cdir, f"{args.name}.key"), cwd)
 
-        os.unlink(os.path.join(cdir, f"{args.name}.crt"))
-        os.unlink(os.path.join(cdir, f"{args.name}.key"))
+	# Need these for other clients
+        #os.unlink(os.path.join(cdir, f"{args.name}.crt"))
+        #os.unlink(os.path.join(cdir, f"{args.name}.key"))
 
     # Save temporary directory, and build ZIP file
     os.chdir(tdir)
