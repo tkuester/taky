@@ -57,11 +57,11 @@ class RouterTestcase(ut.TestCase):
         self.assertTrue(ret.uid == "ANDROID-deadbeef")
 
         # The router should now have the client in it's routing table
-        self.assertIsNot(self.router.find_client(uid="ANDROID-deadbeef"), None)
-        self.assertIsNot(self.router.find_client(callsign="JENNY"), None)
+        self.assertEqual(len(list(self.router.find_clients(uid="ANDROID-deadbeef"))), 1)
+        self.assertEqual(len(list(self.router.find_clients(callsign="JENNY"))), 1)
 
         # And this client should not exist
-        self.assertIs(self.router.find_client(callsign="FOOBAR"), None)
+        self.assertEqual(len(list(self.router.find_clients(callsign="FOOBAR"))), 0)
 
     def test_persist_announce(self):
         # TK1 connects, and identifies

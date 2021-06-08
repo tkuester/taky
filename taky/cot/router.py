@@ -59,20 +59,18 @@ class COTRouter:
 
             client.send_event(event)
 
-    def find_client(self, uid=None, callsign=None):
+    def find_clients(self, uid=None, callsign=None):
         """
-        Search the client database for a requested client
+        Returns an iterator of objects matching the criteria
         """
         for client in self.clients:
             if not client.user:
                 continue
 
             if uid and client.user.uid == uid:
-                return client
+                yield client
             if callsign and client.user.callsign == callsign:
-                return client
-
-        return None
+                yield client
 
     def broadcast(self, src, msg):
         """
@@ -113,11 +111,18 @@ class COTRouter:
             self.lgr.debug("Anonymous -> %s: %s", group, msg)
 
         for client in self.clients:
-            if client.user is src:
+            if not client.user or (client.user is src):
                 continue
 
             if client.user.group == group:
                 client.send_event(msg)
+
+    def send_user(self, src, msg, dst_cs=None, dst_uid=None):
+        """
+        Send a message to a destination by callsign or UID
+        """
+        for client in self.find_clients(uid=dst_uid, callsign=dst_cs):
+            client.send_event(msg)
 
     def route(self, src, evt):
         """
@@ -134,39 +139,14 @@ class COTRouter:
             elif chat.dst_team:
                 self.group_broadcast(src, evt, group=chat.dst_team)
             else:
-                client = self.find_client(uid=chat.dst_uid)
-                if client:
-                    self.lgr.debug(
-                        "%s -> %s: (geochat) %s",
-                        chat.src_cs,
-                        client.user.callsign,
-                        chat.message,
-                    )
-                    client.send_event(evt)
-                else:
-                    self.lgr.warning("No destination for %s", chat)
+                self.send_user(src, evt, dst_uid=chat.dst_uid)
             return
 
         # Check for Marti, use first
         if evt.has_marti:
             self.lgr.debug("Handling marti")
             for callsign in evt.detail.marti_cs:
-                client = self.find_client(callsign=callsign)
-                if client:
-                    if src.user:
-                        self.lgr.debug(
-                            "%s -> %s (marti): %s",
-                            src.user.callsign,
-                            client.user.callsign,
-                            evt,
-                        )
-                    else:
-                        self.lgr.debug(
-                            "Anonymous -> %s (marti): %s",
-                            client.user.callsign,
-                            evt,
-                        )
-                    client.send_event(evt)
+                self.send_user(src, evt, dst_cs=callsign)
             return
 
         # Assume broadcast
