@@ -1,0 +1,16 @@
+version: '2.4'
+services:
+    taky:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: taky
+        init: true # Use an init shim to make it handle signals properly
+        ports:
+            - '8443:8443'
+            - '8089:8089'
+        volumes:
+            - './etc-taky/etc-taky:/etc/taky/'
+            - datapackages:/var/taky/dp-user/
+volumes:
+  datapackages

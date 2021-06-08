@@ -68,6 +68,8 @@ class COTServer:
         # Setup the Management Socket
         self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
+        if os.path.exists(mgmt_sock_path):
+            os.remove(mgmt_sock_path)
         self.mgmt.bind(mgmt_sock_path)
         self.mgmt.listen()
 
