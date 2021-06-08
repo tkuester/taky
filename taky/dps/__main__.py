@@ -124,7 +124,9 @@ def main():
         "workers": number_of_workers(),
         "loglevel": args.log_level,
         "accesslog": "-",
+        "access_log_format": '%(t)s "%(r)s" %(s)s %(b)s "%(a)s"',
     }
+
     if app_config.getboolean("ssl", "enabled"):
         options["ca_certs"] = app_config.get("ssl", "ca")
         options["certfile"] = app_config.get("ssl", "cert")
