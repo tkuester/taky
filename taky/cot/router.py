@@ -72,7 +72,6 @@ class COTRouter:
             if callsign and client.user.callsign == callsign:
                 yield client
 
-
     def find_client(self, uid=None, callsign=None):
         """
         Search the client database for a requested client
@@ -86,7 +85,6 @@ class COTRouter:
             if callsign and client.user.callsign == callsign:
                 return client
 
-        return None
 
     def broadcast(self, src, msg):
         """
@@ -138,7 +136,7 @@ class COTRouter:
         Send a message to a destination by callsign or UID
         """
         for client in self.find_clients(uid=dst_uid, callsign=dst_cs):
-            client.send_event(msg)
+            client.send_whois(msg, src)
 
     def route(self, src, evt):
         """
@@ -162,22 +160,6 @@ class COTRouter:
         if evt.has_marti:
             self.lgr.debug("Handling marti")
             for callsign in evt.detail.marti_cs:
-                client = self.find_client(callsign=callsign)
-                if client:
-                    if src.user:
-                        self.lgr.debug(
-                            "%s -> %s (marti): %s",
-                            src.user.callsign,
-                            client.user.callsign,
-                            evt,
-                        )
-                    else:
-                        self.lgr.debug(
-                            "Anonymous -> %s (marti): %s",
-                            client.user.callsign,
-                            evt,
-                        )
-                    client.send(evt,src) # tag all with src uid for whois 
                 self.send_user(src, evt, dst_cs=callsign)
             return
 
