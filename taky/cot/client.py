@@ -333,7 +333,8 @@ class SocketTAKClient(TAKClient, SocketClient):
             f"addr={self.addr[0]}:{self.addr[1]}>"
         )
 
-    def send(self, data, src=None):
+    # DEPRECATED. RETAINED FOR REFERENCE ONLY
+    def send_whois(self, data, src=None):
         """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
