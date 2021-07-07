@@ -13,7 +13,7 @@ class Detail:
         "<GenericDetail>"
 
     @staticmethod
-    def is_type(tags):
+    def is_type(tags):  # pylint: disable=unused-argument
         """
         Examines the tags in a detail to determine if it belongs to this class
         """

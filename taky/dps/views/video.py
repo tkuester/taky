@@ -17,7 +17,7 @@ def marti_video_upload():
     try:
         parser.feed(request.data)
         elm = parser.close()
-    except etree.XMLSyntaxError as exc:
+    except etree.XMLSyntaxError:
         return "Malformed XML", 400
 
     if elm.tag != "videoConnections":

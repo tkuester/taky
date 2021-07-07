@@ -19,16 +19,14 @@ class Destination(enum.Enum):
 
 class COTRouter:
     """
-    Simple class to route packets. A class is a bit over kill when a simple
-    function would do, but currently the router needs to know what clients are
-    available to send packets to.
+    A class to keep track of clients, and ensure packets get routed properly.
     """
 
-    def __init__(self, config=None):
+    def __init__(self):
         # TODO: self.clients as dictionary, with UID as keys?
         #     : should prohibit multiple sockets sharing a client
         self.clients = set()
-        self.persist = build_persistence(config)
+        self.persist = build_persistence()
         self.last_prune = 0
         self.lgr = logging.getLogger(self.__class__.__name__)
 
@@ -59,7 +57,21 @@ class COTRouter:
             if client.user and event.uid == client.user.uid:
                 continue
 
-            client.send(event)
+            client.send_event(event)
+
+    def find_clients(self, uid=None, callsign=None):
+        """
+        Returns an iterator of objects matching the criteria
+        """
+        for client in self.clients:
+            if not client.user:
+                continue
+
+            if uid and client.user.uid == uid:
+                yield client
+            if callsign and client.user.callsign == callsign:
+                yield client
+
 
     def find_client(self, uid=None, callsign=None):
         """
@@ -90,7 +102,7 @@ class COTRouter:
             if client is src:
                 continue
 
-            client.send(msg)
+            client.send_event(msg)
 
     def group_broadcast(self, src, msg, group=None):
         """
@@ -115,11 +127,18 @@ class COTRouter:
             self.lgr.debug("Anonymous -> %s: %s", group, msg)
 
         for client in self.clients:
-            if client.user is src:
+            if not client.user or (client.user is src):
                 continue
 
             if client.user.group == group:
-                client.send(msg)
+                client.send_event(msg)
+
+    def send_user(self, src, msg, dst_cs=None, dst_uid=None):
+        """
+        Send a message to a destination by callsign or UID
+        """
+        for client in self.find_clients(uid=dst_uid, callsign=dst_cs):
+            client.send_event(msg)
 
     def route(self, src, evt):
         """
@@ -136,17 +155,7 @@ class COTRouter:
             elif chat.dst_team:
                 self.group_broadcast(src, evt, group=chat.dst_team)
             else:
-                client = self.find_client(uid=chat.dst_uid)
-                if client:
-                    self.lgr.debug(
-                        "%s -> %s: (geochat) %s",
-                        chat.src_cs,
-                        client.user.callsign,
-                        chat.message,
-                    )
-                    client.send(evt)
-                else:
-                    self.lgr.warning("No destination for %s", chat)
+                self.send_user(src, evt, dst_uid=chat.dst_uid)
             return
 
         # Check for Marti, use first
@@ -169,6 +178,7 @@ class COTRouter:
                             evt,
                         )
                     client.send(evt,src) # tag all with src uid for whois 
+                self.send_user(src, evt, dst_cs=callsign)
             return
 
         # Assume broadcast

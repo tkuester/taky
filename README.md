@@ -9,24 +9,34 @@ taky - A simple COT server for ATAK
 
 ## Features (and anti-Features!)
 
- * Supports multiple ATAK clients simultaneously! You can see them on the map!
- * SSL support with client keys!
- * Some design consideration for XML security!
- * Actually somewhat decent CoT routing, with Marti support!
- * A hacked up XML parser written by someone who barely understands XML!
- * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
-   industry experience in implementing CoT technology!
- * Server shuts down with only one Ctrl+C!
- * Does not require root to run!
- * Thread safety? Where we're going, we don't need threads!
- * Data Package Server now with privacy and client key checking!
- * Handy CLI utilities for generating systemd service files and client keys!
- * Stupid fast for no good reason! Routes 1000 packets / second on an old Core
-   i5-2500k!
- * Advanced usage of synchronous I/O multiplexing avoids `time.sleep`!
- * Optional redis backed object persistence storage!
- * Still no requirement for SQlite / database!
- * Tested for easy deployment on Ubuntu and CentOS!
+ * Designed with security in mind!
+   * First class SSL support with client keys!
+   * Data Package Server requires client keys!
+   * Some design consideration for XML security!
+   * Does not require root to run!
+
+ * Light weight COT Router and Data Package Server
+   * Only ~2k SLOC for the whole shebang!
+   * Supports multiple ATAK clients simultaneously! You can see them on the map!
+   * Actually somewhat decent CoT routing, with Marti support!
+   * A hacked up XML parser written by someone who barely understands XML!
+   * Advanced Pythonic implementation of CoT model, with only 5 hours of combined
+     industry experience in implementing CoT technology!
+
+ * Simplicity of Design, Use, and Configuration
+   * Server shuts down with only one Ctrl+C!
+   * Thread safety? Where we're going, we don't need threads!
+   * Handy CLI utilities for generating systemd service files and client keys!
+   * Advanced usage of synchronous I/O multiplexing avoids `time.sleep`!
+   * Stupid fast for no good reason! Routes 1000 packets / second on an old
+     Core i5-2500k!
+
+ * Misc
+   * Optional redis backed object persistence storage!
+   * DPS doesn't have a database! Just plain old file storage!
+   * Tested for easy deployment on Ubuntu and CentOS!
+
+Looking for an indepth feature comparison?
 
 ## Requirements
 
@@ -40,27 +50,24 @@ taky - A simple COT server for ATAK
 
 This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
 ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and has even been tested
-on a CentOS 8 docker image!
-
-Most of the testing so far has been with "simulated" clients, instead of real
-users. I still wouldn't recommend using this for an important exercise where
-lives are at stake, but if you want to test it out, please let me know how it
-goes!
+on a CentOS 8 docker image! As the package is available on pip, it should run
+on most modern linux distros and docker containers!
 
 ## Installation
 
-Open a shell, and run:
+To install the latest release, install from pip. Open a shell and run:
+
+```
+$ sudo python3 -m pip install taky
+```
+
+If you prefer the develoment release (not always stable), you can install it
+from source.
 
 ```
 $ git clone https://github.com/tkuester/taky
 $ cd taky
 taky $ python3 setup.py install
-```
-
-Alternatively, you can use pip!
-
-```
-$ python3 -m pip install taky
 ```
 
 ## Usage

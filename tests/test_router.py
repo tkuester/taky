@@ -7,7 +7,7 @@ from datetime import timedelta
 from lxml import etree
 
 from taky import cot
-from taky.config import load_config
+from taky.config import load_config, app_config
 from .test_cot_event import XML_S
 
 
@@ -16,16 +16,16 @@ class UnittestTAKClient(cot.TAKClient):
         super().__init__(*args, **kwargs)
         self.queue = queue.Queue()
 
-    def send(self, msg):
+    def send_event(self, msg):
         self.queue.put(msg)
 
 
 class RouterTestcase(ut.TestCase):
     def setUp(self):
-        cfg = load_config(os.devnull)
-        cfg.set("taky", "redis", "false")
-        cfg.set("cot_server", "cot_log", None)
-        self.router = cot.COTRouter(cfg)
+        load_config(os.devnull)
+        app_config.set("taky", "redis", "false")
+        app_config.set("cot_server", "cot_log", None)
+        self.router = cot.COTRouter()
         self.tk1 = UnittestTAKClient(self.router)
         self.tk2 = UnittestTAKClient(self.router)
 
@@ -57,11 +57,11 @@ class RouterTestcase(ut.TestCase):
         self.assertTrue(ret.uid == "ANDROID-deadbeef")
 
         # The router should now have the client in it's routing table
-        self.assertIsNot(self.router.find_client(uid="ANDROID-deadbeef"), None)
-        self.assertIsNot(self.router.find_client(callsign="JENNY"), None)
+        self.assertEqual(len(list(self.router.find_clients(uid="ANDROID-deadbeef"))), 1)
+        self.assertEqual(len(list(self.router.find_clients(callsign="JENNY"))), 1)
 
         # And this client should not exist
-        self.assertIs(self.router.find_client(callsign="FOOBAR"), None)
+        self.assertEqual(len(list(self.router.find_clients(callsign="FOOBAR"))), 0)
 
     def test_persist_announce(self):
         # TK1 connects, and identifies

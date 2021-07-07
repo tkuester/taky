@@ -3,14 +3,15 @@ import sys
 import shutil
 import socket
 
-from taky.config import load_config
+from taky.config import DEFAULT_CFG
+from taky.config import app_config as config
 import taky.util.rotc as rotc
 
 
 def setup_taky_reg(subp):
     try:
         default_hostname = socket.gethostname()
-    except:
+    except:  # pylint: disable=bare-except
         default_hostname = "taky"
 
     setup = subp.add_parser("setup", help="Setup the taky server")
@@ -44,8 +45,10 @@ def setup_taky_reg(subp):
     setup.add_argument("path", nargs="?", help="Optional path for taky install")
 
 
-def setup_taky(config, args):
-    config = load_config(os.devnull)
+def setup_taky(args):
+    config.clear()
+    config.read_dict(DEFAULT_CFG)
+
     if args.path:
         if os.path.exists(args.path):
             print("ERROR: Directory exists, refusing to run setup", file=sys.stderr)

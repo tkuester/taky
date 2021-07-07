@@ -31,6 +31,7 @@ class GeoChatTestcase(ut.TestCase):
         self.assertEqual(chat.chatroom, "JOKER MAN")
         self.assertEqual(chat.chat_parent, "RootContactGroup")
         self.assertFalse(chat.group_owner)
+        self.assertFalse(chat.broadcast)
         self.assertEqual(chat.src_uid, "ANDROID-deadbeef")
         self.assertEqual(chat.src_cs, "JENNY")
         self.assertEqual(chat.src_marker, "a-f-G-U-C")

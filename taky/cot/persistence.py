@@ -36,6 +36,7 @@ import logging
 from lxml import etree
 import redis
 
+from taky.config import app_config as config
 from . import models
 
 KEPT_EVENTS = [
@@ -48,7 +49,7 @@ KEPT_EVENTS = [
 ]
 
 
-def build_persistence(config):
+def build_persistence():
     """
     Factory method to build a Persistence object from the given config
     """

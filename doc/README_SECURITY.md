@@ -30,12 +30,6 @@ The COT Server requires client certificates. This means that if your COT server
 was configured with SSL and hosted on a public network, no one can connect
 unless they have a client certificate.
 
-However, malicious and/or badly behaving clients may still be able to take down
-the server, or disrupt service. While the XML parsers are run with
-`resolve_entities=False` to prohibit [external entity
-attacks](https://en.wikipedia.org/wiki/XML_external_entity_attack), XML is a
-large attack surface.
-
 Cursor on Target (COT) is a very "tribal" language, and most of the
 implementation I gathered was from the [ATAK source
 code](https://github.com/deptofdefense/AndroidTacticalAssaultKit-CIV). For this
@@ -62,6 +56,31 @@ the solution is to delegate this aspect of security to the user via access
 control. `taky` should act as a "dumb" router, and only have a naive
 understanding of the message content. The end user is responsible for ensuring
 the clients
+
+### But what about XML Security? And running as root?
+
+If `taky` isn't going to try and enforce callsigns, UID's, and a strict data
+model, why make such a big stink about not running as root, and XML security?
+This is an important question to ask, and helps explain `taky`'s security
+model.
+
+`taky`'s XML parsers are run with `resolve_entities=False` to prohibit
+[external entity
+attacks](https://en.wikipedia.org/wiki/XML_external_entity_attack), XML is a
+large attack surface, and this prevents denial of service attacks with
+"XML Bombs".
+
+However, protecting the end users against entity attacks is a beneficial side
+effect. The primary security concern is not to protect the TAK network, but to
+protect the server itself. Entity attacks can be used to read files on the
+server, which may include sensitive information (like `/etc/shadow`). This
+could lead to a compromise of the server.
+
+From the last section, `taky` assumes that TAK network security depends on
+tight access control to certificates, and well behaved clients -- due to some
+design decisions made in COT. While there's no way to protect the COT network
+from poorly designed protocol, the server that `taky` runs on should not have
+to suffer those consequences!
 
 ## Data Package Server Security
 
@@ -115,6 +134,9 @@ later.
 
 ## The Conclusion of the Matter?
 
-Ooog. Use a VPN and control access tightly. Regenerate your CA and certificates
-often. If you use the DPS, consider wiping the datapackage directory clean
-between operations. The same if you use redis as a persistence store.
+Use SSL, and control access to who gets certificates. Until CRL's are
+implemented, you'll need to regenerate your CA and certificates in the event
+you want to revoke someone's keys.
+
+If you use the DPS, consider wiping the datapackage directory clean between
+operations. The same if you use redis as a persistence store.
