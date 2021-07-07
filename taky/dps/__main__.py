@@ -1,6 +1,5 @@
 import os
 import sys
-import ssl
 import multiprocessing
 import argparse
 import configparser
@@ -11,6 +10,7 @@ from gunicorn.workers.sync import SyncWorker
 
 from taky import __version__
 from taky.config import load_config
+from taky.config import app_config
 from taky.dps import app as taky_dps
 
 
@@ -40,17 +40,27 @@ class StandaloneApplication(BaseApplication):
 # https://eugene.kovalev.systems/blog/flask_client_auth
 class ClientCertificateWorker(SyncWorker):
     """Worker for putting certificate information into the X-USER header variable of the request."""
+
     def handle_request(self, listener, req, client, addr):
-        subject = dict([i for subtuple in client.getpeercert().get('subject') for i in subtuple])
-        issuer = dict([i for subtuple in client.getpeercert().get('issuer') for i in subtuple])
+        subject = dict(
+            [i for subtuple in client.getpeercert().get("subject") for i in subtuple]
+        )
+        issuer = dict(
+            [i for subtuple in client.getpeercert().get("issuer") for i in subtuple]
+        )
         headers = dict(req.headers)
-        headers['X-USER'] = subject['commonName']
-        headers['X-ISSUER'] = issuer['commonName']
-        headers['X-NOT_BEFORE'] = ssl.cert_time_to_seconds(client.getpeercert().get('notBefore'))
-        headers['X-NOT_AFTER'] = ssl.cert_time_to_seconds(client.getpeercert().get('notAfter'))
+        headers["X-USER"] = subject["commonName"]
+        headers["X-ISSUER"] = issuer["commonName"]
+        headers["X-NOT_BEFORE"] = ssl.cert_time_to_seconds(
+            client.getpeercert().get("notBefore")
+        )
+        headers["X-NOT_AFTER"] = ssl.cert_time_to_seconds(
+            client.getpeercert().get("notAfter")
+        )
 
         req.headers = list(headers.items())
         super().handle_request(listener, req, client, addr)
+
 
 def number_of_workers():
     return (multiprocessing.cpu_count() * 2) + 1
@@ -70,6 +80,7 @@ def arg_parse():
         action="store",
         dest="log_level",
         default="INFO",
+        choices=["debug", "info", "warning", "error", "critical"],
         help="Path to configuration file",
     )
     argp.add_argument(
@@ -88,17 +99,17 @@ def main():
     (argp, args) = arg_parse()
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as exc:
         argp.error(exc)
 
-    bind_ip = config.get("taky", "bind_ip")
-    port = 8443 if config.getboolean("ssl", "enabled") else 8080
+    bind_ip = app_config.get("taky", "bind_ip")
+    port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
 
     if bind_ip is None:
         bind_ip = ""
 
-    dp_path = config.get("dp_server", "upload_path")
+    dp_path = app_config.get("dp_server", "upload_path")
     if not os.path.exists(dp_path):
         print("-" * 30, file=sys.stderr)
         print("[ WARNING ] Datapackage directory does not exist!", file=sys.stderr)
@@ -112,11 +123,12 @@ def main():
         "bind": f"{bind_ip}:{port}",
         "workers": number_of_workers(),
         "loglevel": args.log_level,
+        "accesslog": "-",
     }
-    if config.getboolean("ssl", "enabled"):
-        options["ca_certs"] = config.get("ssl", "ca")
-        options["certfile"] = config.get("ssl", "cert")
-        options["keyfile"] = config.get("ssl", "key")
+    if app_config.getboolean("ssl", "enabled"):
+        options["ca_certs"] = app_config.get("ssl", "ca")
+        options["certfile"] = app_config.get("ssl", "cert")
+        options["keyfile"] = app_config.get("ssl", "key")
         options["cert_reqs"] = ssl.CERT_REQUIRED
         options["do_handshake_on_connect"] = True
         options["worker_class"] = "taky.dps.__main__.ClientCertificateWorker"

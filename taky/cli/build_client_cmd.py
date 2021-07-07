@@ -5,6 +5,7 @@ import uuid
 import zipfile
 
 from taky.util import datapackage, rotc
+from taky.config import app_config as config
 
 
 def build_client_reg(subp):
@@ -25,7 +26,7 @@ def build_client_reg(subp):
     )
 
 
-def build_client(config, args):
+def build_client(args):
     tdir = tempfile.mkdtemp(prefix="taky-cert-")
 
     # Build zip file structure

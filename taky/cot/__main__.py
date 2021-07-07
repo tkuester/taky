@@ -10,6 +10,15 @@ from taky import __version__
 from taky.cot import COTServer
 from taky.config import load_config
 
+got_sigterm = False
+
+
+def handle_term(sig, frame):  # pylint: disable=unused-argument
+    """ Signal handler """
+    global got_sigterm
+    logging.info("Got SIGTERM")
+    got_sigterm = True
+
 
 def handle_pdb(sig, frame):  # pylint: disable=unused-argument
     """ Signal handler """
@@ -52,6 +61,7 @@ def arg_parse():
 
 def main():
     """ taky COT server """
+    global got_sigterm
     ret = 0
 
     (argp, args) = arg_parse()
@@ -59,7 +69,7 @@ def main():
     logging.info("taky v%s", __version__)
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (FileNotFoundError, OSError):
         if args.cfg_file:
             argp.error(f"Unable to load config file: '{args.cfg_file}'")
@@ -69,20 +79,23 @@ def main():
         argp.error(exc)
         sys.exit(1)
 
+    signal.signal(signal.SIGTERM, handle_term)
+
     # TODO: Check for ipv6 support
-
-    try:
-        cot_srv = COTServer(config)
-    except Exception as exc:  # pylint: disable=broad-except
-        logging.error("Unable to start COTServer: %s", exc)
-        logging.debug("", exc_info=exc)
-        sys.exit(1)
-
     if args.debug:
         signal.signal(signal.SIGUSR1, handle_pdb)
 
+    cot_srv = COTServer()
     try:
-        while True:
+        cot_srv.sock_setup()
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.error("Unable to start COTServer: %s", exc)
+        logging.debug("", exc_info=exc)
+        cot_srv.shutdown()
+        sys.exit(1)
+
+    try:
+        while not got_sigterm:
             cot_srv.loop()
     except KeyboardInterrupt:
         pass
@@ -94,6 +107,7 @@ def main():
         cot_srv.shutdown()
     except Exception as exc:  # pylint: disable=broad-except
         logging.critical("Exception during shutdown", exc_info=exc)
+        ret = 1
 
     sys.exit(ret)
 

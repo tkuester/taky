@@ -4,6 +4,7 @@
 
 NIC=`route -n | grep '0.0.0.0' | head -1 |  awk '{print $8}'`
 IP=`ifconfig $NIC | grep 'inet ' | awk '{print $2}'`
+#IP=90.216.1.129
 TAKY_SERVER="/tmp/takyserver"
 
 takyctl setup --public-ip $IP --host $IP $TAKY_SERVER

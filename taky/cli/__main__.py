@@ -26,6 +26,7 @@ def arg_parse():
     cli.setup_taky_reg(subp)
     cli.build_client_reg(subp)
     cli.systemd_reg(subp)
+    cli.status_reg(subp)
 
     args = argp.parse_args()
 
@@ -36,7 +37,7 @@ def main():
     (argp, args) = arg_parse()
 
     try:
-        config = load_config(args.cfg_file)
+        load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as exc:
         print(exc, file=sys.stderr)
         sys.exit(1)
@@ -45,6 +46,7 @@ def main():
         "setup": cli.setup_taky,
         "build_client": cli.build_client,
         "systemd": cli.systemd,
+        "status": cli.status,
     }
 
     if not args.command:
@@ -52,8 +54,11 @@ def main():
         sys.exit(1)
 
     try:
-        ret = commands[args.command](config, args)
-    except Exception as exc:
+        ret = commands[args.command](args)
+    except KeyboardInterrupt:
+        # TODO: Teardown function?
+        ret = 1
+    except Exception as exc:  # pylint: disable=broad-except
         print(f"{args.command} failed: {str(exc)}", file=sys.stderr)
         print("Unhandled exception:", file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
