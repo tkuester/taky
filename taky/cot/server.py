@@ -173,7 +173,7 @@ class COTServer:
             sock=sock,
             use_ssl=(self.ssl_ctx and not force_tcp),
             router=self.router,
-            cot_log_dir=config.get("cot_server", "log_cot"),
+            cot_log_dir=config.get("cot_server", "cot_log"),
         )
 
         self.router.client_connect(self.clients[sock])

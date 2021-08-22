@@ -148,7 +148,7 @@ redis
 
 [cot_server]
 port = 8089
-log_cot
+cot_log
 
 [dp_server]
 upload_path = /var/taky/dp-user

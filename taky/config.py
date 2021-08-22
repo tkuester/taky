@@ -18,7 +18,7 @@ DEFAULT_CFG = {
         "port": None,  # Defaults to 8087 (or 8089 if SSL)
         "mon_ip": None,
         "mon_port": None,
-        "log_cot": None,  # Path to log COT files to
+        "cot_log": None,  # Path to log COT files to
     },
     "dp_server": {
         "upload_path": "/var/taky/dp-user",
