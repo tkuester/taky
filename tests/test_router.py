@@ -24,7 +24,7 @@ class RouterTestcase(ut.TestCase):
     def setUp(self):
         load_config(os.devnull)
         app_config.set("taky", "redis", "false")
-        app_config.set("cot_server", "cot_log", None)
+        app_config.set("cot_server", "log_cot", None)
         self.router = cot.COTRouter()
         self.tk1 = UnittestTAKClient(self.router)
         self.tk2 = UnittestTAKClient(self.router)

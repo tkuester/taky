@@ -149,14 +149,14 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, router=None, cot_log_dir=None, **kwargs):
+    def __init__(self, router=None, log_cot_dir=None, **kwargs):
         self.router = router
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
         self.last_rx = 0
 
-        self.cot_log_dir = cot_log_dir
+        self.log_cot_dir = log_cot_dir
         self.cot_fp = None
 
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)
@@ -194,7 +194,7 @@ class TAKClient:
         @param evt The COT Event to log
         """
         # Skip if we're not configured to log
-        if not self.cot_log_dir:
+        if not self.log_cot_dir:
             return
         # Skip logging of pings
         if evt and evt.uid and evt.uid.endswith("-ping"):
@@ -209,14 +209,14 @@ class TAKClient:
         if not self.cot_fp:
             # TODO: Multiple clients with same name will fight over file
             #     : Could happen on WiFi -> LTE handoff
-            name = os.path.join(self.cot_log_dir, f"{self.user.uid}.cot")
+            name = os.path.join(self.log_cot_dir, f"{self.user.uid}.cot")
             try:
                 self.lgr.debug("Opening logfile %s", name)
                 self.cot_fp = open(name, "a+")
             except OSError as exc:
                 self.lgr.warning("Unable to open COT log: %s", exc)
                 self.cot_fp = None
-                self.cot_log_dir = None
+                self.log_cot_dir = None
                 return
 
         try:
@@ -239,7 +239,7 @@ class TAKClient:
         except (IOError, OSError) as exc:
             self.lgr.warning("Unable to write to COT log: %s", exc)
             self.close()
-            self.cot_log_dir = None
+            self.log_cot_dir = None
 
     def feed(self, data):
         """
