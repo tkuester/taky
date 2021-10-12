@@ -108,6 +108,8 @@ class SocketClient:
                 return
 
             self.feed(data)
+        except etree.XMLSyntaxError as exc:
+            self.disconnect(str(exc))
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
             self.disconnect(str(exc))
 
