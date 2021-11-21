@@ -37,12 +37,14 @@ def build_client(args):
 
     # Copy over server p12 file
     server_p12 = config.get("ssl", "server_p12")
-    shutil.copy(server_p12, cdir)
+    server_p12_pkg_name = f"server-{uuid.uuid4()}.p12"
+    shutil.copy(server_p12, os.path.join(cdir, server_p12_pkg_name))
 
     # Build client certificates
+    client_pkg_name = f"{args.name}-{uuid.uuid4()}"
     rotc.make_cert(
         path=cdir,
-        f_name=args.name,
+        f_name=client_pkg_name,
         hostname=args.name,
         cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
         cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
@@ -64,10 +66,10 @@ def build_client(args):
         },
         "com.atakmap.app_preferences": {
             "displayServerConnectionWidget": True,
-            "caLocation": f"/storage/emulated/0/atak/cert/{os.path.basename(server_p12)}",
+            "caLocation": f"/storage/emulated/0/atak/cert/{server_p12_pkg_name}",
             "caPassword": config.get("ssl", "server_p12_pw"),
             "clientPassword": args.p12_pw,
-            "certificateLocation": f"/storage/emulated/0/atak/cert/{args.name}.p12",
+            "certificateLocation": f"/storage/emulated/0/atak/cert/{client_pkg_name}.p12",
         },
     }
 
@@ -80,7 +82,7 @@ def build_client(args):
         "name": f"{hostname}_DP",
         "onReceiveDelete": "true",
     }
-    man_cts = ["preference.pref", os.path.basename(server_p12), f"{args.name}.p12"]
+    man_cts = ["preference.pref", server_p12_pkg_name, f"{client_pkg_name}.p12"]
 
     with open(os.path.join(mdir, "manifest.xml"), "wb") as man_fp:
         datapackage.build_manifest(man_fp, cfg_params, man_cts)
@@ -89,12 +91,12 @@ def build_client(args):
 
     # Save PEM files
     if args.dump_pem:
-        shutil.copy(os.path.join(cdir, f"{args.name}.p12"), cwd)
-        shutil.copy(os.path.join(cdir, f"{args.name}.crt"), cwd)
-        shutil.copy(os.path.join(cdir, f"{args.name}.key"), cwd)
+        shutil.copy(os.path.join(cdir, f"{client_pkg_name}.p12"), cwd)
+        shutil.copy(os.path.join(cdir, f"{client_pkg_name}.crt"), cwd)
+        shutil.copy(os.path.join(cdir, f"{client_pkg_name}.key"), cwd)
 
-        os.unlink(os.path.join(cdir, f"{args.name}.crt"))
-        os.unlink(os.path.join(cdir, f"{args.name}.key"))
+        os.unlink(os.path.join(cdir, f"{client_pkg_name}.crt"))
+        os.unlink(os.path.join(cdir, f"{client_pkg_name}.key"))
 
     # Save temporary directory, and build ZIP file
     os.chdir(tdir)
