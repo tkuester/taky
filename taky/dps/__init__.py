@@ -8,6 +8,7 @@ from taky.config import app_config as config
 load_config(os.environ.get("TAKY_CONFIG"))
 
 application = app = Flask(__name__)
+app.config["HOSTNAME"] = config.get("taky", "hostname")
 app.config["NODEID"] = config.get("taky", "node_id")
 app.config["UPLOAD_PATH"] = os.path.realpath(config.get("dp_server", "upload_path"))
 
