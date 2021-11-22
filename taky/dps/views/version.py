@@ -1,3 +1,5 @@
+from flask import request
+
 from taky import __version__
 from taky.dps import app
 
@@ -9,13 +11,15 @@ def marti_api_version():
 
 @app.route("/Marti/api/version/config")
 def marti_api_version_config():
+    hostname = request.host.split(":")
+
     return {
         "version": "2",
         "type": "ServerConfig",
         "data": {
             "version": f"taky-{__version__}",
             "api": "2",
-            "hostname": app.config["HOSTNAME"],
+            "hostname": hostname[0],
         },
         "nodeId": app.config["NODEID"],
     }

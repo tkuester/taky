@@ -12,11 +12,7 @@ def url_for(f_hash):
     """
     Returns the URL for the given hash
     """
-    proto = app.config["PROTO"]
-    ip_addr = app.config["PUBLIC_IP"]
-    port = app.config["DPS_PORT"]
-
-    return f"{proto}{ip_addr}:{port}/Marti/sync/content?hash={f_hash}"
+    return f"{request.host_url}Marti/sync/content?hash={f_hash}"
 
 
 def get_meta(f_hash=None, f_name=None):
