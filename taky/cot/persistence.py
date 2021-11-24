@@ -165,7 +165,7 @@ class Persistence(BasePersistence):
 
         for item in self.events.values():
             if now > item.stale:
-                self.lgr.info("Pruning %s, stale is %s", item, item.stale)
+                self.lgr.debug("Pruning %s, stale is %s", item, item.stale)
                 uids.append(item.uid)
 
         for uid in uids:
