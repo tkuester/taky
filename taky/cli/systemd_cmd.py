@@ -48,7 +48,7 @@ def write_cot_svc(names, args, using_venv=False, site_path=None):
         "RestartSec=3",
     ]
     if site_path:
-        host = config.get("taky", "hostname")
+        host = config.get("taky", "server_address")
         cot_svc.append(f"EnvironmentFile=-/etc/default/taky-{host}")
     else:
         cot_svc.append("EnvironmentFile=-/etc/default/taky")
@@ -164,7 +164,7 @@ def systemd(args):
         }
     else:
         site_path = os.path.dirname(config.get("taky", "cfg_path"))
-        hostname = config.get("taky", "hostname")
+        hostname = config.get("taky", "server_address")
         print(f" - Detected site install: {site_path}")
         svcs = {
             "taky": f"taky-{hostname}.service",

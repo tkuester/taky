@@ -22,7 +22,7 @@ bluetack $ sudo python3 -m pip install taky
 [...]
 
 # Generate config + CA + Certs
-bluetack $ sudo takyctl setup --host <hostname> --public-ip 123.45.67.89 --user bluetack
+bluetack $ sudo takyctl setup --server-address 123.45.67.89 --user bluetack
 Installing site to system
  - Wrote /etc/taky/taky.conf
  - Generating certificate authority

@@ -10,7 +10,7 @@ import taky.util.rotc as rotc
 
 def setup_taky_reg(subp):
     try:
-        default_hostname = socket.gethostname()
+        default_hostname = socket.getfqdn()
     except:  # pylint: disable=bare-except
         default_hostname = "taky"
 
@@ -22,16 +22,13 @@ def setup_taky_reg(subp):
         help="Password for server .p12 [%(default)s]",
     )
     setup.add_argument(
-        "--host",
-        dest="hostname",
+        "--server-address",
+        dest="server_address",
         default=default_hostname,
-        help="Server hostname [%(default)s]",
+        help="Server address [%(default)s]",
     )
     setup.add_argument(
         "--bind-ip", dest="ip", default="0.0.0.0", help="Bind Address [%(default)s]"
-    )
-    setup.add_argument(
-        "--public-ip", dest="public_ip", required=True, help="Public IP address"
     )
     setup.add_argument(
         "--user", dest="user", default=None, help="User/group for file permissions"
@@ -96,8 +93,7 @@ def setup_taky(args):
         config_path = os.path.join(args.path, "etc", "taky", "taky.conf")
 
     config.set("taky", "bind_ip", args.ip)
-    config.set("taky", "public_ip", args.public_ip)
-    config.set("taky", "hostname", args.hostname)
+    config.set("taky", "server_address", args.server_address)
     config.set("cot_server", "port", "8089" if args.use_ssl else "8087")
     config.set("ssl", "enabled", "true" if args.use_ssl else "false")
     config.set("ssl", "server_p12_pw", args.p12_pw)

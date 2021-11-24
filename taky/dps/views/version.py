@@ -19,7 +19,7 @@ def marti_api_version_config():
         "data": {
             "version": f"taky-{__version__}",
             "api": "2",
-            "hostname": hostname[0],
+            "hostname": app.config["COT_ADDRESS"],
         },
         "nodeId": app.config["NODEID"],
     }

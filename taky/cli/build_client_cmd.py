@@ -52,15 +52,23 @@ def build_client(args):
     )
 
     # Build .pref file
-    hostname = config.get("taky", "hostname")
-    public_ip = config.get("taky", "public_ip")
+    if config.has_option("taky", "public_ip"):
+        public_ip = config.get("taky", "public_ip")  # TODO: Deprecate
+    else:
+        public_ip = config.get("taky", "server_address")
+
+    if config.has_option("taky", "hostname"):
+        server_addr = config.get("taky", "hostname")  # TODO: Deprecate
+    else:
+        server_addr = config.get("taky", "server_address")
+
     port = config.getint("cot_server", "port")
     method = "ssl" if config.getboolean("ssl", "enabled") else "tcp"
 
     prefs = {
         "cot_streams": {
             "count": 1,
-            "description0": hostname,
+            "description0": server_addr,
             "enabled0": False,
             "connectString0": f"{public_ip}:{port}:{method}",
         },
@@ -79,7 +87,7 @@ def build_client(args):
     # Build Mission Package Manifest
     cfg_params = {
         "uid": str(uuid.uuid4()),
-        "name": f"{hostname}_DP",
+        "name": f"{server_addr}_DP",
         "onReceiveDelete": "true",
     }
     man_cts = ["preference.pref", server_p12_pkg_name, f"{client_pkg_name}.p12"]

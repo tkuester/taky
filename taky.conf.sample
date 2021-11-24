@@ -1,12 +1,11 @@
 [taky]
-# System hostname
-#hostname=taky.local
+# Server Address
+# The public IP address, hostname, or FQDN. (Defaults to FQDN)
+#server_address=taky.local
 # The TAK Server nodeId
 #node_id=TAKY
 # The IP to bind to. Defaults to 0.0.0.0. To use IPv6, set to "::"
 #bind_ip=
-# The server's public IP address
-#public_ip=
 
 [cot_server]
 # If left blank, taky will listen on 8087 without SSL, or 8089 with SSL

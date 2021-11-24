@@ -1,15 +1,14 @@
 import os
 import logging
 import configparser
+import socket
 
 app_config = configparser.ConfigParser(allow_no_value=True)
 
 DEFAULT_CFG = {
     "taky": {
-        "hostname": "taky.local",  # Servers FQDN
         "node_id": "TAKY",  # TAK Server nodeId
         "bind_ip": None,  # Defaults to all (0.0.0.0)
-        "public_ip": None,  # Server's public IP address
         "redis": None,  # If Redis is enabled. True for localhost,
         # or a redis:// connect string
         "root_dir": "/var/taky",  # Where the root taky directory lies
@@ -65,6 +64,24 @@ def load_config(path=None, explicit=False):
         lgr.info("Loading config file from %s", path)
         with open(path, "r") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
+
+    # TODO: Deprecate
+    if ret_config.has_option("taky", "hostname") or ret_config.has_option(
+        "taky", "server_ip"
+    ):
+        lgr.warning(
+            "The config options 'hostname' and 'server_ip' have been deprecated\n"
+            "since version 0.9, please update your config file to use server_address\n"
+            "instead."
+        )
+
+    if ret_config.has_option("taky", "hostname"):  # TODO: Deprecate
+        hostname = ret_config.get("taky", "hostname")
+    elif ret_config.has_option("taky", "server_address"):
+        hostname = ret_config.get("taky", "server_address")
+    else:
+        hostname = socket.getfqdn()
+    ret_config.set("taky", "server_address", hostname)
 
     port = ret_config.get("cot_server", "port")
     if port in [None, ""]:
