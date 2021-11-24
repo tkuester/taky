@@ -11,8 +11,6 @@ def marti_api_version():
 
 @app.route("/Marti/api/version/config")
 def marti_api_version_config():
-    hostname = request.host.split(":")
-
     return {
         "version": "2",
         "type": "ServerConfig",
