@@ -63,7 +63,7 @@ def build_persistence():
 
     conn_str = config.get("taky", "redis")
     if conn_str:
-        return RedisPersistence(config.get("taky", "hostname"), conn_str)
+        return RedisPersistence(config.get("taky", "server_address"), conn_str)
 
     return Persistence()
 
