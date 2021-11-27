@@ -90,24 +90,31 @@ optional arguments:
 
 ```
 
-# Create a taky.conf file
-Copy the example file:
-
+### Run insecure taky on 0.0.0.0:8087
+This uses a default config (taky.conf) which will listen on localhost. Edit server_address in the .conf file to have this listen on another IP interface.
 ```
-cp taky.conf.sample taky.conf
-```
-
-# Run insecure taky on 0.0.0.0:8087
-$ taky
+$ taky -c taky.conf
 INFO:root:taky v0.7
 INFO:COTServer:Listening for tcp on :8087
 ```
 
-# Run secure SSL taky on 0.0.0.0:8089
-sudo takyctl setup.py --user=$USER
-$ taky
+### Run secure SSL taky on 0.0.0.0:8089
+This uses a default config (taky.ssl.conf) which will listen on localhost. Edit server_address in the .conf file to have this listen on another IP interface. The --server-address will default to the FQDN eg. localhost. You can override it with an IP.
+To create the SSL certificates a script is used which places them in /etc/taky/ssl by default. Your account must have read permission for this folder.
+
+For convenience, a  certificate data package can be generated for quick EUD setup. This will be **user.zip** in the current folder in this example:
+
+```
+$ sudo takyctl -c taky.ssl.conf setup --user=$USER --server-address=192.168.1.107
+Installing site to system
+ - Wrote /etc/taky/taky.conf
+ - Generating certificate authority
+ - Generating server certificate
+ - Changing ownership to thelovedoctor
+$ takyctl -c taky.ssl.conf build_client --dump_pem user
+$ taky -c taky.ssl.conf
 INFO:root:taky v0.7
-INFO:COTServer:Listening for tcp on :8087
+INFO:COTServer:Listening for tcp on :8089
 ```
 
 ## Deploying Taky
