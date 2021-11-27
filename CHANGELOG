@@ -17,14 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
  - Allowing for a proper shutdown from SIGTERM
 
-## [0.8.2] - 2021-09-03
-
-### Fixed
- - Routing GeoChats should work now
-
-### Contributors
- - Thanks to @skadakar for his work finding this, and testing the fix!
-
 ## [0.8.1] - 2021-06-06
 
 ### Fixed

@@ -157,11 +157,18 @@ class COTServer:
             stype = "tcp"
 
             if self.ssl_ctx and not force_tcp:
-                sock = self.ssl_ctx.wrap_socket(
-                    sock, server_side=True, do_handshake_on_connect=False
-                )
-                sock.setblocking(False)
+                if self.ssl_ctx.verify_mode == ssl.CERT_REQUIRED:
+                    sock = self.ssl_ctx.wrap_socket(
+                        sock, server_side=True, do_handshake_on_connect=True
+                    )
+                    clientCert = sock.getpeercert()
+                    self.lgr.debug("Client cert: {}".format(clientCert))
+                else:
+                    sock = self.ssl_ctx.wrap_socket(
+                        sock, server_side=True, do_handshake_on_connect=False
+                    )
                 stype = "ssl"
+
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
         except (socket.error, OSError) as exc:

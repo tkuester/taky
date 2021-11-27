@@ -88,7 +88,23 @@ optional arguments:
   -c CFG_FILE           Path to configuration file
   --version             show program's version number and exit
 
-# Run taky on 0.0.0.0:8087
+```
+
+# Create a taky.conf file
+Copy the example file:
+
+```
+cp taky.conf.sample taky.conf
+```
+
+# Run insecure taky on 0.0.0.0:8087
+$ taky
+INFO:root:taky v0.7
+INFO:COTServer:Listening for tcp on :8087
+```
+
+# Run secure SSL taky on 0.0.0.0:8089
+sudo takyctl setup.py --user=$USER
 $ taky
 INFO:root:taky v0.7
 INFO:COTServer:Listening for tcp on :8087

@@ -140,7 +140,7 @@ def setup_taky(args):
         rotc.make_cert(
             path=ssl_path,
             f_name="server",
-            hostname=args.hostname,
+            hostname=args.server_address,
             cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
             cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
             dump_pem=True,
