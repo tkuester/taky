@@ -5,6 +5,8 @@ import socket
 
 app_config = configparser.ConfigParser(allow_no_value=True)
 
+app_config = configparser.ConfigParser(allow_no_value=True)
+
 DEFAULT_CFG = {
     "taky": {
         "node_id": "TAKY",  # TAK Server nodeId
@@ -54,16 +56,15 @@ def load_config(path=None, explicit=False):
 
     if explicit and not os.path.exists(path):
         raise FileNotFoundError("Config file required, but not present")
-
     ret_config = configparser.ConfigParser(allow_no_value=True)
     ret_config.read_dict(DEFAULT_CFG)
-
     lgr = logging.getLogger("load_config")
 
     if os.path.exists(path):
         lgr.info("Loading config file from %s", path)
         with open(path, "r") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
+
 
     # TODO: Deprecate
     if ret_config.has_option("taky", "hostname") or ret_config.has_option(
@@ -82,6 +83,7 @@ def load_config(path=None, explicit=False):
     else:
         hostname = socket.getfqdn()
     ret_config.set("taky", "server_address", hostname)
+
 
     port = ret_config.get("cot_server", "port")
     if port in [None, ""]:

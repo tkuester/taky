@@ -110,8 +110,7 @@ class SocketClient:
             self.feed(data)
         except etree.XMLSyntaxError as exc:
             self.disconnect(str(exc))
-        except (ssl.SSLError, socket.error, IOError, OSError) as exc:
-            self.disconnect(str(exc))
+
 
     def socket_tx(self):
         """
@@ -152,6 +151,7 @@ class TAKClient:
     """
 
     def __init__(self, router=None, log_cot_dir=None, **kwargs):
+
         self.router = router
         self.user = None
         self.connected = time.time()
@@ -335,7 +335,6 @@ class SocketTAKClient(TAKClient, SocketClient):
             f"addr={self.addr[0]}:{self.addr[1]}>"
         )
 
-
     def send_event(self, event, src=None):
         """
         Send a CoT event to the client. Data should be a cot Event object,
@@ -363,3 +362,4 @@ class SocketTAKClient(TAKClient, SocketClient):
             self.out_buff += data
         else:
             raise ValueError("Can only send Event / XML to TAKClient!")
+

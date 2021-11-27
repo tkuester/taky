@@ -56,9 +56,8 @@ class COTServer:
         self.mon = None
         self.srv = None
         self.ssl_ctx = None
-
         self.started = -1
-
+        
     def sock_setup(self):
         """
         Build the server socket
@@ -135,6 +134,22 @@ class COTServer:
         """
         Accept a new client on the management socket
         """
+        try:
+            (sock, _) = self.mgmt.accept()
+        except (socket.error, OSError) as exc:
+            self.lgr.info("Dropping management client: %s", exc)
+            return
+
+        self.lgr.info("New management client")
+        self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
+
+    def srv_accept(self, sock, force_tcp=False):
+        """
+        Accept a new client from a server socket
+        """
+        ip_addr = None
+        port = None
+
         try:
             (sock, _) = self.mgmt.accept()
         except (socket.error, OSError) as exc:
