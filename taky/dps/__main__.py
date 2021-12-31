@@ -104,10 +104,20 @@ def main():
         argp.error(exc)
 
     bind_ip = app_config.get("taky", "bind_ip")
-    port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
-
     if bind_ip is None:
         bind_ip = ""
+
+    try:
+        port = app_config.getint("dp_server", "port")
+        if port <= 0 or port > 65535:
+            raise ValueError("Invalid port")
+    except ValueError:
+        print(
+            "[ ERROR ] Invalid port specified for dp_server.port, must be (0,65535]",
+            file=sys.stderr,
+        )
+    except (configparser.NoOptionError, configparser.NoSectionError):
+        port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
 
     dp_path = app_config.get("dp_server", "upload_path")
     if not os.path.exists(dp_path):
