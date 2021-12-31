@@ -1,5 +1,3 @@
-from flask import request
-
 from taky import __version__
 from taky.dps import app
 
