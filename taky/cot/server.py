@@ -56,9 +56,8 @@ class COTServer:
         self.mon = None
         self.srv = None
         self.ssl_ctx = None
-
         self.started = -1
-
+        
     def sock_setup(self):
         """
         Build the server socket
@@ -152,16 +151,39 @@ class COTServer:
         port = None
 
         try:
+            (sock, _) = self.mgmt.accept()
+        except (socket.error, OSError) as exc:
+            self.lgr.info("Dropping management client: %s", exc)
+            return
+
+        self.lgr.info("New management client")
+        self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
+
+    def srv_accept(self, sock, force_tcp=False):
+        """
+        Accept a new client from a server socket
+        """
+        ip_addr = None
+        port = None
+
+        try:
             (sock, addr) = sock.accept()
             (ip_addr, port) = addr[0:2]
             stype = "tcp"
 
             if self.ssl_ctx and not force_tcp:
-                sock = self.ssl_ctx.wrap_socket(
-                    sock, server_side=True, do_handshake_on_connect=False
-                )
-                sock.setblocking(False)
+                if self.ssl_ctx.verify_mode == ssl.CERT_REQUIRED:
+                    sock = self.ssl_ctx.wrap_socket(
+                        sock, server_side=True, do_handshake_on_connect=True
+                    )
+                    clientCert = sock.getpeercert()
+                    self.lgr.debug("Client cert: {}".format(clientCert))
+                else:
+                    sock = self.ssl_ctx.wrap_socket(
+                        sock, server_side=True, do_handshake_on_connect=False
+                    )
                 stype = "ssl"
+
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
         except (socket.error, OSError) as exc:

@@ -110,8 +110,7 @@ class SocketClient:
             self.feed(data)
         except etree.XMLSyntaxError as exc:
             self.disconnect(str(exc))
-        except (ssl.SSLError, socket.error, IOError, OSError) as exc:
-            self.disconnect(str(exc))
+
 
     def socket_tx(self):
         """
@@ -152,6 +151,7 @@ class TAKClient:
     """
 
     def __init__(self, router=None, log_cot_dir=None, **kwargs):
+
         self.router = router
         self.user = None
         self.connected = time.time()
@@ -335,7 +335,7 @@ class SocketTAKClient(TAKClient, SocketClient):
             f"addr={self.addr[0]}:{self.addr[1]}>"
         )
 
-    def send_event(self, event):
+    def send_event(self, event, src=None):
         """
         Send a CoT event to the client. Data should be a cot Event object,
         or an XML element, or a byte string.
@@ -348,4 +348,18 @@ class SocketTAKClient(TAKClient, SocketClient):
         if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
             return
 
-        self.out_buff += etree.tostring(event.as_element)
+        if isinstance(event, models.Event):
+            data = event.as_element
+        if etree.iselement(data):
+            if src is not None:
+              # Not all CoT messages contain a uid. Bizarrely.
+              whois = etree.Element(
+              "whois", attrib={"uid": src.user.uid, "callsign": src.user.callsign}
+              )
+              data.append(whois)
+            self.out_buff += etree.tostring(data)
+        elif isinstance(data, bytes):
+            self.out_buff += data
+        else:
+            raise ValueError("Can only send Event / XML to TAKClient!")
+

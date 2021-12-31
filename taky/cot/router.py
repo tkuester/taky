@@ -59,6 +59,7 @@ class COTRouter:
 
             client.send_event(event)
 
+
     def find_clients(self, uid=None, callsign=None):
         """
         Returns an iterator of objects matching the criteria
@@ -71,6 +72,7 @@ class COTRouter:
                 yield client
             if callsign and client.user.callsign == callsign:
                 yield client
+
 
     def broadcast(self, src, msg):
         """
@@ -122,7 +124,8 @@ class COTRouter:
         Send a message to a destination by callsign or UID
         """
         for client in self.find_clients(uid=dst_uid, callsign=dst_cs):
-            client.send_event(msg)
+            client.send_event(msg, src)
+
 
     def route(self, src, evt):
         """

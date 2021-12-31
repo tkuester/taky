@@ -81,7 +81,9 @@ def build_client(args):
         },
     }
 
+
     with open(os.path.join(cdir, "preference.pref"), "wb") as pref_fp:
+
         datapackage.build_pref(pref_fp, prefs)
 
     # Build Mission Package Manifest
@@ -90,6 +92,7 @@ def build_client(args):
         "name": f"{server_addr}_DP",
         "onReceiveDelete": "true",
     }
+
     man_cts = ["preference.pref", server_p12_pkg_name, f"{client_pkg_name}.p12"]
 
     with open(os.path.join(mdir, "manifest.xml"), "wb") as man_fp:
