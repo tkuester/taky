@@ -70,17 +70,12 @@ class RouterTestcase(ut.TestCase):
         self.router.client_connect(self.tk1)
         self.tk1.feed(self.tk1_ident_msg)
 
-        # TK2 connets, and mock identifies. It should receive info about TK1
+        # TK2 connects -- and should have info about TK1 from persist
         self.router.client_connect(self.tk2)
-        self.router.client_ident(self.tk2)
         ret = self.tk2.queue.get_nowait()
         self.assertTrue(ret.uid == "ANDROID-deadbeef")
 
         # TK1 should not have any packets yet...
-        self.assertRaises(queue.Empty, self.tk1.queue.get_nowait)
-
-        # ...even if it re-mock identifies!
-        self.router.client_ident(self.tk1)
         self.assertRaises(queue.Empty, self.tk1.queue.get_nowait)
 
     def test_geochat(self):

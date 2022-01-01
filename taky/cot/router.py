@@ -41,6 +41,7 @@ class COTRouter:
         Add a client to the router
         """
         self.clients.add(client)
+        self.send_persist(client)
 
     def client_disconnect(self, client):
         """
@@ -48,9 +49,9 @@ class COTRouter:
         """
         self.clients.discard(client)
 
-    def client_ident(self, client):
+    def send_persist(self, client):
         """
-        Called by TAKClient when the client first identifies to the server
+        Sends persistence objects to the client
         """
         self.lgr.debug("Sending persistence objects to %s", client)
         for event in self.persist.get_all():

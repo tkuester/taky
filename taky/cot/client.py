@@ -30,16 +30,20 @@ class SocketClient:
     server, such as SSL handshake state, and an outgoing data buffer.
     """
 
-    def __init__(self, sock, use_ssl=False, **kwargs):
+    def __init__(self, sock, use_ssl=False, connect_cb=None, **kwargs):
         self.sock = sock
         self.ssl = use_ssl
         self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
+        self.connect_cb = connect_cb
 
         (ip, port) = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
         self.lgr = logging.getLogger(lgr_name)
         super().__init__(**kwargs)
+
+        if self.ready:
+            self.connect_cb(self)
 
     @property
     def addr(self):
@@ -90,6 +94,7 @@ class SocketClient:
             self.ssl_hs = SSLState.SSL_ESTAB
             self.sock.setblocking(True)
             # TODO: Check SSL certs here
+            self.connect_cb(self)
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:
@@ -297,11 +302,7 @@ class TAKClient:
             return
 
         if isinstance(evt.detail, models.TAKUser):
-            if self.user is None:
-                self.user = evt.detail
-                self.router.client_ident(self)
-            else:
-                self.user = evt.detail
+            self.user = evt.detail
 
     def pong(self):
         """

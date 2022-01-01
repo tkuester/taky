@@ -175,9 +175,11 @@ class COTServer:
             use_ssl=use_ssl,
             router=self.router,
             log_cot_dir=config.get("cot_server", "log_cot"),
+            connect_cb=self.client_connect,
         )
 
-        self.router.client_connect(self.clients[sock])
+    def client_connect(self, client):
+        self.router.client_connect(client)
 
     def client_disconnect(self, client, reason=None):
         """
