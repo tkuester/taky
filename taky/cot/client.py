@@ -52,6 +52,13 @@ class SocketClient:
             return (None, None)
 
     @property
+    def ready(self):
+        if not self.ssl:
+            return True
+
+        return self.ssl_hs in [SSLState.NO_SSL, SSLState.SSL_ESTAB]
+
+    @property
     def is_closed(self):
         """ Returns true if the socket is closed """
         return self.sock.fileno() == -1
@@ -75,7 +82,7 @@ class SocketClient:
 
     def ssl_handshake(self):
         """ Preform the SSL handshake on the socket """
-        if not self.ssl or self.ssl_hs is SSLState.SSL_ESTAB:
+        if self.ready():
             return
 
         try:
@@ -96,7 +103,7 @@ class SocketClient:
 
         If the socket is SSL based, this may be part of the handshake.
         """
-        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+        if self.ssl and not self.ready():
             self.ssl_handshake()
             return
 
@@ -121,7 +128,7 @@ class SocketClient:
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         """
-        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+        if self.ssl and not self.ready():
             self.ssl_handshake()
             return
 
