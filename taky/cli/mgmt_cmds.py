@@ -30,6 +30,7 @@ def mgmt_reg(subp, cmd_name, cmd_help):
 
 
 def print_status(stat):
+    print("Version: %s" % stat.get("version"))
     print("Uptime:", seconds_to_human(stat.get("uptime", -1)))
     print("Num Clients: %d" % stat.get("num_clients", -1))
     print()

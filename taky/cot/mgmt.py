@@ -1,5 +1,7 @@
 import time
 import json
+
+from taky import __version__
 from .client import SocketClient, TAKClient
 
 
@@ -56,6 +58,7 @@ class MgmtClient(SocketClient):
 
     def status(self):
         ret = {
+            "version": __version__,
             "uptime": time.time() - self.server.started,
             "num_clients": 0,
             "clients": [],
