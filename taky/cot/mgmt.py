@@ -41,6 +41,8 @@ class MgmtClient(SocketClient):
                 ret = self.status()
             elif msg.get("cmd") == "purge_persist":
                 ret = self.purge_persist()
+            elif msg.get("cmd") == "ping":
+                ret = {"pong": "taky"}
             else:
                 ret = {"error": f"Invalid cmd: {msg.get('cmd')}"}
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
