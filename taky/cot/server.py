@@ -144,34 +144,35 @@ class COTServer:
         self.lgr.info("New management client")
         self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
 
-    def srv_accept(self, sock, force_tcp=False):
+    def srv_accept(self, srv_sock, force_tcp=False):
         """
         Accept a new client from a server socket
         """
         ip_addr = None
         port = None
+        use_ssl = self.ssl_ctx and not force_tcp
 
         try:
-            (sock, addr) = sock.accept()
+            (sock, addr) = srv_sock.accept()
             (ip_addr, port) = addr[0:2]
-            stype = "tcp"
 
-            if self.ssl_ctx and not force_tcp:
+            if use_ssl:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
                 sock.setblocking(False)
-                stype = "ssl"
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
+            return
         except (socket.error, OSError) as exc:
             self.lgr.info("Client connect failed %s:%s (%s)", ip_addr, port, exc)
             return
 
+        stype = "ssl" if use_ssl else "tcp"
         self.lgr.info("New %s client from %s:%s", stype, ip_addr, port)
         self.clients[sock] = SocketTAKClient(
             sock=sock,
-            use_ssl=(self.ssl_ctx and not force_tcp),
+            use_ssl=use_ssl,
             router=self.router,
             log_cot_dir=config.get("cot_server", "log_cot"),
         )
@@ -241,7 +242,7 @@ class COTServer:
             if client.is_closed:
                 self.client_disconnect(client, "Is closed")
 
-            if not client.ready() and (now - client.connected) > 10:
+            if not client.ready and (now - client.connected) > 10:
                 self.client_disconnect(client, "SSL Handshake timeout")
 
     def shutdown(self):

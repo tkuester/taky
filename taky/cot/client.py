@@ -82,7 +82,7 @@ class SocketClient:
 
     def ssl_handshake(self):
         """ Preform the SSL handshake on the socket """
-        if self.ready():
+        if self.ready:
             return
 
         try:
@@ -103,7 +103,7 @@ class SocketClient:
 
         If the socket is SSL based, this may be part of the handshake.
         """
-        if self.ssl and not self.ready():
+        if self.ssl and not self.ready:
             self.ssl_handshake()
             return
 
@@ -128,7 +128,7 @@ class SocketClient:
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         """
-        if self.ssl and not self.ready():
+        if self.ssl and not self.ready:
             self.ssl_handshake()
             return
 
@@ -352,7 +352,7 @@ class SocketTAKClient(TAKClient, SocketClient):
             raise TypeError("Must send a COTEvent")
 
         # Silently drop data if the SSL handshake is not ready yet
-        if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+        if not self.ready:
             return
 
         self.out_buff += etree.tostring(event.as_element)
