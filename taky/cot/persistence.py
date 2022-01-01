@@ -72,6 +72,13 @@ class BasePersistence:
     def __init__(self):
         self.lgr = logging.getLogger(self.__class__.__name__)
 
+    @property
+    def size(self):
+        """
+        @return The number of items in the database
+        """
+        return 0
+
     def track(self, event):
         """
         @return False if the item should not be tracked, otherwise the TTL
@@ -125,6 +132,14 @@ class BasePersistence:
         # In this case, assume nothing needs to be done
         return
 
+    def purge(self):
+        """
+        Clear the entire database
+
+        @return The number of items deleted
+        """
+        return 0
+
 
 class Persistence(BasePersistence):
     """
@@ -138,6 +153,10 @@ class Persistence(BasePersistence):
     def __init__(self):
         super().__init__()
         self.events = {}
+
+    @property
+    def size(self):
+        return len(self.events)
 
     def track_event(self, event, ttl):
         self.events[event.uid] = event
@@ -171,6 +190,11 @@ class Persistence(BasePersistence):
         for uid in uids:
             self.events.pop(uid)
 
+    def purge(self):
+        count = self.size
+        self.events = {}
+        return count
+
 
 class RedisPersistence(BasePersistence):
     """
@@ -202,12 +226,19 @@ class RedisPersistence(BasePersistence):
             self.lgr.info("Connecting to default redis")
             self.rds = redis.StrictRedis()
 
+        self.lgr.info("Tracking %d items", self.size)
+
+    @property
+    def size(self):
         try:
-            total = len(self.rds.keys(f"{self.rds_ks}:*"))
-            self.lgr.info("Tracking %d items", total)
+            total = 0
+            for _ in self.rds.scan_iter(f"{self.rds_ks}:*"):
+                total += 1
             self._redis_result(True)
         except redis.ConnectionError:
             self._redis_result(False)
+
+        return total
 
     def _redis_result(self, result):
         """
@@ -298,10 +329,23 @@ class RedisPersistence(BasePersistence):
 
     def get_all(self):
         try:
-            for key in self.rds.keys(f"{self.rds_ks}:*"):
+            for key in self.rds.scan_iter(f"{self.rds_ks}:*"):
                 evt = self._get_event(key, True)
                 if evt:
                     yield evt
         except redis.ConnectionError:
             self._redis_result(False)
             return
+
+    def purge(self):
+        count = 0
+        try:
+            pipe = self.rds.pipeline()
+            for key in self.rds.scan_iter(f"{self.rds_ks}:*"):
+                pipe.delete(key)
+            pipe.execute()
+            self._redis_result(True)
+        except redis.ConnectionError:
+            self._redis_result(False)
+
+        return count
