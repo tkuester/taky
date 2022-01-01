@@ -39,6 +39,8 @@ class MgmtClient(SocketClient):
 
             if msg.get("cmd") == "status":
                 ret = self.status()
+            elif msg.get("cmd") == "purge_persist":
+                ret = self.purge_persist()
             else:
                 ret = {"error": f"Invalid cmd: {msg.get('cmd')}"}
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -46,6 +48,9 @@ class MgmtClient(SocketClient):
 
         ret = json.dumps(ret)
         self.out_buff += ret.encode() + b"\0"
+
+    def purge_persist(self):
+        return {"purged": self.server.router.persist.purge()}
 
     def status(self):
         ret = {

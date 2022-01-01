@@ -26,7 +26,8 @@ def arg_parse():
     cli.setup_taky_reg(subp)
     cli.build_client_reg(subp)
     cli.systemd_reg(subp)
-    cli.status_reg(subp)
+    cli.mgmt_reg(subp, "status", "Check the status of the taky server")
+    cli.mgmt_reg(subp, "purge_persist", "Clear the persistence database")
 
     args = argp.parse_args()
 
@@ -46,7 +47,8 @@ def main():
         "setup": cli.setup_taky,
         "build_client": cli.build_client,
         "systemd": cli.systemd,
-        "status": cli.status,
+        "status": cli.mgmt_status,
+        "purge_persist": cli.mgmt_purge_persist,
     }
 
     if not args.command:

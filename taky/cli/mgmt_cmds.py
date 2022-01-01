@@ -9,8 +9,8 @@ from taky.util import pprinttable, seconds_to_human
 from taky.config import app_config as config
 
 
-def status_reg(subp):
-    argp = subp.add_parser("status", help="Check the status of the taky server")
+def mgmt_reg(subp, cmd_name, cmd_help):
+    argp = subp.add_parser(cmd_name, help=cmd_help)
 
     argp.add_argument(
         "-U",
@@ -69,7 +69,7 @@ def print_status(stat):
     pprinttable(table)
 
 
-def status(args):
+def mgmt_cmd(args, command, callback):
     if args.socket is None:
         args.socket = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
 
@@ -77,7 +77,7 @@ def status(args):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         sock.connect(args.socket)
-        cmd = json.dumps({"cmd": "status"}).encode()
+        cmd = json.dumps({"cmd": command}).encode()
         sock.sendall(cmd + b"\0")
 
         sock.settimeout(1)
@@ -112,7 +112,7 @@ def status(args):
         if args.json:
             print(json.dumps(stat))
         else:
-            print_status(stat)
+            callback(stat)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         print("ERROR: Invalid data in response", file=sys.stderr)
         return 1
@@ -132,3 +132,14 @@ def status(args):
         sock = None
 
     return 0
+
+
+def mgmt_status(args):
+    return mgmt_cmd(args, "status", print_status)
+
+
+def mgmt_purge_persist(args):
+    def cb(data):
+        print("%d items deleted" % data.get("purged", 0))
+
+    return mgmt_cmd(args, "purge_persist", cb)
