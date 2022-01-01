@@ -343,6 +343,7 @@ class RedisPersistence(BasePersistence):
             pipe = self.rds.pipeline()
             for key in self.rds.scan_iter(f"{self.rds_ks}:*"):
                 pipe.delete(key)
+                count += 1
             pipe.execute()
             self._redis_result(True)
         except redis.ConnectionError:
