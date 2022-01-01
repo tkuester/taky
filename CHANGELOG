@@ -4,18 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9] - Unreleased
 
 ### Added
- - Management socket + status command
+ - Users can specify alternate DPS ports for proxies
+ - Management socket
+   - Status command
+   - Purge Persistence command
  - TCP Monitor socket
 
 ### Changed
- - Overhaul of config object to be a global variable
- - Refactor of client objects for code reuse
+ - Improved client data package construction for iTak and WinTAK
+ - Use the host URL for the datapackage server
+ - DEPRECATED: Config options "hostname" and "server_ip" are now "server_address"
+ - New clients receive persistance objects upon connection
 
 ### Fixed
- - Allowing for a proper shutdown from SIGTERM
+ - Improve handling of XML syntax errors
+ - Allow COT server to shutdown properly from SIGTERM
 
 ## [0.8.2] - 2021-09-03
 
