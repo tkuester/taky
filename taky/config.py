@@ -67,7 +67,7 @@ def load_config(path=None, explicit=False):
 
     # TODO: Deprecate
     if ret_config.has_option("taky", "hostname") or ret_config.has_option(
-        "taky", "server_ip"
+        "taky", "public_ip"
     ):
         lgr.warning(
             "The config options 'hostname' and 'server_ip' have been deprecated\n"
