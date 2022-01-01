@@ -42,7 +42,7 @@ class SocketClient:
         self.lgr = logging.getLogger(lgr_name)
         super().__init__(**kwargs)
 
-        if self.ready:
+        if self.ready and self.connect_cb:
             self.connect_cb(self)
 
     @property
@@ -94,7 +94,8 @@ class SocketClient:
             self.ssl_hs = SSLState.SSL_ESTAB
             self.sock.setblocking(True)
             # TODO: Check SSL certs here
-            self.connect_cb(self)
+            if self.connect_cb:
+                self.connect_cb(self)
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:
