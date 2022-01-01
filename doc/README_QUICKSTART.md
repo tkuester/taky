@@ -30,7 +30,7 @@ Installing site to system
  - Changing ownership to bluetack
 
 # Install systemd Services
-bluetack $ sudo tackyctl systemd --user bluetack
+bluetack $ sudo takyctl systemd --user bluetack
  - Detected system-wide site install
  - Writing services to /etc/systemd/system
    - Writing taky-cot.service
@@ -59,6 +59,16 @@ bluetack $ ls -l JENNY.zip
 # Hit Ctrl+C when you're done!
 $ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+```
+
+### For Copy and Paste
+
+```
+sudo apt install python3 python3-pip
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install taky
+sudo takyctl setup --server-address 123.45.67.89 --user $(whoami)
+sudo takyctl systemd --user $(whoami)
 ```
 
 ## I want to delete everything and start over!

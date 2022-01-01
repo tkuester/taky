@@ -81,16 +81,11 @@ Step 3. Install Taky
 
 Like installation, there are two primary ways to setup taky. It does not
 matter which installation method you picked, both configuration methods
-are valid.
+will work.
 
-For all configurations, you will need to know the following things:
-
- * The system's public IP address
- * The system's hostname
-
-For now, the system's hostname is primarily "cosmetic". The public IP address
-is used in most cases, to prevent clients from having to do a DNS lookup. This
-may change in the future!
+You will need to know the system's public IP address or hostname (if you have
+DNS configured). While DNS makes management a little more easier, it is not
+required.
 
 ### Global Configuration
 
@@ -121,8 +116,7 @@ This step will also generate the certificate authority, and server certificate.
 
 ```
 admin@bluetack:~$ sudo taky --user stickytak \
-                            --public-ip 192.168.1.100 \
-                            --host bluetack
+                            --server-address 192.168.1.100
 
 admin@bluetack:~$ ls -l /etc/taky
 /etc/taky:
@@ -143,7 +137,7 @@ admin@bluetack:~$ cat /etc/taky/taky.conf
 hostname = bluetack
 node_id = TAKY
 bind_ip = 0.0.0.0
-public_ip = 192.168.1.91
+server_address = 192.168.1.100
 redis
 
 [cot_server]
@@ -254,9 +248,7 @@ Unlike the last step, we will not need to make a linux user. We will just run
 Step 1. Build the deployment configuration
 
 ```
-user@bluetack:~$ takyctl setup --hostname bluetack-1     \
-                               --public-ip 192.168.1.100 \
-                               bluetack-1
+user@bluetack:~$ takyctl setup --server-address bluetack.example.com
 
 user@bluetack:~$ ls -lR bluetack-1
 bluetack-1/:
