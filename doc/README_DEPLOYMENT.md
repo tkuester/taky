@@ -115,7 +115,7 @@ This step will also generate the certificate authority, and server certificate.
 `bin/activate` file!)
 
 ```
-admin@bluetack:~$ sudo taky --user stickytak \
+admin@bluetack:~$ sudo takyctl setup --user stickytak \
                             --server-address 192.168.1.100
 
 admin@bluetack:~$ ls -l /etc/taky
@@ -139,6 +139,7 @@ node_id = TAKY
 bind_ip = 0.0.0.0
 server_address = 192.168.1.100
 redis
+root_dir=/tmp
 
 [cot_server]
 port = 8089

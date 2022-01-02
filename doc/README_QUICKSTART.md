@@ -2,7 +2,7 @@
 
 Ok, geez! Hold your horses! This guide assumes:
 
-1. You have sudo privilegs
+1. You have sudo privileges
 2. You don't mind installing things globally
 3. You don't want to run the server as root
 4. You want SSL, and know how to get files to your end user devices

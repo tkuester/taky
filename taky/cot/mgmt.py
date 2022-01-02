@@ -66,7 +66,7 @@ class MgmtClient(SocketClient):
         for client in self.server.clients.values():
             if not isinstance(client, TAKClient):
                 continue
-
+            
             ret["num_clients"] += 1
             cli_meta = {
                 "last_rx": client.last_rx,
@@ -86,6 +86,9 @@ class MgmtClient(SocketClient):
                 cli_meta["os"] = client.user.device.os
                 cli_meta["version"] = client.user.device.version
                 cli_meta["platform"] = client.user.device.platform
+            if client.evt: 
+                cli_meta["lat"] = client.evt.point.lat
+                cli_meta["lon"] = client.evt.point.lon                
             else:
                 cli_meta["anonymous"] = True
 
