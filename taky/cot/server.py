@@ -191,7 +191,8 @@ class COTServer:
         Disconnect a client from the server
         """
         client.disconnect(reason)
-        client = self.clients.pop(client.sock)
+        if client.sock in self.clients:
+          client = self.clients.pop(client.sock)
 
         if isinstance(client, TAKClient):
             self.router.client_disconnect(client)
