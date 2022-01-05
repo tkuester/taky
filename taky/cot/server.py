@@ -192,7 +192,7 @@ class COTServer:
         """
         client.disconnect(reason)
         if client.sock in self.clients:
-          client = self.clients.pop(client.sock)
+            client = self.clients.pop(client.sock)
 
         if isinstance(client, TAKClient):
             self.router.client_disconnect(client)
@@ -250,6 +250,7 @@ class COTServer:
         for (sock, client) in prune_sox:
             if client.is_closed:
                 self.client_disconnect(client, "Is closed")
+                continue
 
             if client.ssl_hs not in [SSLState.NO_SSL, SSLState.SSL_ESTAB]:
                 if (now - client.connected) > 10:
