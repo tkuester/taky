@@ -221,7 +221,7 @@ class COTServer:
         """
         client.disconnect(reason)
         if client.sock in self.clients:
-          client = self.clients.pop(client.sock)
+            client = self.clients.pop(client.sock)
 
         if isinstance(client, TAKClient):
             self.router.client_disconnect(client)
@@ -278,6 +278,7 @@ class COTServer:
         for (sock, client) in prune_sox:
             if client.is_closed:
                 self.client_disconnect(client, "Is closed")
+                continue
 
             if not client.ready and (now - client.connected) > 10:
                 self.client_disconnect(client, "SSL Handshake timeout")
