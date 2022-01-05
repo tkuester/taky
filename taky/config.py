@@ -49,10 +49,8 @@ def load_config(path=None, explicit=False):
             path = os.path.abspath("taky.conf")
         elif os.path.exists("/etc/taky/taky.conf"):
             path = "/etc/taky/taky.conf"
-        else:
-            raise FileNotFoundError("Unable to find config file")
 
-    if explicit and not os.path.exists(path):
+    if explicit and not (path and os.path.exists(path)):
         raise FileNotFoundError("Config file required, but not present")
 
     ret_config = configparser.ConfigParser(allow_no_value=True)
@@ -60,7 +58,7 @@ def load_config(path=None, explicit=False):
 
     lgr = logging.getLogger("load_config")
 
-    if os.path.exists(path):
+    if path and os.path.exists(path):
         lgr.info("Loading config file from %s", path)
         with open(path, "r") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
