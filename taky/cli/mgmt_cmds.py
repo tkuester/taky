@@ -116,8 +116,9 @@ def mgmt_cmd(args, command, callback):
             callback(stat)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         print("ERROR: Invalid data in response", file=sys.stderr)
+        print(f" - {exc}")
         return 1
-    except FileNotFoundError as exc:
+    except FileNotFoundError:
         print(
             f"ERROR: Unable to connect to mgmt socket: {args.socket}", file=sys.stderr
         )

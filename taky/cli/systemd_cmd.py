@@ -195,7 +195,7 @@ def systemd(args):
             write_dps_svc(svcs, args, using_venv, site_path)
         print(f"   - Writing {svcs['taky']}")
         write_uni_svc(svcs, args)
-    except PermissionError as exc:
+    except PermissionError:
         print(f"ERROR: Unable to write service files to {args.path}", file=sys.stderr)
         return 1
     except OSError as exc:

@@ -10,14 +10,16 @@ from taky import __version__
 from taky.cot import COTServer
 from taky.config import load_config
 
-got_sigterm = False
 
+class Sigint:
+    def __init__(self):
+        self.got_sigterm = False
+        signal.signal(signal.SIGTERM, self.handle_term)
 
-def handle_term(sig, frame):  # pylint: disable=unused-argument
-    """ Signal handler """
-    global got_sigterm
-    logging.info("Got SIGTERM")
-    got_sigterm = True
+    def handle_term(self, sig, frame):  # pylint: disable=unused-argument
+        """ Signal handler """
+        logging.info("Got %s", signal.Signals(sig).name)
+        self.got_sigterm = True
 
 
 def handle_pdb(sig, frame):  # pylint: disable=unused-argument
@@ -61,7 +63,7 @@ def arg_parse():
 
 def main():
     """ taky COT server """
-    global got_sigterm
+    gst = Sigint()
     ret = 0
 
     (argp, args) = arg_parse()
@@ -79,8 +81,6 @@ def main():
         argp.error(f"{exc}")
         sys.exit(1)
 
-    signal.signal(signal.SIGTERM, handle_term)
-
     # TODO: Check for ipv6 support
     if args.debug:
         signal.signal(signal.SIGUSR1, handle_pdb)
@@ -95,7 +95,7 @@ def main():
         sys.exit(1)
 
     try:
-        while not got_sigterm:
+        while not gst.got_sigterm:
             cot_srv.loop()
     except KeyboardInterrupt:
         pass
