@@ -24,6 +24,10 @@ def build_pref(pref_fp, prefs):
                 v_type = "Integer"
             elif isinstance(val, str):
                 v_type = "String"
+            else:
+                raise TypeError(
+                    f"Config option {key} is type {type(val)}, must be bool, int, str"
+                )
 
             entry = etree.Element(
                 "entry", attrib={"key": key, "class": f"class java.lang.{v_type}"}

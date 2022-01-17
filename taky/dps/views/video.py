@@ -35,7 +35,7 @@ def marti_video_upload():
             return "Invalid XML document", 400
 
         uid = feed.find("uid")
-        if uid is None:
+        if (not uid) or (not uid.text):
             continue
         uid = uid.text.strip()
         path = secure_filename(f"{uid}.xml")

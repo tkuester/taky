@@ -230,13 +230,14 @@ class RedisPersistence(BasePersistence):
 
     @property
     def size(self):
+        total = 0
         try:
-            total = 0
             for _ in self.rds.scan_iter(f"{self.rds_ks}:*"):
                 total += 1
             self._redis_result(True)
         except redis.ConnectionError:
             self._redis_result(False)
+            return -1
 
         return total
 

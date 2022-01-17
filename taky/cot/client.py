@@ -272,10 +272,11 @@ class TAKClient:
                     self.pong()
                     continue
 
-                if evt.etype.startswith("a"):
+                if evt.etype and evt.etype.startswith("a"):
                     self.handle_atom(evt)
 
-                self.router.route(self, evt)
+                if self.router:
+                    self.router.route(self, evt)
                 self.log_event(evt)
             except models.UnmarshalError as exc:
                 self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)

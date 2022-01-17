@@ -129,7 +129,7 @@ class COTRouter:
         """
         Push an event to the router
         """
-        if not isinstance(evt, models.Event):
+        if not isinstance(evt, models.Event) or not evt.detail:
             raise ValueError(f"Unable to route {type(evt)}")
 
         # Special handling for chat messages

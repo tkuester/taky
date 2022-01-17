@@ -69,7 +69,7 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     with open(ca_key, "r") as ca_key_fp:
         cakey = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_key_fp.read())
 
-    with open(ca_crt, "r") as ca_crt_fp:
+    with open(ca_crt, "rb") as ca_crt_fp:
         capem = crypto.load_certificate(crypto.FILETYPE_PEM, ca_crt_fp.read())
 
     serialnumber = random.getrandbits(64)

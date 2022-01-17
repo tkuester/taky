@@ -101,7 +101,7 @@ def main():
     try:
         load_config(args.cfg_file)
     except (OSError, configparser.ParsingError) as exc:
-        argp.error(exc)
+        argp.error(f"{exc}")
 
     bind_ip = app_config.get("taky", "bind_ip")
     if bind_ip is None:
@@ -116,6 +116,7 @@ def main():
             "[ ERROR ] Invalid port specified for dp_server.port, must be (0,65535]",
             file=sys.stderr,
         )
+        sys.exit(1)
     except (configparser.NoOptionError, configparser.NoSectionError):
         port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
 
