@@ -4,25 +4,31 @@ import signal
 import logging
 import argparse
 import configparser
-import pdb
+import pdb, bdb
 
 from taky import __version__
 from taky.cot import COTServer
 from taky.config import load_config
 
-got_sigterm = False
 
+class SigHdlr:
+    def __init__(self, debug=False):
+        self.got_sigterm = False
+        self.debug = debug
 
-def handle_term(sig, frame):  # pylint: disable=unused-argument
-    """Signal handler"""
-    global got_sigterm
-    logging.info("Got SIGTERM")
-    got_sigterm = True
+        signal.signal(signal.SIGTERM, self.handle_term)
+        signal.signal(signal.SIGUSR1, self.handle_pdb)
 
+    def handle_term(self, sig, frame):  # pylint: disable=unused-argument
+        """Signal handler"""
+        logging.info("Got SIGTERM")
+        self.got_sigterm = True
 
-def handle_pdb(sig, frame):  # pylint: disable=unused-argument
-    """Signal handler"""
-    pdb.Pdb().set_trace(frame)
+    def handle_pdb(self, sig, frame):  # pylint: disable=unused-argument
+        """Signal handler"""
+        if self.debug:
+            logging.info("Dropping into PDB shell...")
+            pdb.Pdb().set_trace(frame)
 
 
 def arg_parse():
@@ -78,11 +84,8 @@ def main():
         print(f"Configuration file error: {str(exc)}", file=sys.stderr)
         sys.exit(1)
 
-    signal.signal(signal.SIGTERM, handle_term)
-
     # TODO: Check for ipv6 support
-    if args.debug:
-        signal.signal(signal.SIGUSR1, handle_pdb)
+    gst = SigHdlr(args.debug)
 
     cot_srv = COTServer()
     try:
@@ -94,8 +97,11 @@ def main():
         sys.exit(1)
 
     try:
-        while not got_sigterm:
-            cot_srv.loop()
+        while not gst.got_sigterm:
+            try:
+                cot_srv.loop()
+            except bdb.BdbQuit:
+                logging.info("Continuing from PDB shell")
     except KeyboardInterrupt:
         pass
     except Exception as exc:  # pylint: disable=broad-except
