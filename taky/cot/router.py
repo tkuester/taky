@@ -145,7 +145,6 @@ class COTRouter:
 
         # Check for Marti, use first
         if evt.has_marti:
-            self.lgr.debug("Handling marti")
             for callsign in evt.detail.marti_cs:
                 self.send_user(src, evt, dst_cs=callsign)
             return
