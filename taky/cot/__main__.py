@@ -44,7 +44,8 @@ def log_crash(traceback):
     try:
         with open(crash_file, "a", encoding="utf8") as fp:
             fp.write("-" * 60 + "\n")
-            fp.write(dt.utcnow().isoformat() + "\n")
+            fp.write(f"Version: {__version__}\n")
+            fp.write(f"Date: {dt.utcnow().isoformat()}\n")
             fp.write(traceback)
             fp.write("-" * 60 + "\n")
     except OSError as exc:
