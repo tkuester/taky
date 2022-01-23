@@ -4,6 +4,7 @@ import socket
 import select
 import ssl
 import logging
+import pathlib
 
 from taky.config import app_config as config
 from .router import COTRouter
@@ -95,6 +96,10 @@ class COTServer:
         self.started = time.time()
 
         # Setup the Management Socket
+        root_dir = config.get("taky", "root_dir")
+        if not os.path.exists(root_dir):
+            pathlib.Path(root_dir).mkdir(parents=True, exist_ok=True)
+
         mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
         if check_socket(mgmt_sock_path):
             self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

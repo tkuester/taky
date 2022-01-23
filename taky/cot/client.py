@@ -8,6 +8,7 @@ import socket
 import ssl
 import logging
 import traceback
+import pathlib
 
 from lxml import etree
 
@@ -172,6 +173,8 @@ class TAKClient:
         self.last_rx = 0
 
         self.log_cot_dir = log_cot_dir
+        if log_cot_dir and not os.path.exists(log_cot_dir):
+            pathlib.Path(log_cot_dir).mkdir(parents=True, exist_ok=True)
         self.cot_fp = None
 
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)

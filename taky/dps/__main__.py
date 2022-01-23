@@ -1,5 +1,6 @@
 import os
 import sys
+import pathlib
 import multiprocessing
 import argparse
 import configparser
@@ -122,13 +123,7 @@ def main():
 
     dp_path = app_config.get("dp_server", "upload_path")
     if not os.path.exists(dp_path):
-        print("-" * 30, file=sys.stderr)
-        print("[ WARNING ] Datapackage directory does not exist!", file=sys.stderr)
-        print("            Please create it, or check permissions.", file=sys.stderr)
-        print("Current Settings:", file=sys.stderr)
-        print("  [dp_server]", file=sys.stderr)
-        print(f"  upload_path = {dp_path}", file=sys.stderr)
-        print("-" * 30, file=sys.stderr)
+        pathlib.Path(dp_path).mkdir(parents=True, exist_ok=True)
 
     options = {
         "bind": f"{bind_ip}:{port}",
