@@ -34,7 +34,7 @@ class SigHdlr:
             pdb.Pdb().set_trace(frame)
 
 
-def log_crash(traceback):
+def log_crash(trace):
     # Log Crash
     if not os.path.exists(app_config.get("taky", "root_dir")):
         return
@@ -46,7 +46,7 @@ def log_crash(traceback):
             fp.write("-" * 60 + "\n")
             fp.write(f"Version: {__version__}\n")
             fp.write(f"Date: {dt.utcnow().isoformat()}\n")
-            fp.write(traceback)
+            fp.write(trace)
             fp.write("-" * 60 + "\n")
     except OSError as exc:
         logging.error("Unable to log crash dump: %s", exc)
