@@ -1,14 +1,17 @@
 # pylint: disable=missing-module-docstring
+import os
 import sys
 import signal
 import logging
 import argparse
 import configparser
 import pdb, bdb
+from datetime import datetime as dt
+import traceback
 
 from taky import __version__
 from taky.cot import COTServer
-from taky.config import load_config
+from taky.config import load_config, app_config
 
 
 class SigHdlr:
@@ -29,6 +32,23 @@ class SigHdlr:
         if self.debug:
             logging.info("Dropping into PDB shell...")
             pdb.Pdb().set_trace(frame)
+
+
+def log_crash(traceback):
+    # Log Crash
+    if not os.path.exists(app_config.get("taky", "root_dir")):
+        return
+
+    crash_file = os.path.join(app_config.get("taky", "root_dir"), "crash.log")
+
+    try:
+        with open(crash_file, "a", encoding="utf8") as fp:
+            fp.write("-" * 60 + "\n")
+            fp.write(dt.utcnow().isoformat() + "\n")
+            fp.write(traceback)
+            fp.write("-" * 60 + "\n")
+    except OSError as exc:
+        logging.error("Unable to log crash dump: %s", exc)
 
 
 def arg_parse():
@@ -107,6 +127,8 @@ def main():
     except Exception as exc:  # pylint: disable=broad-except
         logging.critical("Unhandled exception", exc_info=exc)
         ret = 1
+
+        log_crash(traceback.format_exc())
 
     try:
         cot_srv.shutdown()
