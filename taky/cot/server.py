@@ -98,6 +98,7 @@ class COTServer:
         # Setup the Management Socket
         root_dir = config.get("taky", "root_dir")
         if not os.path.exists(root_dir):
+            self.lgr.info("Building taky root directory: %s", root_dir)
             pathlib.Path(root_dir).mkdir(parents=True, exist_ok=True)
 
         mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")

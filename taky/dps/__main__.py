@@ -123,6 +123,7 @@ def main():
 
     dp_path = app_config.get("dp_server", "upload_path")
     if not os.path.exists(dp_path):
+        print(f"INFO: Building DPS upload dir: {dp_path}", file=sys.stderr)
         pathlib.Path(dp_path).mkdir(parents=True, exist_ok=True)
 
     options = {

@@ -166,6 +166,7 @@ class TAKClient:
     """
 
     def __init__(self, router=None, log_cot_dir=None, **kwargs):
+        self.lgr = logging.getLogger(self.__class__.__name__)
         self.router = router
         self.user = None
         self.connected = time.time()
@@ -174,6 +175,7 @@ class TAKClient:
 
         self.log_cot_dir = log_cot_dir
         if log_cot_dir and not os.path.exists(log_cot_dir):
+            self.lgr.info("Building COT log dir: %s", log_cot_dir)
             pathlib.Path(log_cot_dir).mkdir(parents=True, exist_ok=True)
         self.cot_fp = None
 
@@ -181,7 +183,6 @@ class TAKClient:
         parser.feed(b"<root>")
         self.xdc = XMLDeclStrip(parser)
 
-        self.lgr = logging.getLogger(self.__class__.__name__)
         super().__init__(**kwargs)
 
     def __repr__(self):
