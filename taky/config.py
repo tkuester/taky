@@ -36,38 +36,49 @@ DEFAULT_CFG = {
 }
 
 
-def load_config(path=None, explicit=False):
+def load_config(path=None):
     """
     Loads a config file from the specified path into the global config. If no
     path is specified, the file is inferred by checking local and global paths.
 
     @param path     The path of the configuration file to load
-    @param explicit Don't return a default
     """
+    ret_config = configparser.ConfigParser(allow_no_value=True)
+    ret_config.read_dict(DEFAULT_CFG)
+
     if path is None:
         if os.path.exists("taky.conf"):
             path = os.path.abspath("taky.conf")
         elif os.path.exists("/etc/taky/taky.conf"):
             path = "/etc/taky/taky.conf"
+        else:
+            # Use default config
+            logging.info("Using default config file")
+            ret_config.set("taky", "cfg_path", None)
+            ret_config.set("taky", "root_dir", os.path.abspath("./taky-data"))
+            ret_config.set(
+                "dp_server",
+                "upload_path",
+                os.path.join(os.path.abspath("./taky-data"), "dp-user"),
+            )
 
-    if explicit and not (path and os.path.exists(path)):
-        raise FileNotFoundError("Config file required, but not present")
+            patch_config(ret_config)
+            return
 
-    ret_config = configparser.ConfigParser(allow_no_value=True)
-    ret_config.read_dict(DEFAULT_CFG)
+    logging.info("Loading config file from %s", path)
+    with open(path, "r") as cfg_fp:
+        ret_config.read_file(cfg_fp, source=path)
 
-    lgr = logging.getLogger("load_config")
+    ret_config.set("taky", "cfg_path", path)
+    patch_config(ret_config)
 
-    if path and os.path.exists(path):
-        lgr.info("Loading config file from %s", path)
-        with open(path, "r") as cfg_fp:
-            ret_config.read_file(cfg_fp, source=path)
 
+def patch_config(ret_config):
     # TODO: Deprecate
     if ret_config.has_option("taky", "hostname") or ret_config.has_option(
         "taky", "public_ip"
     ):
-        lgr.warning(
+        logging.warning(
             "The config options 'hostname' and 'server_ip' have been deprecated\n"
             "since version 0.9, please update your config file to use server_address\n"
             "instead."
@@ -110,9 +121,6 @@ def load_config(path=None, explicit=False):
             if port <= 0 or port >= 65535:
                 raise ValueError(f"Invalid port: {port}")
         ret_config.set("cot_server", "mon_port", str(port))
-
-    if explicit:
-        ret_config.set("taky", "cfg_path", path)
 
     app_config.clear()
     app_config.update(ret_config)

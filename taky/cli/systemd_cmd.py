@@ -141,9 +141,13 @@ def write_uni_svc(names, args):
 def systemd(args):
     """ Build and install systemd scripts for the server """
     try:
-        load_config(args.cfg_file, explicit=True)
+        load_config(args.cfg_file)
     except (FileNotFoundError, configparser.ParsingError, OSError) as exc:
         print(exc, file=sys.stderr)
+        return 1
+
+    if config.get("taky", "cfg_path") == None:
+        print("ERROR: Cannot use default config file", file=sys.stderr)
         return 1
 
     print("Building systemd services")
