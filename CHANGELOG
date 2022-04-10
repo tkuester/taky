@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
  - Allowing for a proper shutdown from SIGTERM
 
+## [0.8.3] - 2022-04-10
+
+### Added
+ - Generation of iTAK compatible client certificates
+
+### Fixed
+ - Internal client certificate files are now unique by UUID (#39)
+
+### Contributors
+ - Thanks to @skadakar, @pclifaz, and @fordepowers for assisting in testing
+   of the new features, and contributing pull requests and support!
+
 ## [0.8.2] - 2021-09-03
 
 ### Fixed
