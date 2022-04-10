@@ -30,7 +30,7 @@ Installing site to system
  - Changing ownership to bluetack
 
 # Install systemd Services
-bluetack $ sudo tackyctl systemd --user bluetack
+bluetack $ sudo takyctl systemd --user bluetack
  - Detected system-wide site install
  - Writing services to /etc/systemd/system
    - Writing taky-cot.service
