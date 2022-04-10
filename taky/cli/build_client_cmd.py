@@ -36,9 +36,9 @@ def build_client(config, args):
     tdir = tempfile.mkdtemp(prefix="taky-cert-")
 
     # Build zip file structure
-    if not args.is_itak:
-        mdir = os.path.join(tdir, "MANIFEST")
-        os.mkdir(mdir)
+    if args.is_itak:
+        cdir = tdir
+    else:
         cdir = os.path.join(tdir, "certs")
         os.mkdir(cdir)
 
@@ -48,7 +48,7 @@ def build_client(config, args):
 
     # Build client certificates
     rotc.make_cert(
-        path= cdir if not args.is_itak else tdir,
+        path=cdir,
         f_name=args.name,
         hostname=args.name,
         cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
@@ -62,54 +62,53 @@ def build_client(config, args):
     port = config.getint("cot_server", "port")
     method = "ssl" if config.getboolean("ssl", "enabled") else "tcp"
 
-    if args.is_itak: 
-        prefs = {
-        "cot_streams": {
-            "count": 1,
-            "description0": hostname,
-            "enabled0": False,
-            "connectString0": f"{public_ip}:{port}:{method}",
-        },
-        "com.atakmap.app_preferences": {
-            "caLocation": f"cert/{os.path.basename(server_p12)}",
-            "caPassword": config.get("ssl", "server_p12_pw"),
-            "clientPassword": args.p12_pw,
-            "certificateLocation": f"cert/{args.name}.p12",
-        },
-    }
-    else:
-        prefs = {
-        "cot_streams": {
-            "count": 1,
-            "description0": hostname,
-            "enabled0": False,
-            "connectString0": f"{public_ip}:{port}:{method}",
-        },
-        "com.atakmap.app_preferences": {
-            "displayServerConnectionWidget": True,
-            "caLocation": f"/storage/emulated/0/atak/cert/{os.path.basename(server_p12)}",
-            "caPassword": config.get("ssl", "server_p12_pw"),
-            "clientPassword": args.p12_pw,
-            "certificateLocation": f"/storage/emulated/0/atak/cert/{args.name}.p12",
-        },
-    }
-
+    pref_name = "preference.pref"
     if args.is_itak:
-        with open(os.path.join(tdir, "preference.pref"), "wb") as pref_fp:
-            datapackage.build_pref(pref_fp, prefs)
+        prefs = {
+            "cot_streams": {
+                "count": 1,
+                "description0": hostname,
+                "enabled0": False,
+                "connectString0": f"{public_ip}:{port}:{method}",
+            },
+            "com.atakmap.app_preferences": {
+                "caLocation": f"cert/{os.path.basename(server_p12)}",
+                "caPassword": config.get("ssl", "server_p12_pw"),
+                "clientPassword": args.p12_pw,
+                "certificateLocation": f"cert/{args.name}.p12",
+            },
+        }
     else:
-        with open(os.path.join(cdir, "fts.pref"), "wb") as pref_fp:
-            datapackage.build_pref(pref_fp, prefs)
+        prefs = {
+            "cot_streams": {
+                "count": 1,
+                "description0": hostname,
+                "enabled0": False,
+                "connectString0": f"{public_ip}:{port}:{method}",
+            },
+            "com.atakmap.app_preferences": {
+                "displayServerConnectionWidget": True,
+                "caLocation": f"/storage/emulated/0/atak/cert/{os.path.basename(server_p12)}",
+                "caPassword": config.get("ssl", "server_p12_pw"),
+                "clientPassword": args.p12_pw,
+                "certificateLocation": f"/storage/emulated/0/atak/cert/{args.name}.p12",
+            },
+        }
 
+    with open(os.path.join(cdir, pref_name), "wb") as pref_fp:
+        datapackage.build_pref(pref_fp, prefs)
 
     # Build Mission Package Manifest
     if not args.is_itak:
+        mdir = os.path.join(tdir, "MANIFEST")
+        os.mkdir(mdir)
+
         cfg_params = {
             "uid": str(uuid.uuid4()),
             "name": f"{hostname}_DP",
             "onReceiveDelete": "true",
         }
-        man_cts = ["fts.pref", os.path.basename(server_p12), f"{args.name}.p12"]
+        man_cts = [pref_name, os.path.basename(server_p12), f"{args.name}.p12"]
 
         with open(os.path.join(mdir, "manifest.xml"), "wb") as man_fp:
             datapackage.build_manifest(man_fp, cfg_params, man_cts)
@@ -118,12 +117,12 @@ def build_client(config, args):
 
     # Save PEM files
     if args.dump_pem:
-        shutil.copy(os.path.join(cdir if not args.is_itak else tdir, f"{args.name}.p12"), cwd)
-        shutil.copy(os.path.join(cdir if not args.is_itak else tdir, f"{args.name}.crt"), cwd)
-        shutil.copy(os.path.join(cdir if not args.is_itak else tdir, f"{args.name}.key"), cwd)
+        shutil.copy(os.path.join(cdir, f"{args.name}.p12"), cwd)
+        shutil.copy(os.path.join(cdir, f"{args.name}.crt"), cwd)
+        shutil.copy(os.path.join(cdir, f"{args.name}.key"), cwd)
 
-        os.unlink(os.path.join(cdir if not args.is_itak else tdir, f"{args.name}.crt"))
-        os.unlink(os.path.join(cdir if not args.is_itak else tdir, f"{args.name}.key"))
+        os.unlink(os.path.join(cdir, f"{args.name}.crt"))
+        os.unlink(os.path.join(cdir, f"{args.name}.key"))
 
     # Save temporary directory, and build ZIP file
     os.chdir(tdir)
