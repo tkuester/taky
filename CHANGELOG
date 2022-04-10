@@ -26,8 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Internal client certificate files are now unique by UUID (#39)
 
 ### Contributors
- - Thanks to @skadakar, @pclifaz, and @fordepowers for assisting in testing
-   of the new features, and contributing pull requests and support!
+ - Thanks to @fordepowers for contributing the iTAK certificate generation!
+ - Thanks to @pclifaz for assisting testing of the new features!
+ - Thanks to @skadakar for offering heaps of help to new users in Discord!
+ - Thanks to @mighkel for a comprehensive writeup to improve documentation!
 
 ## [0.8.2] - 2021-09-03
 
