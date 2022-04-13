@@ -226,6 +226,7 @@ class COTServer:
                 cbs={
                     "route": self.router.route,
                     "packet_rx": self.mon_packet,
+                    "connect": self.router.send_persist,
                 },
             )
 

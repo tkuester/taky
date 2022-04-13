@@ -41,7 +41,6 @@ class COTRouter:
         Add a client to the router
         """
         self.clients.add(client)
-        self.send_persist(client)
 
     def client_disconnect(self, client):
         """

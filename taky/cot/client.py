@@ -31,19 +31,18 @@ class SocketClient:
     server, such as SSL handshake state, and an outgoing data buffer.
     """
 
-    def __init__(self, sock, use_ssl=False, connect_cb=None, **kwargs):
+    def __init__(self, sock, use_ssl=False, **kwargs):
         self.sock = sock
         self.ssl = use_ssl
         self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
-        self.connect_cb = connect_cb
+        self.connect_cb = kwargs.get("cbs", {}).get("connect", lambda cli: None)
 
         (ip, port) = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
         self.lgr = logging.getLogger(lgr_name)
-        super().__init__(**kwargs)
 
-        if self.ready and self.connect_cb:
+        if self.ready:
             self.connect_cb(self)
 
     @property
@@ -95,8 +94,7 @@ class SocketClient:
             self.ssl_hs = SSLState.SSL_ESTAB
             self.sock.setblocking(True)
             # TODO: Check SSL certs here
-            if self.connect_cb:
-                self.connect_cb(self)
+            self.connect_cb(self)
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:
@@ -185,17 +183,17 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, log_cot_dir=None, cbs=None, **kwargs):
+    def __init__(self, log_cot_dir=None, **kwargs):
         self.lgr = logging.getLogger(self.__class__.__name__)
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
         self.last_rx = 0
 
-        if not cbs:
-            cbs = {}
+        cbs = kwargs.get("cbs", {})
         self.route = cbs.get("route", lambda pkt: None)
         self.packet_rx = cbs.get("packet_rx", lambda pkt: None)
+        self.client_ident = cbs.get("client_ident", lambda pkt: None)
 
         self.log_cot_dir = log_cot_dir
         if log_cot_dir and not os.path.exists(log_cot_dir):
@@ -206,8 +204,6 @@ class TAKClient:
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)
         parser.feed(b"<root>")
         self.xdc = XMLDeclStrip(parser)
-
-        super().__init__(**kwargs)
 
     def __repr__(self):
         if self.user:
@@ -333,7 +329,11 @@ class TAKClient:
             return
 
         if isinstance(evt.detail, models.TAKUser):
-            self.user = evt.detail
+            if self.user is None:
+                self.user = evt.detail
+                self.client_ident(self)
+            else:
+                self.user = evt.detail
 
     def pong(self):
         """
@@ -358,7 +358,8 @@ class SocketTAKClient(TAKClient, SocketClient):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        TAKClient.__init__(self, **kwargs)
+        SocketClient.__init__(self, **kwargs)
 
     def __repr__(self):
         if self.user:
