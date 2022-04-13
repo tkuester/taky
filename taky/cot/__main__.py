@@ -76,7 +76,7 @@ def main():
         else:
             argp.error("Unable to load './taky.conf' or '/etc/taky.conf'")
     except configparser.ParsingError as exc:
-        argp.error(exc)
+        print(f"Configuration file error: {str(exc)}", file=sys.stderr)
         sys.exit(1)
 
     signal.signal(signal.SIGTERM, handle_term)

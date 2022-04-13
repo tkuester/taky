@@ -73,6 +73,7 @@ class Event:
         if ret.etype is None:
             raise UnmarshalError("Event must have 'type' attribute")
 
+        child = None
         try:
             for child in elm.iterchildren():
                 if child.tag == "point":
@@ -86,7 +87,10 @@ class Event:
                     else:
                         ret.detail = Detail.from_elm(child)
         except (TypeError, ValueError, AttributeError) as exc:
-            raise UnmarshalError(f"Issue parsing {child.tag}") from exc
+            if child is not None:
+                raise UnmarshalError(f"Issue parsing {child.tag}") from exc
+            else:
+                raise UnmarshalError(f"Issue parsing children") from exc
 
         return ret
 

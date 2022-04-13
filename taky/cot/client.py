@@ -253,6 +253,9 @@ class TAKClient:
             self.last_rx = time.time()
             try:
                 evt = models.Event.from_elm(elm)
+                if not evt.etype:
+                    continue
+
                 if evt.etype == "t-x-c-t":
                     self.pong()
                     continue

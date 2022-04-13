@@ -24,6 +24,8 @@ def build_pref(pref_fp, prefs):
                 v_type = "Integer"
             elif isinstance(val, str):
                 v_type = "String"
+            else:
+                raise ValueError(f"Unknown preference type: {type(val)}")
 
             entry = etree.Element(
                 "entry", attrib={"key": key, "class": f"class java.lang.{v_type}"}

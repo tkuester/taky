@@ -164,6 +164,7 @@ class COTServer:
                 stype = "ssl"
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
+            return
         except (socket.error, OSError) as exc:
             self.lgr.info("Client connect failed %s:%s (%s)", ip_addr, port, exc)
             return
