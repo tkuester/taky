@@ -41,7 +41,7 @@ jobs:
     - id: pylint
       name: Analyzing the code with pylint
       run: |
-        python3 -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('::set-output name=score::%.2f' % ret.linter.stats['global_note'])"
+        python3 -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('::set-output name=score::%.2f' % ret.linter.stats.global_note)"
     - id: tests
       name: Running unit tests, generating coverage
       run: |
