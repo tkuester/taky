@@ -12,7 +12,7 @@ class TAKClientTest(ut.TestCase):
         load_config(os.devnull)
         app_config.set("taky", "redis", "false")
         router = cot.COTRouter()
-        self.tk = cot.TAKClient(router)
+        self.tk = cot.TAKClient(cbs={"route": router.route})
 
     def test_ident(self):
         self.tk.feed(XML_S)

@@ -157,6 +157,26 @@ class SocketClient:
             self.sock.close()
 
 
+class MonClient(SocketClient):
+    def feed(self, data):
+        pass
+
+    def send_event(self, event):
+        """
+        Send a CoT event to the client. Data should be a cot Event object,
+        or an XML element, or a byte string.
+        """
+
+        if not isinstance(event, models.Event):
+            raise TypeError("Must send a COTEvent")
+
+        # Silently drop data if the SSL handshake is not ready yet
+        if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+            return
+
+        self.out_buff += etree.tostring(event.as_element)
+
+
 class TAKClient:
     """
     Holds state and information regarding a client connected to the TAK server.
@@ -165,13 +185,17 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, router=None, log_cot_dir=None, **kwargs):
+    def __init__(self, log_cot_dir=None, cbs=None, **kwargs):
         self.lgr = logging.getLogger(self.__class__.__name__)
-        self.router = router
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
         self.last_rx = 0
+
+        if not cbs:
+            cbs = {}
+        self.route = cbs.get("route", lambda pkt: None)
+        self.packet_rx = cbs.get("packet_rx", lambda pkt: None)
 
         self.log_cot_dir = log_cot_dir
         if log_cot_dir and not os.path.exists(log_cot_dir):
@@ -272,6 +296,8 @@ class TAKClient:
             self.last_rx = time.time()
             try:
                 evt = models.Event.from_elm(elm)
+                self.packet_rx(evt)
+
                 if evt.etype == "t-x-c-t":
                     self.pong()
                     continue
@@ -279,8 +305,7 @@ class TAKClient:
                 if evt.etype and evt.etype.startswith("a"):
                     self.handle_atom(evt)
 
-                if self.router:
-                    self.router.route(self, evt)
+                self.route(self, evt)
                 self.log_event(evt)
             except models.UnmarshalError as exc:
                 self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)

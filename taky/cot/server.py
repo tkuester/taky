@@ -8,7 +8,7 @@ import pathlib
 
 from taky.config import app_config as config
 from .router import COTRouter
-from .client import TAKClient, SocketTAKClient
+from .client import MonClient, TAKClient, SocketTAKClient
 from .mgmt import MgmtClient
 
 
@@ -188,13 +188,13 @@ class COTServer:
         self.lgr.info("New management client")
         self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
 
-    def srv_accept(self, srv_sock, force_tcp=False):
+    def srv_accept(self, srv_sock, force_tcp=False, mon_client=False):
         """
         Accept a new client from a server socket
         """
         ip_addr = None
         port = None
-        use_ssl = self.ssl_ctx and not force_tcp
+        use_ssl = self.ssl_ctx and not (force_tcp or mon_client)
 
         try:
             (sock, addr) = srv_sock.accept()
@@ -213,17 +213,23 @@ class COTServer:
             return
 
         stype = "ssl" if use_ssl else "tcp"
-        self.lgr.info("New %s client from %s:%s", stype, ip_addr, port)
-        self.clients[sock] = SocketTAKClient(
-            sock=sock,
-            use_ssl=use_ssl,
-            router=self.router,
-            log_cot_dir=config.get("cot_server", "log_cot"),
-            connect_cb=self.client_connect,
-        )
+        if mon_client:
+            self.lgr.info("New %s mon client from %s:%s", stype, ip_addr, port)
+            self.clients[sock] = MonClient(
+                sock=sock,
+            )
+        else:
+            self.lgr.info("New %s cot client from %s:%s", stype, ip_addr, port)
+            self.clients[sock] = SocketTAKClient(
+                sock=sock,
+                use_ssl=(self.ssl_ctx and not force_tcp),
+                cbs={
+                    "route": self.router.route,
+                    "packet_rx": self.mon_packet,
+                },
+            )
 
-    def client_connect(self, client):
-        self.router.client_connect(client)
+            self.router.client_connect(self.clients[sock])
 
     def client_disconnect(self, client, reason=None):
         """
@@ -265,7 +271,7 @@ class COTServer:
             if sock is self.srv:
                 self.srv_accept(sock)
             elif sock is self.mon:
-                self.srv_accept(sock, force_tcp=True)
+                self.srv_accept(sock, mon_client=True)
             elif sock is self.mgmt:
                 self.mgmt_accept()
             else:
@@ -339,3 +345,7 @@ class COTServer:
             self.mgmt = None
 
         self.lgr.info("Stopped")
+
+    def mon_packet(self, evt):
+        for client in list(self.clients.values()):
+            client.send_event(evt)

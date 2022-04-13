@@ -28,8 +28,8 @@ class RouterTestcase(ut.TestCase):
         app_config.set("taky", "redis", "false")
         app_config.set("cot_server", "log_cot", None)
         self.router = cot.COTRouter()
-        self.tk1 = UnittestTAKClient(self.router)
-        self.tk2 = UnittestTAKClient(self.router)
+        self.tk1 = UnittestTAKClient(cbs={"route": self.router.route})
+        self.tk2 = UnittestTAKClient(cbs={"route": self.router.route})
 
         elm = etree.fromstring(XML_S)
         now = dt.utcnow()
