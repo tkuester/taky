@@ -1,10 +1,8 @@
 import sys
 import argparse
-import configparser
 import traceback
 
 from taky import __version__
-from taky.config import load_config
 from taky import cli
 
 
@@ -35,12 +33,6 @@ def arg_parse():
 
 def main():
     (argp, args) = arg_parse()
-
-    try:
-        load_config(args.cfg_file)
-    except (OSError, configparser.ParsingError) as exc:
-        print(exc, file=sys.stderr)
-        sys.exit(1)
 
     commands = {
         "setup": cli.setup_taky,
