@@ -4,6 +4,7 @@ import multiprocessing
 import argparse
 import configparser
 import ssl
+import logging
 
 from gunicorn.app.base import BaseApplication
 from gunicorn.workers.sync import SyncWorker
@@ -12,6 +13,7 @@ from taky import __version__
 from taky.config import load_config
 from taky.config import app_config
 from taky.dps import app as taky_dps
+from taky.dps import configure_app
 
 
 class StandaloneApplication(BaseApplication):
@@ -97,11 +99,19 @@ def main():
     Runs the DPS, handy for avoiding a specific gunicorn setup
     """
     (argp, args) = arg_parse()
+    logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
 
     try:
-        load_config(args.cfg_file)
+        if os.environ.get("TAKY_CONFIG"):
+            load_config(os.environ.get("TAKY_CONFIG"), explicit=True)
+        elif args.cfg_file:
+            load_config(args.cfg_file, explicit=True)
+        else:
+            load_config()
     except (OSError, configparser.ParsingError) as exc:
-        argp.error(exc)
+        argp.error(str(exc))
+
+    configure_app(app_config)
 
     bind_ip = app_config.get("taky", "bind_ip")
     port = 8443 if app_config.getboolean("ssl", "enabled") else 8080
