@@ -1,3 +1,5 @@
+from datetime import datetime as dt
+
 from lxml import etree
 from dateutil.parser import isoparse
 
@@ -45,6 +47,10 @@ class Event:
             return False
 
         return self.detail.elm.find("marti") is not None
+
+    @property
+    def persist_ttl(self):
+        return round((self.stale - dt.utcnow()).total_seconds())
 
     @staticmethod
     def from_elm(elm):

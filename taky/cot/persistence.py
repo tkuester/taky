@@ -80,7 +80,7 @@ class BasePersistence:
         # TODO: Regex probably faster?
         for etype in KEPT_EVENTS:
             if event.etype.startswith(etype):
-                ttl = round((event.stale - dt.utcnow()).total_seconds())
+                ttl = event.persist_ttl
                 break
 
         if not ttl or ttl < 0:
