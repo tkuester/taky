@@ -45,26 +45,29 @@ def load_config(path=None, explicit=False):
     @param path     The path of the configuration file to load
     @param explicit Don't return a default
     """
+    lgr = logging.getLogger("load_config")
+
     if path is None:
         if os.path.exists("taky.conf"):
             path = os.path.abspath("taky.conf")
+            lgr.info("Assuming %s", path)
         elif os.path.exists("/etc/taky/taky.conf"):
             path = "/etc/taky/taky.conf"
-        else:
-            raise FileNotFoundError("Unable to find config file")
-
-    if explicit and not os.path.exists(path):
-        raise FileNotFoundError("Config file required, but not present")
+            lgr.info("Assuming %s", path)
+        elif explicit:
+            raise FileNotFoundError("Unable to find default config file")
 
     ret_config = configparser.ConfigParser(allow_no_value=True)
     ret_config.read_dict(DEFAULT_CFG)
 
-    lgr = logging.getLogger("load_config")
-
-    if os.path.exists(path):
+    if path and os.path.exists(path):
         lgr.info("Loading config file from %s", path)
         with open(path, "r") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
+    elif explicit:
+        raise FileNotFoundError("Config file required, but not present")
+    else:
+        lgr.info("Using default config")
 
     port = ret_config.get("cot_server", "port")
     if port in [None, ""]:
