@@ -179,6 +179,9 @@ class TAKClient:
         raise NotImplementedError()
 
     def close(self):
+        self.close_cot()
+
+    def close_cot(self):
         """ Close the COT log """
         if self.cot_fp:
             try:
@@ -196,20 +199,25 @@ class TAKClient:
         # Skip if we're not configured to log
         if not self.log_cot_dir:
             return
+        if evt is None and elm is None:
+            return
         # Skip logging of pings
         if evt and evt.uid and evt.uid.endswith("-ping"):
-            return
-        # Don't log if we don't have a user yet
-        if self.user is None or self.user.uid is None:
-            return
-        if evt is None and elm is None:
             return
 
         # Open the COT file if it's the first run
         if not self.cot_fp:
-            # TODO: Multiple clients with same name will fight over file
-            #     : Could happen on WiFi -> LTE handoff
-            name = os.path.join(self.log_cot_dir, f"{self.user.uid}.cot")
+            # Don't log if we don't have a user yet
+            if self.user and self.user.uid:
+                name = os.path.join(
+                    self.log_cot_dir, f"{self.user.uid}-{self.user.callsign}.cot"
+                )
+            elif hasattr(self, "addr"):
+                name = os.path.join(self.log_cot_dir, f"anonymous-{self.addr[0]}.cot")
+            else:
+                # Don't have a way to determine log file name!
+                return
+
             try:
                 self.lgr.debug("Opening logfile %s", name)
                 self.cot_fp = open(name, "a+")
@@ -293,6 +301,8 @@ class TAKClient:
         if isinstance(evt.detail, models.TAKUser):
             if self.user is None:
                 self.user = evt.detail
+                # Try to close the COT (ie: anonymous log)
+                self.close_cot()
                 self.router.client_ident(self)
             else:
                 self.user = evt.detail
