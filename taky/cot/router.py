@@ -2,7 +2,10 @@
 import time
 import enum
 import logging
+from datetime import datetime as dt
+from datetime import timedelta
 
+from taky.config import app_config
 from . import models
 from .client import TAKClient
 from .persistence import build_persistence
@@ -28,6 +31,7 @@ class COTRouter:
         self.clients = set()
         self.persist = build_persistence()
         self.last_prune = 0
+        self.max_ttl = app_config.getint("cot_server", "max_persist_ttl")
         self.lgr = logging.getLogger(self.__class__.__name__)
 
     def prune(self):
@@ -130,6 +134,11 @@ class COTRouter:
         """
         if not isinstance(evt, models.Event):
             raise ValueError(f"Unable to route {type(evt)}")
+
+        # If configured, constrain events to a max TTL
+        if self.max_ttl >= 0:
+            if evt.persist_ttl > self.max_ttl:
+                evt.stale = dt.utcnow() + timedelta(seconds=self.max_ttl)
 
         # Special handling for chat messages
         if isinstance(evt.detail, models.GeoChat):

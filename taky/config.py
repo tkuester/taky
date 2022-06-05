@@ -19,6 +19,7 @@ DEFAULT_CFG = {
         "mon_ip": None,
         "mon_port": None,
         "log_cot": None,  # Path to log COT files to
+        "max_persist_ttl": -1,  # Enforce a maximum persistence TTL
     },
     "dp_server": {
         "upload_path": "/var/taky/dp-user",
@@ -81,6 +82,16 @@ def load_config(path=None, explicit=False):
         if port <= 0 or port >= 65535:
             raise ValueError(f"Invalid port: {port}")
     ret_config.set("cot_server", "port", str(port))
+
+    max_ttl = ret_config.get("cot_server", "max_persist_ttl")
+    if max_ttl in [None, ""]:
+        max_ttl = -1
+    else:
+        try:
+            max_ttl = int(max_ttl)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid max_persist_ttl: {max_ttl}")
+    ret_config.set("cot_server", "max_persist_ttl", str(max_ttl))
 
     if not ret_config.getboolean("ssl", "enabled"):
         # Disable monitor port
