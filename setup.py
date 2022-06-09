@@ -10,7 +10,7 @@ setup(
     author="Tim K",
     author_email="tpkuester@gmail.com",
     setup_requires=["setuptools_scm"],
-    install_requires=["lxml", "dateutils", "Flask", "pyopenssl", "gunicorn", "redis"],
+    install_requires=["lxml", "dateutils", "Flask", "pyopenssl", "gunicorn", "redis", "simplekml"],
     description="A simple TAK server and COT router",
     long_description=long_description,
     long_description_content_type="text/markdown",

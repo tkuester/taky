@@ -3,6 +3,7 @@ import sys
 import time
 import socket
 import json
+import simplekml
 from collections import namedtuple
 
 from taky.util import pprinttable, seconds_to_human
@@ -28,6 +29,14 @@ def mgmt_reg(subp, cmd_name, cmd_help):
         help="Output the status in JSON",
     )
 
+    argp.add_argument(
+        "-k",
+        "--kml",
+        dest="kml",
+        default=False,
+        action="store_true",
+        help="Output the status in KML",
+    )
 
 def print_status(stat):
     print("Version: %s" % stat.get("version"))
@@ -112,6 +121,8 @@ def mgmt_cmd(args, command, callback):
 
         if args.json:
             print(json.dumps(stat))
+        elif args.kml:
+            print(kml(stat))
         else:
             callback(stat)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -145,3 +156,17 @@ def mgmt_purge_persist(args):
         print("%d items deleted" % data.get("purged", 0))
 
     return mgmt_cmd(args, "purge_persist", cb)
+
+# Print KML to stdout
+def kml(stat):
+    kml = simplekml.Kml()
+    clients = stat.get("clients")
+    
+    # FAQ: https://simplekml.readthedocs.io/en/latest/styling.html
+    for c in clients:
+      pnt = kml.newpoint(name=c["callsign"])
+      pnt.description = "<pre>"+json.dumps(c,sort_keys=True, indent=2)+"</pre>"
+      pnt.coords = [(c["lon"],c["lat"])]
+      
+    return kml.kml()
+

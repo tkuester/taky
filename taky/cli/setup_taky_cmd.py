@@ -109,6 +109,8 @@ def setup_taky(args):
 
     if args.user:
         shutil.chown(config_path, user=args.user, group=args.user)
+        root_dir = config.get("taky", "root_dir")
+        shutil.chown(root_dir, user=args.user, group=args.user)
 
     dirs = [
         config.get("dp_server", "upload_path"),
@@ -140,7 +142,7 @@ def setup_taky(args):
         rotc.make_cert(
             path=ssl_path,
             f_name="server",
-            hostname=args.hostname,
+            hostname=args.server_address,
             cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
             cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
             dump_pem=True,

@@ -200,6 +200,7 @@ class TAKClient:
             self.lgr.info("Building COT log dir: %s", log_cot_dir)
             pathlib.Path(log_cot_dir).mkdir(parents=True, exist_ok=True)
         self.cot_fp = None
+        self.evt = None # To get the <point>
 
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)
         parser.feed(b"<root>")
@@ -303,6 +304,7 @@ class TAKClient:
 
                 self.route(self, evt)
                 self.log_event(evt)
+                self.evt = evt
             except models.UnmarshalError as exc:
                 self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)
                 self.lgr.debug(etree.tostring(elm, pretty_print=True))

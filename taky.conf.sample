@@ -1,7 +1,8 @@
 [taky]
 # Server Address
 # The public IP address, hostname, or FQDN. (Defaults to FQDN)
-#server_address=taky.local
+server_address=127.0.0.1
+root_dir=/tmp
 # The TAK Server nodeId
 #node_id=TAKY
 # The IP to bind to. Defaults to 0.0.0.0. To use IPv6, set to "::"
