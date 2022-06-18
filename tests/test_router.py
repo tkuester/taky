@@ -10,16 +10,7 @@ from taky import cot
 from taky.config import load_config, app_config
 from taky.cot import models
 from taky.config import load_config
-from .test_cot_event import XML_S
-
-
-class UnittestTAKClient(cot.TAKClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.queue = queue.Queue()
-
-    def send_event(self, msg):
-        self.queue.put(msg)
+from . import XML_S, UnittestTAKClient
 
 
 class RouterTestcase(ut.TestCase):
