@@ -180,11 +180,18 @@ redis = true
 Step 4. Generate a client certificate
 
 All your users will need a client certificate. This is fairly straight forward
-to do! In any directory, run:
+to do! 
 
+For ATAK/Wintak/TakTracker:
 ```
 admin@bluetack:~$ takyctl build_client JENNY
 admin@bluetack:~$ ls -l JENNY.zip
+-rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY.zip
+```
+For ITAK:
+```
+admin@bluetack:~$ takyctl build_client --is_itak JENNY-ITAK
+admin@bluetack:~$ ls -l JENNY-ITAK.zip
 -rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY.zip
 ```
 
