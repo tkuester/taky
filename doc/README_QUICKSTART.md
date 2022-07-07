@@ -55,7 +55,7 @@ bluetack $ ls -l JENNY.zip
 # Build your first client certificate for ITAK
 bluetack $ takyctl build_client --is_itak JENNY-ITAK
 bluetack $ ls -l JENNY-ITAK.zip
--rw-r--r-- 1 bluetack bluetack 7040 Apr  3 16:07 JENNY.zip
+-rw-r--r-- 1 bluetack bluetack 7040 Apr  3 16:07 JENNY-ITAK.zip
 
 # Transfer the .zip file to your device, and import it! If you want to serve it
 # locally (ie: for Android clients), run this, and point the import manager to
