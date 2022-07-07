@@ -192,7 +192,7 @@ For ITAK:
 ```
 admin@bluetack:~$ takyctl build_client --is_itak JENNY-ITAK
 admin@bluetack:~$ ls -l JENNY-ITAK.zip
--rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY.zip
+-rw-rw-r-- 1 admin admin 6.9K Feb 27 20:23 JENNY-ITAK.zip
 ```
 
 Simply copy that over to your device, and import it.
