@@ -47,9 +47,14 @@ bluetack  107862  5.5  0.4  57852 34292 ?        Ss   16:32   0:00 /usr/bin/pyth
 bluetack  107863  7.4  0.5  69092 43384 ?        Ss   16:32   0:00 /usr/bin/python3 /usr/local/bin/taky_dps
 [...]
 
-# Build your first client certificate
+# Build your first client certificate for ATAK/Wintak/TAKTracker
 bluetack $ takyctl build_client JENNY
 bluetack $ ls -l JENNY.zip
+-rw-r--r-- 1 bluetack bluetack 7040 Apr  3 16:07 JENNY.zip
+
+# Build your first client certificate for ITAK
+bluetack $ takyctl build_client --is_itak JENNY-ITAK
+bluetack $ ls -l JENNY-ITAK.zip
 -rw-r--r-- 1 bluetack bluetack 7040 Apr  3 16:07 JENNY.zip
 
 # Transfer the .zip file to your device, and import it! If you want to serve it
