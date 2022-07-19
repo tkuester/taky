@@ -14,19 +14,19 @@ got_sigterm = False
 
 
 def handle_term(sig, frame):  # pylint: disable=unused-argument
-    """ Signal handler """
+    """Signal handler"""
     global got_sigterm
     logging.info("Got SIGTERM")
     got_sigterm = True
 
 
 def handle_pdb(sig, frame):  # pylint: disable=unused-argument
-    """ Signal handler """
+    """Signal handler"""
     pdb.Pdb().set_trace(frame)
 
 
 def arg_parse():
-    """ Handle arguments """
+    """Handle arguments"""
     argp = argparse.ArgumentParser(description="Start the taky server")
     argp.add_argument(
         "-l",
@@ -60,7 +60,7 @@ def arg_parse():
 
 
 def main():
-    """ taky COT server """
+    """taky COT server"""
     global got_sigterm
     ret = 0
 

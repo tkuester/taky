@@ -16,7 +16,7 @@ from . import models
 
 
 class SSLState(enum.Enum):
-    """ Tracks SSL state """
+    """Tracks SSL state"""
 
     NO_SSL = 0
     SSL_WAIT = 1
@@ -53,7 +53,7 @@ class SocketClient:
 
     @property
     def is_closed(self):
-        """ Returns true if the socket is closed """
+        """Returns true if the socket is closed"""
         return self.sock.fileno() == -1
 
     @property
@@ -74,7 +74,7 @@ class SocketClient:
         raise NotImplementedError()
 
     def ssl_handshake(self):
-        """ Preform the SSL handshake on the socket """
+        """Preform the SSL handshake on the socket"""
         if not self.ssl or self.ssl_hs is SSLState.SSL_ESTAB:
             return
 
@@ -182,7 +182,7 @@ class TAKClient:
         self.close_cot()
 
     def close_cot(self):
-        """ Close the COT log """
+        """Close the COT log"""
         if self.cot_fp:
             try:
                 self.cot_fp.close()

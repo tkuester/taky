@@ -8,7 +8,7 @@ from taky.config import app_config as config
 
 
 def systemd_reg(subp):
-    """ Register the systemd command """
+    """Register the systemd command"""
     argp = subp.add_parser("systemd", help="Generate systemd service scripts")
     argp.add_argument(
         "--path",
@@ -36,7 +36,7 @@ def systemd_reg(subp):
 
 
 def write_cot_svc(names, args, using_venv=False, site_path=None):
-    """ Build the cot server service """
+    """Build the cot server service"""
     cot_svc = [
         "[Unit]",
         "Description=taky CoT Server",
@@ -73,7 +73,7 @@ def write_cot_svc(names, args, using_venv=False, site_path=None):
 
 
 def write_dps_svc(names, args, using_venv=False, site_path=None):
-    """ Build the data package server service """
+    """Build the data package server service"""
     dps_svc = [
         "[Unit]",
         "Description=taky Data Package Server",
@@ -110,7 +110,7 @@ def write_dps_svc(names, args, using_venv=False, site_path=None):
 
 
 def write_uni_svc(names, args):
-    """ Build the service that unites the COT and DPS services """
+    """Build the service that unites the COT and DPS services"""
     uni_svc = [
         "[Unit]",
         "Description=taky Server",
@@ -139,7 +139,7 @@ def write_uni_svc(names, args):
 
 
 def systemd(args):
-    """ Build and install systemd scripts for the server """
+    """Build and install systemd scripts for the server"""
     try:
         load_config(args.cfg_file, explicit=True)
     except (FileNotFoundError, configparser.ParsingError, OSError) as exc:

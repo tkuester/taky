@@ -68,7 +68,7 @@ class GeoChat(Detail):
 
     @property
     def broadcast(self):
-        """ Returns true if message is sent to all chat rooms """
+        """Returns true if message is sent to all chat rooms"""
         return self.chatroom == ALL_CHAT_ROOMS
 
     @staticmethod
