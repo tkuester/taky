@@ -166,8 +166,9 @@ class COTServer:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
-                sock.setblocking(False)
                 stype = "ssl"
+
+            sock.setblocking(False)
         except ssl.SSLError as exc:
             self.lgr.info("Rejecting client %s:%s (%s)", ip_addr, port, exc)
             return

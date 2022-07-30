@@ -81,7 +81,6 @@ class SocketClient:
         try:
             self.sock.do_handshake()
             self.ssl_hs = SSLState.SSL_ESTAB
-            self.sock.setblocking(True)
             # TODO: Check SSL certs here
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
@@ -112,6 +111,8 @@ class SocketClient:
             # FIXME: This should really be under TAKClient...
             self.disconnect("XML Syntax Error")
             self.lgr.debug("XML Syntax Error: %s", self, exc_info=exc)
+        except BlockingIOError:
+            self.lgr.debug("Client blocked RX: %s", self)
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
             self.disconnect(str(exc))
 
@@ -130,6 +131,8 @@ class SocketClient:
         try:
             sent = self.sock.send(self.out_buff[0:4096])
             self.out_buff = self.out_buff[sent:]
+        except BlockingIOError:
+            self.lgr.debug("Client blocked TX: %s", self)
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
             self.disconnect(str(exc))
 
