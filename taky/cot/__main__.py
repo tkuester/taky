@@ -61,7 +61,6 @@ def arg_parse():
 
 def main():
     """taky COT server"""
-    global got_sigterm
     ret = 0
 
     (argp, args) = arg_parse()

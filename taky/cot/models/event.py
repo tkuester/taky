@@ -96,7 +96,7 @@ class Event:
             if child is not None:
                 raise UnmarshalError(f"Issue parsing {child.tag}") from exc
             else:
-                raise UnmarshalError(f"Issue parsing children") from exc
+                raise UnmarshalError("Issue parsing children") from exc
 
         return ret
 

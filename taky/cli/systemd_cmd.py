@@ -67,7 +67,7 @@ def write_cot_svc(names, args, using_venv=False, site_path=None):
 
     cot_svc.extend(["", "[Install]", "WantedBy=multi-user.target"])
 
-    with open(os.path.join(args.path, names["cot"]), "w") as svc_fp:
+    with open(os.path.join(args.path, names["cot"]), "w", encoding="utf8") as svc_fp:
         svc_fp.write("\n".join(cot_svc))
         svc_fp.write("\n")
 
@@ -104,7 +104,7 @@ def write_dps_svc(names, args, using_venv=False, site_path=None):
         ]
     )
 
-    with open(os.path.join(args.path, names["dps"]), "w") as svc_fp:
+    with open(os.path.join(args.path, names["dps"]), "w", encoding="utf8") as svc_fp:
         svc_fp.write("\n".join(dps_svc))
         svc_fp.write("\n")
 
@@ -133,7 +133,7 @@ def write_uni_svc(names, args):
         ]
     )
 
-    with open(os.path.join(args.path, names["taky"]), "w") as svc_fp:
+    with open(os.path.join(args.path, names["taky"]), "w", encoding="utf8") as svc_fp:
         svc_fp.write("\n".join(uni_svc))
         svc_fp.write("\n")
 
@@ -195,8 +195,11 @@ def systemd(args):
             write_dps_svc(svcs, args, using_venv, site_path)
         print(f"   - Writing {svcs['taky']}")
         write_uni_svc(svcs, args)
-    except PermissionError as exc:
-        print(f"ERROR: Unable to write service files to {args.path}", file=sys.stderr)
+    except PermissionError:
+        print(
+            f"ERROR: Unable to write service files to {args.path}, permission denied",
+            file=sys.stderr,
+        )
         return 1
     except OSError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

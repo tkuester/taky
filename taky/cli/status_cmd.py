@@ -122,7 +122,7 @@ def status(args):
         else:
             print_status(stat)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        print("ERROR: Invalid data in response", file=sys.stderr)
+        print(f"ERROR: Invalid data in response: {exc}", file=sys.stderr)
         return 1
     except FileNotFoundError as exc:
         print(

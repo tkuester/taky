@@ -8,8 +8,6 @@ application = app = Flask(__name__)
 
 
 def configure_app(config):
-    global app
-
     app.config["HOSTNAME"] = config.get("taky", "hostname")
     app.config["NODEID"] = config.get("taky", "node_id")
     app.config["UPLOAD_PATH"] = os.path.realpath(config.get("dp_server", "upload_path"))

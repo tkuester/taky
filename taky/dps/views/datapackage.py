@@ -31,7 +31,7 @@ def get_meta(f_hash=None, f_name=None):
         return {}
 
     try:
-        with open(meta_path) as meta_fp:
+        with open(meta_path, encoding="utf8") as meta_fp:
             return json.load(meta_fp)
     except (json.JSONDecodeError, OSError):
         return {}
@@ -46,7 +46,7 @@ def put_meta(meta):
 
     # Save the file's meta/{filename}.json
     meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
-    with open(meta_path, "w") as meta_fp:
+    with open(meta_path, "w", encoding="utf8") as meta_fp:
         json.dump(meta, meta_fp)
 
     # Symlink the meta/{f_hash}.json to {filename}.json

@@ -66,7 +66,7 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     @param dump_pem  True if you wish to keep the .crt/.key file
     """
     (ca_crt, ca_key) = cert_auth
-    with open(ca_key, "r") as ca_key_fp:
+    with open(ca_key, "r", encoding="utf8") as ca_key_fp:
         cakey = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_key_fp.read())
 
     with open(ca_crt, "rb") as ca_crt_fp:

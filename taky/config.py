@@ -63,7 +63,7 @@ def load_config(path=None, explicit=False):
 
     if path and os.path.exists(path):
         lgr.info("Loading config file from %s", path)
-        with open(path, "r") as cfg_fp:
+        with open(path, "r", encoding="utf8") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
     elif explicit:
         raise FileNotFoundError("Config file required, but not present")
@@ -90,7 +90,7 @@ def load_config(path=None, explicit=False):
         try:
             max_ttl = int(max_ttl)
         except (TypeError, ValueError) as exc:
-            raise ValueError(f"Invalid max_persist_ttl: {max_ttl}")
+            raise ValueError(f"Invalid max_persist_ttl: {max_ttl}") from exc
     ret_config.set("cot_server", "max_persist_ttl", str(max_ttl))
 
     if not ret_config.getboolean("ssl", "enabled"):

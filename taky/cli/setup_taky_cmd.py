@@ -107,7 +107,7 @@ def setup_taky(args):
         print(f"ERROR: Config already exists at {config_path}, refusing to setup")
         return 1
 
-    with open(config_path, "w") as cfg_fp:
+    with open(config_path, "w", encoding="utf8") as cfg_fp:
         config.write(cfg_fp)
 
     print(f" - Wrote {config_path}")
