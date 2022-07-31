@@ -39,6 +39,10 @@ def setup_taky_reg(subp):
     setup.add_argument(
         "--bind-ip", dest="ip", default="0.0.0.0", help="Bind Address [%(default)s]"
     )
+    setup.add_argument(
+        "--public-ip", dest="public_ip", required=True, help="Public IP address"
+    )
+
     setup.add_argument("path", nargs="?", help="Optional path for taky install")
 
 
@@ -93,6 +97,7 @@ def setup_taky(args):
         config_path = os.path.join(args.path, "etc", "taky", "taky.conf")
 
     config.set("taky", "bind_ip", args.ip)
+    config.set("taky", "public_ip", args.public_ip)
     config.set("taky", "hostname", args.hostname)
     config.set("cot_server", "port", "8089" if args.use_ssl else "8087")
     config.set("ssl", "enabled", "true" if args.use_ssl else "false")
