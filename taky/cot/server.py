@@ -66,10 +66,16 @@ class COTServer:
         self.started = time.time()
 
         # Setup the Management Socket
-        self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         mgmt_sock_path = os.path.join(config.get("taky", "root_dir"), "taky-mgmt.sock")
-        self.mgmt.bind(mgmt_sock_path)
-        self.mgmt.listen()
+        try:
+            self.mgmt = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.mgmt.bind(mgmt_sock_path)
+            self.mgmt.listen()
+        except OSError as exc:
+            self.lgr.error(
+                "Unable to open management socket at %s: %s", mgmt_sock_path, exc
+            )
+            self.mgmt = None
 
         # Build the SSL Context
         self.ssl_ctx = self._ssl_setup()
@@ -197,7 +203,8 @@ class COTServer:
         rd_clients.append(self.srv)
         if self.mon:
             rd_clients.append(self.mon)
-        rd_clients.append(self.mgmt)
+        if self.mgmt:
+            rd_clients.append(self.mgmt)
         wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
         (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 1)
