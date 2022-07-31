@@ -85,7 +85,7 @@ class COTServer:
         port = config.getint("cot_server", "port")
 
         mode = "ssl" if self.ssl_ctx else "tcp"
-        self.lgr.info("Listening for %s on %s:%s", mode, ip_addr, port)
+        self.lgr.info("Listening for %s on %s:%s", mode, ip_addr or "", port)
         self.srv = build_srv(ip_addr, port)
 
         # Setup the Monitor Socket
