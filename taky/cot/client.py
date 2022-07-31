@@ -108,6 +108,10 @@ class SocketClient:
                 return
 
             self.feed(data)
+        except etree.XMLSyntaxError as exc:
+            # FIXME: This should really be under TAKClient...
+            self.disconnect("XML Syntax Error")
+            self.lgr.debug("XML Syntax Error: %s", self, exc_info=exc)
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
             self.disconnect(str(exc))
 
