@@ -9,6 +9,7 @@ setup(
     use_scm_version=True,
     author="Tim K",
     author_email="tpkuester@gmail.com",
+    tests_require=["mock"],
     setup_requires=["setuptools_scm"],
     install_requires=["lxml", "dateutils", "Flask", "pyopenssl", "gunicorn", "redis"],
     description="A simple TAK server and COT router",
