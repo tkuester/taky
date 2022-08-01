@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Management socket + status command
  - TCP Monitor socket
+ - Log messages from anonymous users
+ - max_persist_ttl option to prevent long lived COTs
 
 ### Changed
  - Overhaul of config object to be a global variable
@@ -16,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
  - Allowing for a proper shutdown from SIGTERM
+ - Clients receiving malformed XML doesn't crash the server
+ - Switched to nonblocking sockets to prevent rare lockup
 
 ## [0.8.3] - 2022-04-10
 
