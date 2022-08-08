@@ -98,6 +98,7 @@ def make_cert(
     cert.sign(cakey, "sha256")
 
     p12 = crypto.PKCS12()
+    p12.set_friendlyname(hostname.encode())
     if key_in_pem:
         p12.set_privatekey(cli_key)
     p12.set_certificate(cert)
