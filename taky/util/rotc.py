@@ -53,7 +53,16 @@ def make_ca(crt_path, key_path, n_years=10):
     os.umask(old)
 
 
-def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=False):
+def make_cert(
+    path,
+    f_name,
+    hostname,
+    cert_pw,
+    cert_auth,
+    n_years=10,
+    dump_pem=False,
+    key_in_pem=True,
+):
     """
     Make an SSL certificate and p12 file
 
@@ -89,7 +98,8 @@ def make_cert(path, f_name, hostname, cert_pw, cert_auth, n_years=10, dump_pem=F
     cert.sign(cakey, "sha256")
 
     p12 = crypto.PKCS12()
-    p12.set_privatekey(cli_key)
+    if key_in_pem:
+        p12.set_privatekey(cli_key)
     p12.set_certificate(cert)
     p12.set_ca_certificates(chain)
     p12data = p12.export(passphrase=bytes(cert_pw, encoding="UTF-8"))

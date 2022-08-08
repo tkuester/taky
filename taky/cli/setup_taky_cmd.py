@@ -149,6 +149,7 @@ def setup_taky(args):
             cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
             cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
             dump_pem=True,
+            key_in_pem=False,
         )
 
         if args.user:
