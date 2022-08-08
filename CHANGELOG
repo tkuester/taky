@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - TCP Monitor socket
  - Log messages from anonymous users
  - max_persist_ttl option to prevent long lived COTs
+ - P12 bundles now have a "Friendly Name" set
 
 ### Changed
  - Overhaul of config object to be a global variable
@@ -20,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Allowing for a proper shutdown from SIGTERM
  - Clients receiving malformed XML doesn't crash the server
  - Switched to nonblocking sockets to prevent rare lockup
+ - Removed the server's private key from the server.p12 file
+
+### Contributors
+ - Thanks to @AdakaR for helping find both the XML and blocking socket bugs!
+ - Thanks to Tom for finding the private key issue
 
 ## [0.8.3] - 2022-04-10
 
