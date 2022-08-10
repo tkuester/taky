@@ -135,5 +135,5 @@ Feel free to checkout the
 planned for the next version of taky! Pull requests and issues are welcome!
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/tkuester/taky/main/doc/taky.png" alt="taky logo" />
+  <img src="https://raw.githubusercontent.com/tkuester/taky/main/doc/taky.png" alt="taky logo" width="200" />
 </p>
