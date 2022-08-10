@@ -70,6 +70,8 @@ def setup_taky(args):
         ssl_path = "ssl"
         config_path = "taky.conf"
 
+        config.set("taky", "root_dir", ".")
+
         config.set("ssl", "ca", os.path.join(".", "ssl", "ca.crt"))
         config.set("ssl", "ca_key", os.path.join(".", "ssl", "ca.key"))
         config.set("ssl", "server_p12", os.path.join(".", "ssl", "server.p12"))
