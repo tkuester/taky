@@ -9,21 +9,22 @@ me know!
 
 ## Programming Language
 
-| Servers                  | taky (0.8)          | Free TAK Server (1.8.1)      |
-| ---                      | ---                 | ---                          |
-| Application              | Light Weight        | Feature Full                 |
-| Language                 | Python 3.6+         | Python 3.6+                  |
-| SLOC                     | ~2100               | ~11100                       |
-| Unit Testing             | Yes (~38%, passing) | Yes (~38%, failing)          |
-| Pylint                   | 9.3/10              | 1.4/10                       |
-| Development Model        | GitHub              | Private (mirrored to GitHub) |
-| First Commit             | 2021/01/18          | 2020/02/05                   |
-| License                  | MIT                 | Eclipse                      |
+| Servers           | taky (0.8.4)        | Free TAK Server (1.9.9)      |
+| ---               | ---                 | ---                          |
+| Application       | Light Weight        | Feature Full                 |
+| Language          | Python 3.6+         | Python 3.6+                  |
+| SLOC              | ~2600               | ~11200                       |
+| Unit Testing      | Yes (~37%, passing) | Yes (~38%, failing)          |
+| Pylint            | 9.3/10              | 2.2/10                       |
+| Development Model | GitHub              | Private (mirrored to GitHub) |
+| First Commit      | 2021/01/18          | 2020/02/05                   |
+| License           | MIT                 | Eclipse                      |
 
 taky and FTS have both been developed in the same language. FTS has many more
 bells and whistles that make it easy for non-tech folks to help administrate.
-As such, it a code base nearly 5x larger! However, users can easily browse
-data packages and register new clients in a web browser.
+As such, it's code base nearly 5x larger! However, users can easily browse
+data packages and register new clients in a web browser with FTS. In taky,
+this must be done on the command line.
 
 taky is much more bare bones, and geared towards hackers and devlopers. An
 emphasis was put on code hygeine, and pythonic development practices,
@@ -39,12 +40,12 @@ private and commercial use.
 
 ## Features and Functionality
 
-| Servers             | taky (0.8)                     | Free TAK Server (1.8.1)      |
+| Servers             | taky (0.8.4)                   | Free TAK Server (1.8.1)      |
 | ---                 | ---                            | ---                          |
 | Interactive Web UI  | No                             | Yes                          |
 | DPS Endpoints       | Data Package, Video            | Data Package, Video, ExCheck |
 | DPS Security        | Client Certs, Public / Private | N/A                          |
-| Dual TCP/SSL Server | Not yet!                       | Yes                          |
+| Dual TCP/SSL Server | Monitor socket                 | Yes                          |
 | COT Model           | Naive                          | Strict                       |
 | Persistence Backend | Filesystem, Redis              | SQlite                       |
 | Requires root?      | No                             | Yes                          |
@@ -87,7 +88,7 @@ the software crash, a detailed log is kept in the journal, and systemd restarts
 restarts the COT server in 3 seconds.
 
 Another feature of taky is logging COT messages. If enabled, all valid XML
-messages are sent to individual user log files. This can be extremely handy for
+messages are sent to individual user [log](log) files. This can be extremely handy for
 debugging custom applications.
 
 Finally, both taky and FTS have a persistence backend to store and notify users

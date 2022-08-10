@@ -110,17 +110,30 @@ For more advanced setups, look at the README_DEPLOYMENT.md file!
 
 As far as the "Unicorn Test Readiness Level" goes, `taky` is not a high
 heritage space unicorn. We are somewhere between TRL 5 and 6. The horse is
-outside, and we're tentatively calling it a unicorn.
+outside, and we're tentatively calling it a unicorn. Users have reported that
+`taky` worked well on ANW2C networks, L3Harris radios, passed custom COT
+messages without complaint, and even found taky deployments in the field with
+coalition forces!
 
 The COT server is the most mature part of the codebase. While some of the more
 esoteric configurations have not been tested, the standard SSL setup seems to
-be rather solid, and performs well with heavy loads.
+be rather solid, and performs well with heavy loads. That being said, there is
+a known memory leak with the XML parser that hasn't been resolved.
 
 The Data Package server (DPS) is starting to mature, but has not been as
 extensively tested. Simple client-to-client and client-to-server transfers seem
 to work well, although some features like Video and posting tracks have not
 been implemented yet.
 
+All said and done, `taky` is experimental software written as a hobby. You are
+free to use it as you see fit, but please take into serious consideration
+various failure modes, and craft contingency plans if the service fails,
+especially if life, wellbeing, or safety are on the line.
+
 Feel free to checkout the
 [milestones](https://github.com/tkuester/taky/milestones) page to see what is
 planned for the next version of taky! Pull requests and issues are welcome!
+
+<p align="center">
+  <img src="https://github.com/tkuester/taky/blob/master/doc/taky.png" alt="taky logo" />
+</p>

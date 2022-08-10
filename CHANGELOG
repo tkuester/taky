@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.4]
 
 ### Added
  - Management socket + status command
@@ -22,10 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Clients receiving malformed XML doesn't crash the server
  - Switched to nonblocking sockets to prevent rare lockup
  - Removed the server's private key from the server.p12 file
+ - Don't crash after PDB exit
 
 ### Contributors
  - Thanks to @AdakaR for helping find both the XML and blocking socket bugs!
- - Thanks to Tom for finding the private key issue
+ - Thanks to Tom for finding the private key issue!
+ - Thanks to Alex and Doug for helping with development!
+ - Thanks to @jazap for the logo!
 
 ## [0.8.3] - 2022-04-10
 
