@@ -108,7 +108,8 @@ For more advanced setups, look at the README_DEPLOYMENT.md file!
 
 ## Development Status
 
-As far as the "Unicorn Test Readiness Level" goes, `taky` is not a high
+As far as the "[Unicorn Test Readiness
+Level](https://www.granttremblay.com/blog/trls)" goes, `taky` is not a high
 heritage space unicorn. We are somewhere between TRL 5 and 6. The horse is
 outside, and we're tentatively calling it a unicorn. Users have reported that
 `taky` worked well on ANW2C networks, L3Harris radios, passed custom COT
@@ -133,6 +134,20 @@ especially if life, wellbeing, or safety are on the line.
 Feel free to checkout the
 [milestones](https://github.com/tkuester/taky/milestones) page to see what is
 planned for the next version of taky! Pull requests and issues are welcome!
+
+### Known Issues
+
+At this time, there are two known issues with taky. The first is a memory leak
+caused by the XML parser library. This issue will likely not be resolved
+unless LXML writes a fix for their parser. This means that over several days,
+the memory usage in `taky` will balloon to excessive size, potentially causing
+instability.
+
+Additionally, a change in OpenSSL's default settings (seen in Ubuntu 22.04,
+OpenSSL 3.0.2) is currently causing client certificates to be rejected by ATAK.
+An issue has been logged with ATAK about this, and plans are in the works to
+update certificate generation to use the old defaults for certificate
+generation.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/tkuester/taky/main/doc/taky.png" alt="taky logo" width="200" />
