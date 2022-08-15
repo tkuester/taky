@@ -7,6 +7,7 @@ https://github.com/lennisthemenace/ATAK-Certs
 
 import os
 import random
+import subprocess
 
 from OpenSSL import crypto
 
@@ -97,28 +98,45 @@ def make_cert(
     cert.set_version(2)
     cert.sign(cakey, "sha256")
 
-    p12 = crypto.PKCS12()
-    p12.set_friendlyname(hostname.encode())
-    if key_in_pem:
-        p12.set_privatekey(cli_key)
-    p12.set_certificate(cert)
-    p12.set_ca_certificates(chain)
-    p12data = p12.export(passphrase=bytes(cert_pw, encoding="UTF-8"))
+    key_path = os.path.join(path, f"{f_name}.key")
+    crt_path = os.path.join(path, f"{f_name}.crt")
 
-    with open(os.path.join(path, f"{f_name}.p12"), "wb") as p12_fp:
-        p12_fp.write(p12data)
-
-    if not dump_pem:
-        return
-
-    old = os.umask(0o077)
+    old_umask = os.umask(0o077)
     try:
-        with open(os.path.join(path, f"{f_name}.key"), "wb") as cli_key_fp:
+        with open(key_path, "wb") as cli_key_fp:
             cli_key_fp.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, cli_key))
     except Exception as exc:
         raise exc
     finally:
-        os.umask(old)
+        os.umask(old_umask)
 
-    with open(os.path.join(path, f"{f_name}.crt"), "wb") as cli_crt_fp:
+    with open(crt_path, "wb") as cli_crt_fp:
         cli_crt_fp.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+
+    p12_path = os.path.join(path, f'{f_name}.p12')
+
+    p12_args = ['openssl', 'pkcs12', '-export',
+                '-certfile', ca_crt,
+                '-caname', capem.get_subject().CN,
+                '-in', crt_path]
+
+    if key_in_pem:
+        p12_args.extend(['-inkey', key_path])
+    else:
+        p12_args.extend(['-nokeys'])
+
+    p12_args.extend([
+        '-name', hostname,
+        '-certpbe', 'PBE-SHA1-3DES', '-macalg', 'sha1', '-nomaciter',
+        '-passout', f'pass:{cert_pw}',
+        '-out', p12_path,
+    ])
+
+    try:
+        subprocess.check_call(p12_args)
+    except subprocess.CalledProcessError as exc:
+        raise exc
+    finally:
+        if not dump_pem:
+            os.remove(key_path)
+            os.remove(crt_path)
