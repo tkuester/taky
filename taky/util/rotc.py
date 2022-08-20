@@ -113,24 +113,40 @@ def make_cert(
     with open(crt_path, "wb") as cli_crt_fp:
         cli_crt_fp.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
 
-    p12_path = os.path.join(path, f'{f_name}.p12')
+    p12_path = os.path.join(path, f"{f_name}.p12")
 
-    p12_args = ['openssl', 'pkcs12', '-export',
-                '-certfile', ca_crt,
-                '-caname', capem.get_subject().CN,
-                '-in', crt_path]
+    p12_args = [
+        "openssl",
+        "pkcs12",
+        "-export",
+        "-certfile",
+        ca_crt,
+        "-caname",
+        capem.get_subject().CN,
+        "-in",
+        crt_path,
+    ]
 
     if key_in_pem:
-        p12_args.extend(['-inkey', key_path])
+        p12_args.extend(["-inkey", key_path, "-name", hostname])
     else:
-        p12_args.extend(['-nokeys'])
+        p12_args.extend(["-nokeys", "-caname", hostname])
 
-    p12_args.extend([
-        '-name', hostname,
-        '-certpbe', 'PBE-SHA1-3DES', '-macalg', 'sha1', '-nomaciter',
-        '-passout', f'pass:{cert_pw}',
-        '-out', p12_path,
-    ])
+    p12_args.extend(
+        [
+            "-certpbe",
+            "PBE-SHA1-3DES",
+            "-keypbe",
+            "PBE-SHA1-3DES",
+            "-macalg",
+            "sha1",
+            "-nomaciter",
+            "-passout",
+            f"pass:{cert_pw}",
+            "-out",
+            p12_path,
+        ]
+    )
 
     try:
         subprocess.check_call(p12_args)
