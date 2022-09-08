@@ -5,7 +5,7 @@ import socket
 
 from taky.config import DEFAULT_CFG
 from taky.config import app_config as config
-import taky.util.rotc as rotc
+from taky.util import anc
 
 
 def setup_taky_reg(subp):
@@ -135,7 +135,7 @@ def setup_taky(args):
             return 1
 
         print(" - Generating certificate authority")
-        rotc.make_ca(
+        anc.make_ca(
             crt_path=config.get("ssl", "ca"), key_path=config.get("ssl", "ca_key")
         )
 
@@ -144,7 +144,7 @@ def setup_taky(args):
             shutil.chown(config.get("ssl", "ca_key"), user=args.user, group=args.user)
 
         print(" - Generating server certificate")
-        rotc.make_cert(
+        anc.make_cert(
             path=ssl_path,
             f_name="server",
             hostname=args.hostname,
@@ -152,6 +152,7 @@ def setup_taky(args):
             cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
             dump_pem=True,
             key_in_pem=False,
+            is_server_cert=True,
         )
 
         if args.user:

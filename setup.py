@@ -13,6 +13,7 @@ setup(
     setup_requires=["setuptools_scm"],
     install_requires=[
         "lxml>=4.4.0",
+        "cryptography>=38.0.0",
         "dateutils",
         "Flask",
         "pyopenssl",

@@ -6,7 +6,7 @@ import uuid
 import zipfile
 import configparser
 
-from taky.util import datapackage, rotc
+from taky.util import datapackage, anc
 from taky.config import load_config
 from taky.config import app_config as config
 
@@ -59,13 +59,15 @@ def build_client(args):
 
     # Build client certificates
     client_pkg_name = f"{args.name}-{uuid.uuid4()}"
-    rotc.make_cert(
+    anc.make_cert(
         path=cdir,
         f_name=client_pkg_name,
         hostname=args.name,
         cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
         cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
         dump_pem=args.dump_pem,
+        key_in_pem=True,
+        is_server_cert=False,
     )
 
     # Build .pref file
