@@ -16,6 +16,53 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12, PrivateFormat
 
 
+def load_certificate(crt_path, key_path):
+    """
+    Utility method to load a certificate in PEM format
+
+    @param crt_path Where to load the certificate
+    @param key_path Where to load the key
+    @return A tuple of (crt, key)
+    """
+    with open(crt_path, "rb") as crt_fp:
+        ca_crt_bytes = crt_fp.read()
+    with open(key_path, "rb") as key_fp:
+        ca_key_bytes = key_fp.read()
+
+    ca_crt = x509.load_pem_x509_certificate(ca_crt_bytes)
+    ca_key = serialization.load_pem_private_key(ca_key_bytes, None)
+
+    return (ca_crt, ca_key)
+
+
+def write_certificate(crt_path, key_path, crt, key):
+    """
+    Utility method to write a certificate in unencrypted PEM format
+
+    @param crt_path Where to write the certificate
+    @param key_path Where to write the key
+    @param crt      The certificate
+    @param key      The key
+    """
+    old = os.umask(0o077)
+    try:
+        privkey_bytes = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        with open(key_path, "wb") as key_fp:
+            key_fp.write(privkey_bytes)
+    except Exception as exc:
+        raise exc
+    finally:
+        os.umask(old)
+
+    with open(crt_path, "wb") as crt_fp:
+        pubkey_bytes = crt.public_bytes(serialization.Encoding.PEM)
+        crt_fp.write(pubkey_bytes)
+
+
 def make_ca(crt_path, key_path, n_years=10):
     """
     Build a certificate authority
@@ -73,23 +120,7 @@ def make_ca(crt_path, key_path, n_years=10):
 
     cert = builder.sign(private_key=private_key, algorithm=hashes.SHA256())  # type: ignore
 
-    old = os.umask(0o077)
-    try:
-        privkey_bytes = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-        with open(key_path, "wb") as key_fp:
-            key_fp.write(privkey_bytes)
-    except Exception as exc:
-        raise exc
-    finally:
-        os.umask(old)
-
-    with open(crt_path, "wb") as crt_fp:
-        pubkey_bytes = cert.public_bytes(serialization.Encoding.PEM)
-        crt_fp.write(pubkey_bytes)
+    write_certificate(crt_path, key_path, cert, private_key)
 
 
 def make_cert(
@@ -118,14 +149,7 @@ def make_cert(
 
     # Load CA
     (ca_crt_path, ca_key_path) = cert_auth
-
-    with open(ca_crt_path, "rb") as crt_fp:
-        ca_crt_bytes = crt_fp.read()
-    with open(ca_key_path, "rb") as key_fp:
-        ca_key_bytes = key_fp.read()
-
-    ca_crt = x509.load_pem_x509_certificate(ca_crt_bytes)
-    ca_key = serialization.load_pem_private_key(ca_key_bytes, None)
+    (ca_crt, ca_key) = load_certificate(ca_crt_path, ca_key_path)
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
@@ -216,23 +240,7 @@ def make_cert(
         key_path = os.path.join(path, f"{f_name}.key")
         crt_path = os.path.join(path, f"{f_name}.crt")
 
-        old = os.umask(0o077)
-        try:
-            privkey_bytes = private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            with open(key_path, "wb") as key_fp:
-                key_fp.write(privkey_bytes)
-        except Exception as exc:
-            raise exc
-        finally:
-            os.umask(old)
-
-        with open(crt_path, "wb") as crt_fp:
-            pubkey_bytes = cert.public_bytes(serialization.Encoding.PEM)
-            crt_fp.write(pubkey_bytes)
+        write_certificate(crt_path, key_path, cert, private_key)
 
     ca_p12 = pkcs12.PKCS12Certificate(cert=ca_crt, friendly_name="CA".encode())
 
