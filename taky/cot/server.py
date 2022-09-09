@@ -160,6 +160,12 @@ class COTServer:
                 self.lgr.info("Using default CA certificates")
                 ssl_ctx.load_default_certs()
 
+            crl_path = config.get("ssl", "crl")
+            if os.path.exists(crl_path):
+                self.lgr.info("Loading CRL file from %s", crl_path)
+                ssl_ctx.load_verify_locations(crl_path)
+                ssl_ctx.verify_flags = ssl.VERIFY_CRL_CHECK_LEAF
+
             ssl_ctx.load_cert_chain(
                 certfile=config.get("ssl", "cert"),
                 keyfile=config.get("ssl", "key"),
