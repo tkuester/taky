@@ -1,5 +1,4 @@
 from .xmldeclstrip import XMLDeclStrip
-from . import rotc
 from . import anc
 from . import datapackage
 
