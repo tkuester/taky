@@ -260,3 +260,111 @@ def make_cert(
     p12_path = os.path.join(path, f"{f_name}.p12")
     with open(p12_path, "wb") as p12_fp:
         p12_fp.write(p12_dat)
+
+    return cert
+
+
+class CertificateDatabase:
+    def __init__(self, cert_db_path, ca_crt_path, ca_key_path, crl_path):
+        self.cert_db_path = cert_db_path
+        self.crl_path = crl_path
+
+        (self.ca_crt, self.ca_key) = load_certificate(ca_crt_path, ca_key_path)
+
+        self.cert_db_sn = {}
+
+        self.read_cert_db()
+
+    def read_cert_db(self):
+        self.cert_db_sn = {}
+
+        if not os.path.exists(self.cert_db_path):
+            return
+
+        with open(self.cert_db_path, "r", encoding="utf8") as fp:
+            for line in fp.readlines():
+                line = line.strip().split("\t")
+                if len(line) != 5:
+                    continue
+
+                (status, issued, expires, serial_num, name) = line
+                issued = dt.fromisoformat(issued)
+                expires = dt.fromisoformat(expires)
+                serial_num = int(serial_num, 16)
+
+                cert = {
+                    "status": status,
+                    "issued": issued,
+                    "expires": expires,
+                    "serial_num": serial_num,
+                    "name": name,
+                }
+
+                self.cert_db_sn[serial_num] = cert
+
+    def revoke_certificate(self, serial_num, revocation_date=None):
+        if serial_num not in self.cert_db_sn:
+            raise IndexError("Unable to find certificate")
+
+        now = dt.now()
+        if revocation_date is None:
+            revocation_date = now
+
+        self.cert_db_sn[serial_num]["status"] = "R"
+        self.cert_db_sn[serial_num]["expires"] = revocation_date
+
+        crl_b = x509.CertificateRevocationListBuilder()
+        crl_b = crl_b.issuer_name(self.ca_crt.subject)
+        crl_b = crl_b.last_update(now)
+        crl_b = crl_b.next_update(now + timedelta(days=1))
+
+        for record in self.cert_db_sn.values():
+            if record["status"] != "R":
+                continue
+
+            rev_cert = x509.RevokedCertificateBuilder()
+            rev_cert = rev_cert.serial_number(record["serial_num"])
+            rev_cert = rev_cert.revocation_date(record["expires"])
+            crl_b = crl_b.add_revoked_certificate(rev_cert.build())
+
+        crl = crl_b.sign(private_key=self.ca_key, algorithm=hashes.SHA256())
+
+        with open(self.crl_path, "wb") as fp:
+            fp.write(crl.public_bytes(serialization.Encoding.PEM))
+        self.write_cert_db()
+
+    def add_certificate(self, cert):
+        names = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+        if len(names) != 1:
+            raise ValueError("Certificate must have exactly one CommonName")
+        common_name = names[0].value
+
+        self.cert_db_sn[cert.serial_number] = {
+            "status": "V",
+            "issued": cert.not_valid_before,
+            "expires": cert.not_valid_after,
+            "serial_num": cert.serial_number,
+            "name": common_name,
+        }
+
+        self.write_cert_db()
+
+    def get_certificate_by_name(self, name):
+        for record in self.cert_db_sn.values():
+            if record["name"] == name:
+                return record
+
+        return None
+
+    def write_cert_db(self):
+        with open(self.cert_db_path, "w", encoding="utf8") as fp:
+            for record in self.cert_db_sn.values():
+                line = [
+                    record["status"],
+                    record["issued"].isoformat(),
+                    record["expires"].isoformat(),
+                    f"{record['serial_num']:040x}",
+                    record["name"],
+                ]
+                line = "\t".join(line) + "\n"
+                fp.write(line)
