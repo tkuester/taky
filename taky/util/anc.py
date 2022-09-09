@@ -16,12 +16,13 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12, PrivateFormat
 
 
-def load_certificate(crt_path, key_path):
+def load_certificate(crt_path, key_path, password=None):
     """
     Utility method to load a certificate in PEM format
 
     @param crt_path Where to load the certificate
     @param key_path Where to load the key
+    @param password The password for the key (default as None)
     @return A tuple of (crt, key)
     """
     with open(crt_path, "rb") as crt_fp:
@@ -30,7 +31,7 @@ def load_certificate(crt_path, key_path):
         ca_key_bytes = key_fp.read()
 
     ca_crt = x509.load_pem_x509_certificate(ca_crt_bytes)
-    ca_key = serialization.load_pem_private_key(ca_key_bytes, None)
+    ca_key = serialization.load_pem_private_key(ca_key_bytes, password)
 
     return (ca_crt, ca_key)
 
