@@ -15,6 +15,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12, PrivateFormat
 
+from taky.config import app_config
+
 
 def load_certificate(crt_path, key_path, password=None):
     """
@@ -266,14 +268,15 @@ def make_cert(
 
 
 class CertificateDatabase:
-    def __init__(self, cert_db_path, ca_crt_path, ca_key_path, crl_path):
-        self.cert_db_path = cert_db_path
-        self.crl_path = crl_path
+    def __init__(self):
+        self.cert_db_path = app_config.get("ssl", "cert_db")
+        self.crl_path = app_config.get("ssl", "crl")
 
+        ca_crt_path = app_config.get("ssl", "ca")
+        ca_key_path = app_config.get("ssl", "ca_key")
         (self.ca_crt, self.ca_key) = load_certificate(ca_crt_path, ca_key_path)
 
         self.cert_db_sn = {}
-
         self.read_cert_db()
 
     def read_cert_db(self):
