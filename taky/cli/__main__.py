@@ -25,6 +25,7 @@ def arg_parse():
     cli.build_client_reg(subp)
     cli.systemd_reg(subp)
     cli.status_reg(subp)
+    cli.kickban_reg(subp)
 
     args = argp.parse_args()
 
@@ -39,6 +40,7 @@ def main():
         "build_client": cli.build_client,
         "systemd": cli.systemd,
         "status": cli.status,
+        "kickban": cli.kickban,
     }
 
     if not args.command:
