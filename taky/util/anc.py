@@ -211,7 +211,7 @@ def make_cert(
             critical=True,
         )
 
-    commonname = f_name
+    commonname = hostname
     organization = None
     subject = []
     is_valid_commonname = commonname is not None and len(commonname) < 64
