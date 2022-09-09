@@ -57,9 +57,12 @@ def build_client(args):
     server_p12_pkg_name = f"server-{uuid.uuid4()}.p12"
     shutil.copy(server_p12, os.path.join(cdir, server_p12_pkg_name))
 
+    # Load the certificate database
+    cert_db = anc.CertificateDatabase()
+
     # Build client certificates
     client_pkg_name = f"{args.name}-{uuid.uuid4()}"
-    anc.make_cert(
+    client_cert = anc.make_cert(
         path=cdir,
         f_name=client_pkg_name,
         hostname=args.name,
@@ -69,6 +72,7 @@ def build_client(args):
         key_in_pem=True,
         is_server_cert=False,
     )
+    cert_db.add_certificate(client_cert)
 
     # Build .pref file
     hostname = config.get("taky", "hostname")

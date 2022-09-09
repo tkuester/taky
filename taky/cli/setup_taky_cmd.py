@@ -77,6 +77,8 @@ def setup_taky(args):
         config.set("ssl", "server_p12", os.path.join(".", "ssl", "server.p12"))
         config.set("ssl", "cert", os.path.join(".", "ssl", "server.crt"))
         config.set("ssl", "key", os.path.join(".", "ssl", "server.key"))
+        config.set("ssl", "crl", os.path.join(".", "ssl", "revoked.crl"))
+        config.set("ssl", "cert_db", os.path.join(".", "ssl", "cert-db.txt"))
 
         config.set("dp_server", "upload_path", os.path.join(".", "dp-user"))
     else:
@@ -143,8 +145,11 @@ def setup_taky(args):
             shutil.chown(config.get("ssl", "ca"), user=args.user, group=args.user)
             shutil.chown(config.get("ssl", "ca_key"), user=args.user, group=args.user)
 
+        print(" - Initializing certificate database")
+        cert_db = anc.CertificateDatabase()
+
         print(" - Generating server certificate")
-        anc.make_cert(
+        server_cert = anc.make_cert(
             path=ssl_path,
             f_name="server",
             hostname=args.hostname,
@@ -154,6 +159,7 @@ def setup_taky(args):
             key_in_pem=False,
             is_server_cert=True,
         )
+        cert_db.add_certificate(server_cert)
 
         if args.user:
             print(f" - Changing ownership to {args.user}")
@@ -162,5 +168,6 @@ def setup_taky(args):
             shutil.chown(
                 config.get("ssl", "server_p12"), user=args.user, group=args.user
             )
+            shutil.chown(config.get("ssl", "cert_db"), user=args.user, group=args.user)
 
     return 0
