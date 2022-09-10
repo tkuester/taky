@@ -99,7 +99,7 @@ def datapackage_get():
     if not os.path.exists(name):
         return f"Can't find {name}", 404
 
-    return send_file(name, as_attachment=True, attachment_filename=meta["Name"])
+    return send_file(name, as_attachment=True, download_name=meta["Name"])
 
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])

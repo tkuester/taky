@@ -15,7 +15,7 @@ setup(
         "lxml>=4.4.0",
         "cryptography>=38.0.0",
         "dateutils",
-        "Flask~=1.1",
+        "Flask~=2.0",
         "gunicorn",
         "redis",
     ],
