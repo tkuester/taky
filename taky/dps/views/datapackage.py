@@ -5,7 +5,7 @@ from datetime import datetime as dt
 from flask import request, send_file
 from werkzeug.utils import secure_filename
 
-from taky.dps import app
+from taky.dps import app, requires_auth
 
 
 def url_for(f_hash):
@@ -58,6 +58,7 @@ def put_meta(meta):
 
 
 @app.route("/Marti/sync/search")
+@requires_auth
 def datapackage_search():
     """
     Search for a datapackage
@@ -81,6 +82,7 @@ def datapackage_search():
 
 
 @app.route("/Marti/sync/content")
+@requires_auth
 def datapackage_get():
     """
     Download a datapackage
@@ -103,6 +105,7 @@ def datapackage_get():
 
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])
+@requires_auth
 def datapackage_upload():
     """
     Upload a datapackage to the server
@@ -163,6 +166,7 @@ def datapackage_upload():
 
 
 @app.route("/Marti/api/sync/metadata/<f_hash>/tool", methods=["PUT"])
+@requires_auth
 def datapackage_metadata_tool(f_hash):
     """
     Update the "tool" for the datapackage (ie: public / private)
@@ -183,6 +187,7 @@ def datapackage_metadata_tool(f_hash):
 
 
 @app.route("/Marti/sync/missionquery")
+@requires_auth
 def datapackage_exists():
     """
     Called when trying to determine if the file exists on the server

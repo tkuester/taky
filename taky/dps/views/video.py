@@ -4,10 +4,11 @@ from lxml import etree
 from flask import request, Response
 from werkzeug.utils import secure_filename
 
-from taky.dps import app
+from taky.dps import app, requires_auth
 
 
 @app.route("/Marti/vcm", methods=["POST"])
+@requires_auth
 def marti_video_upload():
     """
     Accepts an XML document of video feeds, and saves them
@@ -50,6 +51,7 @@ def marti_video_upload():
 
 
 @app.route("/Marti/vcm", methods=["GET"])
+@requires_auth
 def marti_video_index():
     """
     Returns an XML document of all the feeds on the server

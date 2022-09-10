@@ -1,9 +1,10 @@
 from flask import request
 
-from taky.dps import app
+from taky.dps import app, requires_auth
 
 
 @app.route("/Marti/TracksKML", methods=["POST"])
+@requires_auth
 def marti_tracks_kml():
     print(request.args)
     print(request.data)
@@ -11,6 +12,7 @@ def marti_tracks_kml():
 
 
 @app.route("/Marti/ExportMissionKML")
+@requires_auth
 def marti_mission_kml():
     """
     [

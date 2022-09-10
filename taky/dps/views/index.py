@@ -1,4 +1,4 @@
-from taky.dps import app
+from taky.dps import app, requires_auth
 
 
 @app.route("/")
@@ -7,6 +7,7 @@ def hello_world():
 
 
 @app.route("/Marti/api/clientEndPoints")
+@requires_auth
 def marti_api_client_endpoints():
     return {
         "Matcher": "com.bbn.marti.remote.ClientEndpoint",
