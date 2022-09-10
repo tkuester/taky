@@ -353,12 +353,10 @@ class CertificateDatabase:
 
         self.write_cert_db()
 
-    def get_certificate_by_name(self, name):
+    def get_certificates_by_name(self, name):
         for record in self.cert_db_sn.values():
             if record["name"] == name:
-                return record
-
-        return None
+                yield record
 
     def write_cert_db(self):
         with open(self.cert_db_path, "w", encoding="utf8") as fp:

@@ -33,12 +33,16 @@ def kickban(args):
 
     cdb = anc.CertificateDatabase()
 
-    cert = cdb.get_certificate_by_name(args.name)
-    if cert is None:
-        print(f"ERROR: Unable to find client certificate for {args.name}")
-        return 1
+    count = 0
+    for cert in cdb.get_certificates_by_name(args.name):
+        if cert["status"] == "R":
+            continue
 
-    cdb.revoke_certificate(cert["serial_num"])
-    print(f"Revoked certificate for {args.name}")
+        cdb.revoke_certificate(cert["serial_num"])
+        print(f"Revoked certificate for {args.name} (SN: {cert['serial_num']:040x})")
+        count += 1
+
+    if count == 0:
+        print("Unable to find valid certificate for {args.name}")
 
     return 0
