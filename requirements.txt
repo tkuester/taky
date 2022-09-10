@@ -1,7 +1,6 @@
 lxml>=4.4.0
 cryptography>=38.0.0
 dateutils
-Flask
-pyopenssl
+Flask~=1.1
 gunicorn
 redis
