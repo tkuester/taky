@@ -44,7 +44,7 @@ Looking for an indepth feature comparison?
  * lxml (BSD)
  * dateutil (Apache 2.0 / BSD 3-clause)
  * flask (BSD 3-clause)
- * pyopenssl (Apache 2.0)
+ * cryptography (Apache 2.0 / BSD 3-clause / PSF)
  * gunicorn (MIT)
  * redis (MIT)
 
@@ -137,17 +137,10 @@ planned for the next version of taky! Pull requests and issues are welcome!
 
 ### Known Issues
 
-At this time, there are two known issues with taky. The first is a memory leak
-caused by the XML parser library. This issue will likely not be resolved
-unless LXML writes a fix for their parser. This means that over several days,
-the memory usage in `taky` will balloon to excessive size, potentially causing
-instability.
-
-Additionally, a change in OpenSSL's default settings (seen in Ubuntu 22.04,
-OpenSSL 3.0.2) is currently causing client certificates to be rejected by ATAK.
-An issue has been logged with ATAK about this, and plans are in the works to
-update certificate generation to use the old defaults for certificate
-generation.
+At this time, there is one known issue with taky: a memory leak caused by the
+XML parser library. Over several days, the memory usage in `taky` will balloon
+to excessive size, potentially causing instability. This issue will likely not
+be resolved unless LXML writes a fix for their parser.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/tkuester/taky/main/doc/taky.png" alt="taky logo" width="200" />
