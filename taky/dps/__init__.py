@@ -1,10 +1,29 @@
 import os
+import functools
 
+import flask
 from flask import Flask
 
 from taky.config import load_config, app_config
 
 application = app = Flask(__name__)
+
+
+def requires_auth(func):
+    """
+    Function to ensure that a valid client certificate is submitted
+    """
+
+    @functools.wraps(func)
+    def check_headers(*args, **kwargs):
+        if not flask.request.headers.get("X-USER"):
+            flask.abort(401)
+        if flask.request.headers.get("X-REVOKED"):
+            flask.abort(403)
+
+        return func(*args, **kwargs)
+
+    return check_headers
 
 
 def configure_app(config):
