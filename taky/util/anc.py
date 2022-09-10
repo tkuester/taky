@@ -358,6 +358,15 @@ class CertificateDatabase:
             if record["name"] == name:
                 yield record
 
+    def get_certificate_by_serial(self, serial_num):
+        if isinstance(serial_num, str):
+            try:
+                serial_num = int(serial_num, 16)
+            except:
+                return None
+
+        return self.cert_db_sn.get(serial_num)
+
     def write_cert_db(self):
         with open(self.cert_db_path, "w", encoding="utf8") as fp:
             for record in self.cert_db_sn.values():
