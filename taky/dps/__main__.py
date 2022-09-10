@@ -12,6 +12,7 @@ from gunicorn.workers.sync import SyncWorker
 from taky import __version__
 from taky.config import load_config
 from taky.config import app_config
+from taky.util import anc
 from taky.dps import app as taky_dps
 from taky.dps import configure_app
 
@@ -43,22 +44,34 @@ class StandaloneApplication(BaseApplication):
 class ClientCertificateWorker(SyncWorker):
     """Worker for putting certificate information into the X-USER header variable of the request."""
 
+    cert_db = None
+
     def handle_request(self, listener, req, client, addr):
-        subject = dict(
-            [i for subtuple in client.getpeercert().get("subject") for i in subtuple]
-        )
-        issuer = dict(
-            [i for subtuple in client.getpeercert().get("issuer") for i in subtuple]
-        )
+        if self.cert_db is None:
+            self.cert_db = anc.CertificateDatabase()
+
         headers = dict(req.headers)
-        headers["X-USER"] = subject["commonName"]
-        headers["X-ISSUER"] = issuer["commonName"]
-        headers["X-NOT_BEFORE"] = ssl.cert_time_to_seconds(
-            client.getpeercert().get("notBefore")
-        )
-        headers["X-NOT_AFTER"] = ssl.cert_time_to_seconds(
-            client.getpeercert().get("notAfter")
-        )
+        peer_cert = client.getpeercert()
+
+        if peer_cert:
+            subject = dict(
+                [i for subtuple in peer_cert.get("subject") for i in subtuple]
+            )
+            issuer = dict([i for subtuple in peer_cert.get("issuer") for i in subtuple])
+            headers["X-USER"] = subject["commonName"]
+            headers["X-SERIAL_NUMBER"] = peer_cert.get("serialNumber")
+
+            cert = self.cert_db.get_certificate_by_serial(peer_cert.get("serialNumber"))
+            if cert and cert.get("status") == "R":
+                headers["X-REVOKED"] = 1
+
+            headers["X-ISSUER"] = issuer["commonName"]
+            headers["X-NOT_BEFORE"] = ssl.cert_time_to_seconds(
+                client.getpeercert().get("notBefore")
+            )
+            headers["X-NOT_AFTER"] = ssl.cert_time_to_seconds(
+                client.getpeercert().get("notAfter")
+            )
 
         req.headers = list(headers.items())
         super().handle_request(listener, req, client, addr)
@@ -141,7 +154,7 @@ def main():
         options["ca_certs"] = app_config.get("ssl", "ca")
         options["certfile"] = app_config.get("ssl", "cert")
         options["keyfile"] = app_config.get("ssl", "key")
-        options["cert_reqs"] = ssl.CERT_REQUIRED
+        options["cert_reqs"] = ssl.CERT_OPTIONAL
         options["do_handshake_on_connect"] = True
         options["worker_class"] = "taky.dps.__main__.ClientCertificateWorker"
 
