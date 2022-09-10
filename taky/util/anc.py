@@ -270,11 +270,6 @@ def make_cert(
 class CertificateDatabase:
     def __init__(self):
         self.cert_db_path = app_config.get("ssl", "cert_db")
-        self.crl_path = app_config.get("ssl", "crl")
-
-        ca_crt_path = app_config.get("ssl", "ca")
-        ca_key_path = app_config.get("ssl", "ca_key")
-        (self.ca_crt, self.ca_key) = load_certificate(ca_crt_path, ca_key_path)
 
         self.cert_db_sn = {}
         self.read_cert_db()
@@ -317,24 +312,6 @@ class CertificateDatabase:
         self.cert_db_sn[serial_num]["status"] = "R"
         self.cert_db_sn[serial_num]["expires"] = revocation_date
 
-        crl_b = x509.CertificateRevocationListBuilder()
-        crl_b = crl_b.issuer_name(self.ca_crt.subject)
-        crl_b = crl_b.last_update(now)
-        crl_b = crl_b.next_update(now + timedelta(days=1))
-
-        for record in self.cert_db_sn.values():
-            if record["status"] != "R":
-                continue
-
-            rev_cert = x509.RevokedCertificateBuilder()
-            rev_cert = rev_cert.serial_number(record["serial_num"])
-            rev_cert = rev_cert.revocation_date(record["expires"])
-            crl_b = crl_b.add_revoked_certificate(rev_cert.build())
-
-        crl = crl_b.sign(private_key=self.ca_key, algorithm=hashes.SHA256())
-
-        with open(self.crl_path, "wb") as fp:
-            fp.write(crl.public_bytes(serialization.Encoding.PEM))
         self.write_cert_db()
 
     def add_certificate(self, cert):

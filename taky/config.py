@@ -34,7 +34,6 @@ DEFAULT_CFG = {
         "cert": "/etc/taky/ssl/server.crt",
         "key": "/etc/taky/ssl/server.key",
         "key_pw": None,
-        "crl": "/etc/taky/ssl/revoked.crl",
         "cert_db": "/etc/taky/ssl/cert-db.txt",
     },
 }
