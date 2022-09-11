@@ -1,7 +1,8 @@
 import os
 
 from lxml import etree
-from flask import request, Response
+from flask import request
+from flask.wrappers import Response
 from werkzeug.utils import secure_filename
 
 from taky.dps import app, requires_auth
