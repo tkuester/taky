@@ -33,6 +33,7 @@ class SocketClient:
     def __init__(self, sock, use_ssl=False, **kwargs):
         self.sock = sock
         self.ssl = use_ssl
+        self.peer_cert = None
         self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
 
@@ -81,7 +82,7 @@ class SocketClient:
         try:
             self.sock.do_handshake()
             self.ssl_hs = SSLState.SSL_ESTAB
-            # TODO: Check SSL certs here
+            self.peer_cert = self.sock.getpeercert()
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:

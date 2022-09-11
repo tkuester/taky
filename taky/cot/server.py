@@ -6,6 +6,7 @@ import ssl
 import logging
 
 from taky.config import app_config as config
+from taky.util import anc
 from .router import COTRouter
 from .client import TAKClient, SocketTAKClient, SSLState
 from .mgmt import MgmtClient
@@ -80,6 +81,7 @@ class COTServer:
 
         self.clients = {}
         self.router = COTRouter()
+        self.cert_db = anc.CertificateDatabase()
 
         self.mgmt = None
         self.mon = None
