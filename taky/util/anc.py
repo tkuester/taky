@@ -169,6 +169,12 @@ def make_cert(
         x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()),
         critical=False,
     )
+    builder = builder.add_extension(
+        x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
+            ca_crt.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value
+        ),
+        critical=False,
+    )
 
     # Add Server / Client Auth
     if is_server_cert:
