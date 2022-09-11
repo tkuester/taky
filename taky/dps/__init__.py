@@ -29,23 +29,13 @@ def requires_auth(func):
 def configure_app(config):
     app.config["HOSTNAME"] = config.get("taky", "hostname")
     app.config["NODEID"] = config.get("taky", "node_id")
-    app.config["UPLOAD_PATH"] = os.path.realpath(config.get("dp_server", "upload_path"))
+    app.config["UPLOAD_PATH"] = config.get("dp_server", "upload_path")
 
-    app.config["PUBLIC_IP"] = config.get("taky", "public_ip")
-    app.config["COT_PORT"] = config.getint("cot_server", "port")
+    cot_port = config.getint("cot_server", "port")
     if config.getboolean("ssl", "enabled"):
-        app.config["PREFERRED_URL_SCHEME"] = "https"
-        app.config[
-            "COT_CONN_STR"
-        ] = f'ssl:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
-        app.config["DPS_PORT"] = 8443
+        app.config["COT_CONN_STR"] = f'ssl:{app.config["HOSTNAME"]}:{cot_port}'
     else:
-        app.config["PREFERRED_URL_SCHEME"] = "http"
-        app.config[
-            "COT_CONN_STR"
-        ] = f'tcp:{app.config["HOSTNAME"]}:{app.config["COT_PORT"]}'
-        app.config["DPS_PORT"] = 8080
-        # TODO: Configurable?
+        app.config["COT_CONN_STR"] = f'tcp:{app.config["HOSTNAME"]}:{cot_port}'
 
 
 try:
