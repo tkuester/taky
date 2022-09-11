@@ -186,23 +186,22 @@ class COTServer:
         self.lgr.info("New management client")
         self.clients[sock] = MgmtClient(sock=sock, use_ssl=False, server=self)
 
-    def srv_accept(self, sock, force_tcp=False):
+    def srv_accept(self, force_tcp=False):
         """
         Accept a new client from a server socket
         """
         ip_addr = None
         port = None
+        use_ssl = self.ssl_ctx and not force_tcp
 
         try:
-            (sock, addr) = sock.accept()
+            (sock, addr) = self.srv.accept()
             (ip_addr, port) = addr[0:2]
-            stype = "tcp"
 
-            if self.ssl_ctx and not force_tcp:
+            if use_ssl:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
-                stype = "ssl"
 
             sock.setblocking(False)
         except ssl.SSLError as exc:
@@ -212,6 +211,7 @@ class COTServer:
             self.lgr.info("Client connect failed %s:%s (%s)", ip_addr, port, exc)
             return
 
+        stype = "ssl" if use_ssl else "tcp"
         self.lgr.info("New %s client from %s:%s", stype, ip_addr, port)
         self.clients[sock] = SocketTAKClient(
             sock=sock,
@@ -260,9 +260,9 @@ class COTServer:
         # Process sockets with incoming data
         for sock in s_rd:
             if sock is self.srv:
-                self.srv_accept(sock)
+                self.srv_accept()
             elif sock is self.mon:
-                self.srv_accept(sock, force_tcp=True)
+                self.srv_accept(force_tcp=True)
             elif sock is self.mgmt:
                 self.mgmt_accept()
             else:
