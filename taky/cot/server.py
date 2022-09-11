@@ -8,7 +8,7 @@ import logging
 from taky.config import app_config as config
 from taky.util import anc
 from .router import COTRouter
-from .client import TAKClient, SocketTAKClient, SSLState
+from .client import TAKClient, SocketTAKClient
 from .mgmt import MgmtClient
 
 
@@ -288,9 +288,8 @@ class COTServer:
                 self.client_disconnect(client, "Is closed")
                 continue
 
-            if client.ssl_hs not in [SSLState.NO_SSL, SSLState.SSL_ESTAB]:
-                if (now - client.connected) > 10:
-                    self.client_disconnect(client, "SSL Handshake timeout")
+            if not client.ready and (now - client.connected) > 10:
+                self.client_disconnect(client, "SSL Handshake timeout")
 
     def shutdown(self):
         """

@@ -42,6 +42,9 @@ class SocketClient:
         self.lgr = logging.getLogger(lgr_name)
         super().__init__(**kwargs)
 
+        if self.ready:
+            self.connect_cb(self)
+
     @property
     def addr(self):
         try:
@@ -51,6 +54,13 @@ class SocketClient:
             return addr
         except:  # pylint: disable=bare-except
             return (None, None)
+
+    @property
+    def ready(self):
+        if not self.ssl:
+            return True
+
+        return self.ssl_hs in [SSLState.NO_SSL, SSLState.SSL_ESTAB]
 
     @property
     def is_closed(self):
@@ -76,7 +86,7 @@ class SocketClient:
 
     def ssl_handshake(self):
         """Preform the SSL handshake on the socket"""
-        if not self.ssl or self.ssl_hs is SSLState.SSL_ESTAB:
+        if self.ready:
             return
 
         try:
@@ -96,7 +106,7 @@ class SocketClient:
 
         If the socket is SSL based, this may be part of the handshake.
         """
-        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+        if self.ssl and not self.ready:
             self.ssl_handshake()
             return
 
@@ -125,7 +135,7 @@ class SocketClient:
         If the client is SSL enabled, and the handshake has not yet taken
         place, we fail silently.
         """
-        if self.ssl and self.ssl_hs is not SSLState.SSL_ESTAB:
+        if self.ssl and not self.ready:
             self.ssl_handshake()
             return
 
@@ -364,7 +374,7 @@ class SocketTAKClient(TAKClient, SocketClient):
             raise TypeError("Must send a COTEvent")
 
         # Silently drop data if the SSL handshake is not ready yet
-        if self.ssl_hs in [SSLState.SSL_WAIT, SSLState.SSL_WAIT_TX]:
+        if not self.ready:
             return
 
         self.out_buff += etree.tostring(event.as_element)
