@@ -64,12 +64,24 @@ def load_config(path=None, explicit=False):
 
     if path and os.path.exists(path):
         lgr.info("Loading config file from %s", path)
+        cfg_dir = os.path.realpath(os.path.dirname(path))
         with open(path, "r", encoding="utf8") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
     elif explicit:
         raise FileNotFoundError("Config file required, but not present")
     else:
         lgr.info("Using default config")
+        cfg_dir = os.getcwd()
+
+        ret_config.set("taky", "root_dir", ".")
+        ret_config.set("dp_server", "upload_path", "./dp-user")
+
+    # Make directories absolute
+    for (sect, opt) in [("taky", "root_dir"), ("dp_server", "upload_path")]:
+        path = ret_config.get(sect, opt)
+        if path and not os.path.isabs(path):
+            path = os.path.realpath(os.path.join(cfg_dir, path))
+            ret_config.set(sect, opt, path)
 
     port = ret_config.get("cot_server", "port")
     if port in [None, ""]:
@@ -110,6 +122,12 @@ def load_config(path=None, explicit=False):
             if port <= 0 or port >= 65535:
                 raise ValueError(f"Invalid port: {port}")
         ret_config.set("cot_server", "mon_port", str(port))
+
+        for f_name in ["ca", "ca_key", "server_p12", "cert", "key", "cert_db"]:
+            f_path = ret_config.get("ssl", f_name)
+            if f_path and not os.path.isabs(f_path):
+                f_path = os.path.realpath(os.path.join(cfg_dir, f_path))
+                ret_config.set("ssl", f_name, f_path)
 
     if explicit:
         ret_config.set("taky", "cfg_path", path)
