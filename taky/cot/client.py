@@ -37,11 +37,11 @@ class SocketClient:
         self.peer_cert = None
         self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
+        self.connect_cb = kwargs.get("cbs", {}).get("connect", lambda client: None)
 
         (ip, port) = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
         self.lgr = logging.getLogger(lgr_name)
-        super().__init__(**kwargs)
 
         if self.ready:
             self.connect_cb(self)
@@ -94,6 +94,7 @@ class SocketClient:
             self.sock.do_handshake()
             self.ssl_hs = SSLState.SSL_ESTAB
             self.peer_cert = self.sock.getpeercert()
+            self.connect_cb(self)
         except ssl.SSLWantReadError:
             self.ssl_hs = SSLState.SSL_WAIT
         except ssl.SSLWantWriteError:
@@ -120,7 +121,6 @@ class SocketClient:
 
             self.feed(data)
         except etree.XMLSyntaxError as exc:
-            # FIXME: This should really be under TAKClient...
             self.disconnect("XML Syntax Error")
             self.lgr.debug("XML Syntax Error: %s", self, exc_info=exc)
         except BlockingIOError:
@@ -160,6 +160,25 @@ class SocketClient:
             self.sock.close()
 
 
+class MonClient(SocketClient):
+    def feed(self, data):
+        pass
+
+    def send_event(self, event):
+        """
+        Send a CoT event to the client.
+
+        @param event A CoT Event object
+        """
+        if not isinstance(event, models.Event):
+            raise TypeError("Must send a COTEvent")
+
+        if not self.ready:
+            return
+
+        self.out_buff += etree.tostring(event.as_element)
+
+
 class TAKClient:
     """
     Holds state and information regarding a client connected to the TAK server.
@@ -168,11 +187,16 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, router=None, **kwargs):
+    def __init__(self, **kwargs):
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
         self.last_rx = 0
+
+        cbs = kwargs.get("cbs", {})
+        self.route = cbs.get("route", lambda client, pkt: None)
+        self.packet_rx = cbs.get("packet_rx", lambda pkt: None)
+        self.client_ident = cbs.get("client_ident", lambda pkt: None)
 
         self.log_cot_dir = app_config.get("cot_server", "log_cot")
         self.cot_fp = None
@@ -182,7 +206,6 @@ class TAKClient:
         self.xdc = XMLDeclStrip(parser)
 
         self.lgr = logging.getLogger(self.__class__.__name__)
-        super().__init__(**kwargs)
 
     def __repr__(self):
         if self.user:
@@ -193,6 +216,8 @@ class TAKClient:
     def send_event(self, event):
         """
         Send a CoT event to the client.
+
+        @param event A CoT Event object
         """
         raise NotImplementedError()
 
@@ -279,6 +304,8 @@ class TAKClient:
             self.last_rx = time.time()
             try:
                 evt = models.Event.from_elm(elm)
+                self.packet_rx(evt)
+
                 if not evt.etype:
                     continue
 
@@ -289,7 +316,7 @@ class TAKClient:
                 if evt.etype.startswith("a"):
                     self.handle_atom(evt)
 
-                self.router.route(self, evt)
+                self.route(self, evt)
                 self.log_event(evt)
             except models.UnmarshalError as exc:
                 self.lgr.debug("Unable to parse Event: %s", exc, exc_info=exc)
@@ -321,7 +348,7 @@ class TAKClient:
                 self.user = evt.detail
                 # Try to close the COT (ie: anonymous log)
                 self.close_cot()
-                self.router.client_ident(self)
+                self.client_ident(self)
             else:
                 self.user = evt.detail
 
@@ -348,7 +375,8 @@ class SocketTAKClient(TAKClient, SocketClient):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        TAKClient.__init__(self, **kwargs)
+        SocketClient.__init__(self, **kwargs)
 
     def __repr__(self):
         if self.user:
@@ -366,10 +394,10 @@ class SocketTAKClient(TAKClient, SocketClient):
 
     def send_event(self, event):
         """
-        Send a CoT event to the client. Data should be a cot Event object,
-        or an XML element, or a byte string.
-        """
+        Send a CoT event to the client.
 
+        @param event A CoT Event object
+        """
         if not isinstance(event, models.Event):
             raise TypeError("Must send a COTEvent")
 

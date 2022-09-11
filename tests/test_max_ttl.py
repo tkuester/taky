@@ -14,7 +14,7 @@ from taky.config import load_config
 from . import XML_S, UnittestTAKClient
 
 
-class RouterTestcase(ut.TestCase):
+class RouterMaxTTLTestcase(ut.TestCase):
     def setUp(self):
         self.max_ttl_s = 10
         load_config(os.devnull)
@@ -23,8 +23,12 @@ class RouterTestcase(ut.TestCase):
         app_config.set("cot_server", "max_persist_ttl", str(self.max_ttl_s))
 
         self.router = cot.COTRouter()
-        self.tk1 = UnittestTAKClient(self.router)
-        self.tk2 = UnittestTAKClient(self.router)
+        self.tk1 = UnittestTAKClient(
+            cbs={"route": self.router.route, "connect": self.router.send_persist}
+        )
+        self.tk2 = UnittestTAKClient(
+            cbs={"route": self.router.route, "connect": self.router.send_persist}
+        )
 
         elm = etree.fromstring(XML_S)
         self.now = now = dt(2022, 1, 1)
@@ -46,11 +50,12 @@ class RouterTestcase(ut.TestCase):
 
         # TK1 connects, and identifies
         self.router.client_connect(self.tk1)
+        self.router.send_persist(self.tk2)
         self.tk1.feed(self.tk1_ident_msg)
 
         # TK2 connets, and mock identifies. It should receive info about TK1
         self.router.client_connect(self.tk2)
-        self.router.client_ident(self.tk2)
+        self.router.send_persist(self.tk2)
         ret = self.tk2.queue.get_nowait()
         self.assertTrue(ret.uid == "ANDROID-deadbeef")
         self.assertTrue(ret.persist_ttl == self.max_ttl_s)

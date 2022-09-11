@@ -19,8 +19,12 @@ class RouterTestcase(ut.TestCase):
         app_config.set("taky", "redis", "false")
         app_config.set("cot_server", "log_cot", None)
         self.router = cot.COTRouter()
-        self.tk1 = UnittestTAKClient(self.router)
-        self.tk2 = UnittestTAKClient(self.router)
+        self.tk1 = UnittestTAKClient(
+            cbs={"route": self.router.route, "connect": self.router.send_persist}
+        )
+        self.tk2 = UnittestTAKClient(
+            cbs={"route": self.router.route, "connect": self.router.send_persist}
+        )
 
         elm = etree.fromstring(XML_S)
         now = dt.utcnow()
@@ -63,7 +67,7 @@ class RouterTestcase(ut.TestCase):
 
         # TK2 connets, and mock identifies. It should receive info about TK1
         self.router.client_connect(self.tk2)
-        self.router.client_ident(self.tk2)
+        self.router.send_persist(self.tk2)
         ret = self.tk2.queue.get_nowait()
         self.assertTrue(ret.uid == "ANDROID-deadbeef")
 
@@ -71,7 +75,7 @@ class RouterTestcase(ut.TestCase):
         self.assertRaises(queue.Empty, self.tk1.queue.get_nowait)
 
         # ...even if it re-mock identifies!
-        self.router.client_ident(self.tk1)
+        self.router.send_persist(self.tk1)
         self.assertRaises(queue.Empty, self.tk1.queue.get_nowait)
 
     def test_geochat(self):

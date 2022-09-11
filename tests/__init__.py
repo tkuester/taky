@@ -6,9 +6,12 @@ XML_S = b"""<event version="2.0" uid="ANDROID-deadbeef" type="a-f-G-U-C" how="m-
 
 
 class UnittestTAKClient(cot.TAKClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.queue = queue.Queue()
+
+        cbs = kwargs.get("cbs", {})
+        cbs.get("connect", lambda cli: None)(self)
 
     def send_event(self, msg):
         self.queue.put(msg)

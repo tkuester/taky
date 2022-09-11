@@ -52,7 +52,7 @@ class COTRouter:
         """
         self.clients.discard(client)
 
-    def client_ident(self, client):
+    def send_persist(self, client):
         """
         Called by TAKClient when the client first identifies to the server
         """
