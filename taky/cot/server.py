@@ -177,6 +177,10 @@ class COTServer:
         """
         Accept a new client on the management socket
         """
+        if not self.mgmt:
+            # Should never happen
+            return
+
         try:
             (sock, _) = self.mgmt.accept()
         except (socket.error, OSError) as exc:
@@ -198,7 +202,7 @@ class COTServer:
             (sock, addr) = self.srv.accept()
             (ip_addr, port) = addr[0:2]
 
-            if use_ssl:
+            if use_ssl and self.ssl_ctx:
                 sock = self.ssl_ctx.wrap_socket(
                     sock, server_side=True, do_handshake_on_connect=False
                 )
@@ -267,13 +271,13 @@ class COTServer:
                 self.mgmt_accept()
             else:
                 client = self.clients.get(sock)
-                if not client.is_closed:
+                if client and not client.is_closed:
                     client.socket_rx()
 
         # Process sockets with outgoing data
         for sock in s_wr:
             client = self.clients.get(sock)
-            if not client.is_closed:
+            if client and not client.is_closed:
                 client.socket_tx()
 
         # Prune the persistence database
