@@ -11,6 +11,7 @@ import traceback
 
 from lxml import etree
 
+from taky.config import app_config
 from taky.util import XMLDeclStrip
 from . import models
 
@@ -167,14 +168,13 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, router=None, log_cot_dir=None, **kwargs):
-        self.router = router
+    def __init__(self, router=None, **kwargs):
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
         self.last_rx = 0
 
-        self.log_cot_dir = log_cot_dir
+        self.log_cot_dir = app_config.get("cot_server", "log_cot")
         self.cot_fp = None
 
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)
