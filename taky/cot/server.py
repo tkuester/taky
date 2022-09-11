@@ -229,11 +229,25 @@ class COTServer:
                 cbs={
                     "route": self.router.route,
                     "packet_rx": self.mon_packet,
-                    "connect": self.router.send_persist,
+                    "connect": self.client_connect,
                 },
             )
 
         self.router.client_connect(self.clients[sock])
+
+    def client_connect(self, client):
+        if client.peer_cert:
+            self.lgr.debug(
+                "Checking %s against cert db", client.peer_cert.get("serialNumber")
+            )
+            cert = self.cert_db.get_certificate_by_serial(
+                client.peer_cert.get("serialNumber")
+            )
+            if cert and cert.get("status") == "R":
+                self.client_disconnect(client, "User banned")
+                return
+
+        self.router.send_persist(client)
 
     def client_disconnect(self, client, reason=None):
         """
