@@ -8,7 +8,7 @@ import logging
 from taky.config import app_config as config
 from taky.util import anc
 from .router import COTRouter
-from .client import TAKClient, SocketTAKClient, MonClient
+from .client import TAKClient, SocketTAKClient
 from .mgmt import MgmtClient
 
 
@@ -218,9 +218,13 @@ class COTServer:
         stype = "ssl" if use_ssl else "tcp"
         if mon_client:
             self.lgr.info("New %s mon client from %s:%s", stype, ip_addr, port)
-            self.clients[sock] = MonClient(
+            self.clients[sock] = SocketTAKClient(
+                monitor=True,
                 sock=sock,
-                cbs={"connect": self.client_connect},
+                cbs={
+                    "route": self.router.route,
+                    "connect": self.client_connect,
+                },
             )
         else:
             self.lgr.info("New %s cot client from %s:%s", stype, ip_addr, port)
@@ -368,5 +372,5 @@ class COTServer:
 
     def mon_packet(self, evt):
         for client in self.clients.values():
-            if isinstance(client, MonClient):
+            if client.monitor:
                 client.send_event(evt)

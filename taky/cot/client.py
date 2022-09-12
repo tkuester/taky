@@ -160,27 +160,6 @@ class SocketClient:
             self.sock.close()
 
 
-class MonClient(SocketClient):
-    user = None
-
-    def feed(self, data):
-        pass
-
-    def send_event(self, event):
-        """
-        Send a CoT event to the client.
-
-        @param event A CoT Event object
-        """
-        if not isinstance(event, models.Event):
-            raise TypeError("Must send a COTEvent")
-
-        if not self.ready:
-            return
-
-        self.out_buff += etree.tostring(event.as_element)
-
-
 class TAKClient:
     """
     Holds state and information regarding a client connected to the TAK server.
@@ -189,7 +168,8 @@ class TAKClient:
     the client.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, monitor=False, **kwargs):
+        self.monitor = monitor
         self.user = None
         self.connected = time.time()
         self.num_rx = 0
@@ -258,7 +238,8 @@ class TAKClient:
                     self.log_cot_dir, f"{self.user.uid}-{self.user.callsign}.cot"
                 )
             elif hasattr(self, "addr"):
-                name = os.path.join(self.log_cot_dir, f"anonymous-{self.addr[0]}.cot")
+                name = "monitor" if self.monitor else "anonymous"
+                name = os.path.join(self.log_cot_dir, f"{name}-{self.addr[0]}.cot")
             else:
                 # Don't have a way to determine log file name!
                 return
@@ -342,6 +323,9 @@ class TAKClient:
         Inspects the Event to see if it is a self description, and if so,
         informs the router a client has identified itself.
         """
+        if self.monitor:
+            return
+
         if evt.detail is None:
             return
 
