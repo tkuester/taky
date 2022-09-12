@@ -161,6 +161,8 @@ class SocketClient:
 
 
 class MonClient(SocketClient):
+    user = None
+
     def feed(self, data):
         pass
 

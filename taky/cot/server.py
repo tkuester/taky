@@ -220,6 +220,7 @@ class COTServer:
             self.lgr.info("New %s mon client from %s:%s", stype, ip_addr, port)
             self.clients[sock] = MonClient(
                 sock=sock,
+                cbs={"connect": self.client_connect},
             )
         else:
             self.lgr.info("New %s cot client from %s:%s", stype, ip_addr, port)
