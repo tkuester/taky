@@ -1,5 +1,7 @@
+import logging
 import time
 import json
+
 from .client import SocketClient, TAKClient
 
 
@@ -11,6 +13,7 @@ class MgmtClient(SocketClient):
     """
 
     def __init__(self, server, **kwargs):
+        self.lgr = logging.getLogger(self.__class__.__name__)
         self.server = server
         self.buff = b""
         super().__init__(**kwargs)
@@ -41,6 +44,8 @@ class MgmtClient(SocketClient):
                 ret = self.status()
             elif msg.get("cmd") == "ping":
                 ret = {"pong": "taky"}
+            elif msg.get("cmd") == "kickban":
+                ret = self.kickban(msg.get("user"))
             else:
                 ret = {"error": f"Invalid cmd: {msg.get('cmd')}"}
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -48,6 +53,30 @@ class MgmtClient(SocketClient):
 
         ret = json.dumps(ret)
         self.out_buff += ret.encode() + b"\0"
+
+    def kickban(self, user):
+        cdb = self.server.cert_db
+        revoked_sns = []
+
+        for cert in cdb.get_certificates_by_name(user):
+            if cert["status"] == "R":
+                continue
+
+            cdb.revoke_certificate(cert["serial_num"])
+            revoked_sns.append(cert["serial_num"])
+            self.lgr.info(
+                f"Revoked certificate for {user} (SN: {cert['serial_num']:040x})"
+            )
+
+            for client in list(self.server.clients.values()):
+                if not client.peer_cert:
+                    continue
+
+                if int(client.peer_cert.get("serialNumber"), 16) == cert["serial_num"]:
+                    self.lgr.info(f"Kicking user {user} from server")
+                    self.server.client_disconnect(client, "Banned")
+
+        return {"revoked_sns": revoked_sns}
 
     def status(self):
         ret = {
