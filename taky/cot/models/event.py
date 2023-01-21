@@ -40,15 +40,6 @@ class Event:
         )
 
     @property
-    def has_marti(self):
-        if self.detail is None:
-            return False
-        if not etree.iselement(self.detail.elm):
-            return False
-
-        return self.detail.elm.find("marti") is not None
-
-    @property
     def persist_ttl(self):
         return round((self.stale - dt.utcnow()).total_seconds())
 

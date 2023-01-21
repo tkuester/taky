@@ -10,7 +10,7 @@ from taky import cot
 from taky.config import load_config, app_config
 from taky.cot import models
 from taky.config import load_config
-from . import XML_S, UnittestTAKClient
+from . import XML_S, XML_EMPTY_MARTI_BC, UnittestTAKClient
 
 
 class RouterTestcase(ut.TestCase):
@@ -114,3 +114,28 @@ class RouterTestcase(ut.TestCase):
             self.assertEqual(evt.detail.message, gc.message)
         except queue.Empty:
             self.fail("Message not routed to user")
+
+    def test_empty_marti(self):
+        """
+        This integration test sets up two clients, and ensures that packets with
+        empty <Marti> tags get routed.
+        """
+        # Both clients connect simultaneously
+        self.router.client_connect(self.tk1)
+        self.router.client_connect(self.tk2)
+
+        elm = etree.fromstring(XML_EMPTY_MARTI_BC)
+        # TODO: Mock time, instead of using real time
+        now = dt.utcnow()
+        td = timedelta(days=10)
+
+        elm.set("time", now.isoformat())
+        elm.set("start", now.isoformat())
+        elm.set("stale", (now + td).isoformat())
+
+        msg = etree.tostring(elm)
+
+        # tk1 identifies self, tk2 should get message
+        self.tk1.feed(msg)
+        ret = self.tk2.queue.get_nowait()
+        self.assertTrue(ret.uid == "EB77220E-6299-4CA3-95FC-0200BD9FE78A")

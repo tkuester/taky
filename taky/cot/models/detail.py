@@ -21,6 +21,17 @@ class Detail:
         return True
 
     @property
+    def has_marti(self):
+        if self.elm is None:
+            return False
+
+        marti = self.elm.find("marti")
+        if marti is None:
+            return False
+
+        return len(list(self.marti_cs)) > 0
+
+    @property
     def marti_cs(self):
         """
         A list of callsigns in the Marti tag (if present)
