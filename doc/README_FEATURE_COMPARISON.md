@@ -9,12 +9,12 @@ me know!
 
 ## Programming Language
 
-| Servers           | taky (0.8.4)        | Free TAK Server (1.9.9)      |
+| Servers           | taky (0.9)          | Free TAK Server (1.9.9)      |
 | ---               | ---                 | ---                          |
 | Application       | Light Weight        | Feature Full                 |
 | Language          | Python 3.6+         | Python 3.6+                  |
-| SLOC              | ~2600               | ~11200                       |
-| Unit Testing      | Yes (~37%, passing) | Yes (~38%, failing)          |
+| SLOC              | ~3000               | ~11200                       |
+| Unit Testing      | Yes (~35%, passing) | Yes (~38%, failing)          |
 | Pylint            | 9.3/10              | 2.2/10                       |
 | Development Model | GitHub              | Private (mirrored to GitHub) |
 | First Commit      | 2021/01/18          | 2020/02/05                   |
@@ -58,8 +58,9 @@ with a performance cost, requiring more memory.
 
 taky was originally developed with a security focus. As such, SSL was expected
 to work out of the box, doing away with a need for TCP. However, many users
-have expressed a desire for a TCP monitoring port -- and one will be added in
-the future.
+also use some homebrew scripts for integration -- and setting up client
+certificates is burdensome. taky allows for a TCP monitoring port to be opened
+that receives all routed packets.
 
 As an added bonus though, taky's Data Package Server has several security
 benefits not yet found in FTS. First, taky's DPS enforces client certificates.

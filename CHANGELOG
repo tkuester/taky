@@ -4,7 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.4]
+## [0.9] - 2023/01/21
+
+### Added
+ - Kickban command allows admins to ban clients
+ - DPS endpoints that don't require client certificates
+ - Monitor clients receive persist data, can inject packets
+ - Monitor clients receive all routed packets, not just broadcast
+ - Relative path support for config
+
+### Changed
+ - Migrated from Python OpenSSL to Cryptography
+ - Pinned Flask dependency to ~2.0
+ - Improved "correctness" of cenerated certificates
+
+### Fixed
+ - SSL certs being generated in a way that Android rejects
+ - Packets with empty <marti/> tags get routed now
+
+### Contributors
+ - @fieldmapper, @sgofferj, @skadakar, and @FarrantAlex for their help wrangling
+   GitHub issues
+ - All the patient users in `#taky` who gave helpful feedback for this release
+
+## [0.8.4] - 2022-09-08
 
 ### Added
  - Management socket + status command
