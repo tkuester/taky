@@ -21,6 +21,44 @@ XML_EMPTY_MARTI_BC = b"""
 </event>
 """
 
+XML_MARTI_UID_BC = b"""
+<event version="2.0" uid="EB77220E-6299-4CA3-95FC-0200BD9FE78A" type="a-u-G" how="h-g-i-g-o" time="2023-01-12T09:53:31.000Z" start="2023-01-12T09:53:31.000Z" stale="2023-01-12T09:55:31.000Z">
+    <point lat="54.338986" lon="9.755263" hae="0.0" ce="0.0" le="0.0"/>
+    <detail>
+        <contact callsign="poop"/>
+        <precisionlocation geopointsrc="???" altsrc="???"/>
+        <status readiness="true"/>
+        <archive/>
+        <link uid="1874F828-5CF1-4289-B6C0-D4F6ABFB0B4D" production_time="2023-01-12T09:53:31Z" type="a-f-G-U-C" parent_callsign="FM05-iOS" relation="p-p"/>
+        <usericon iconsetpath="COT_MAPPING_2525B/a-u/a-u-G"/>
+        <color argb="-1"/>
+        <marti>
+            <dest uid="ANDROID-deadbeef" />
+        </marti>
+        <remarks/>
+    </detail>
+</event>
+"""
+
+XML_MARTI_CALLSIGN_BC = b"""
+<event version="2.0" uid="EB77220E-6299-4CA3-95FC-0200BD9FE78A" type="a-u-G" how="h-g-i-g-o" time="2023-01-12T09:53:31.000Z" start="2023-01-12T09:53:31.000Z" stale="2023-01-12T09:55:31.000Z">
+    <point lat="54.338986" lon="9.755263" hae="0.0" ce="0.0" le="0.0"/>
+    <detail>
+        <contact callsign="poop"/>
+        <precisionlocation geopointsrc="???" altsrc="???"/>
+        <status readiness="true"/>
+        <archive/>
+        <link uid="1874F828-5CF1-4289-B6C0-D4F6ABFB0B4D" production_time="2023-01-12T09:53:31Z" type="a-f-G-U-C" parent_callsign="FM05-iOS" relation="p-p"/>
+        <usericon iconsetpath="COT_MAPPING_2525B/a-u/a-u-G"/>
+        <color argb="-1"/>
+        <marti>
+            <dest callsign="JENNY" />
+        </marti>
+        <remarks/>
+    </detail>
+</event>
+"""
+
 
 class UnittestTAKClient(cot.TAKClient):
     def __init__(self, **kwargs):

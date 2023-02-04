@@ -29,12 +29,12 @@ class Detail:
         if marti is None:
             return False
 
-        return len(list(self.marti_cs)) > 0
+        return len(list(self.marti)) > 0
 
     @property
-    def marti_cs(self):
+    def marti(self):
         """
-        A list of callsigns in the Marti tag (if present)
+        A list of callsigns and UIDs in the Marti tag, in a tuple of (type, id)
 
         Returns an empty list if not present
         """
@@ -46,7 +46,11 @@ class Detail:
             return
 
         for dest in marti.iterfind("dest"):
-            yield dest.get("callsign")
+            # Prefer to use UID over Callsign
+            if dest.get("uid"):
+                yield ("uid", dest.get("uid"))
+            else:
+                yield ("callsign", dest.get("callsign"))
 
     @property
     def as_element(self):

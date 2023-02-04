@@ -10,7 +10,8 @@ from taky import cot
 from taky.config import load_config, app_config
 from taky.cot import models
 from taky.config import load_config
-from . import XML_S, XML_EMPTY_MARTI_BC, UnittestTAKClient
+from . import XML_S, XML_EMPTY_MARTI_BC, XML_MARTI_UID_BC, XML_MARTI_CALLSIGN_BC
+from . import UnittestTAKClient
 
 
 class RouterTestcase(ut.TestCase):
@@ -138,4 +139,56 @@ class RouterTestcase(ut.TestCase):
         # tk1 identifies self, tk2 should get message
         self.tk1.feed(msg)
         ret = self.tk2.queue.get_nowait()
+        self.assertTrue(ret.uid == "EB77220E-6299-4CA3-95FC-0200BD9FE78A")
+
+    def test_marti_uid(self):
+        """
+        This integration test sets up two clients, and ensures that packets with
+        <Marti> tags containing UIDs get routed.
+        """
+        # Both clients connect simultaneously
+        self.router.client_connect(self.tk1)
+        self.router.client_connect(self.tk2)
+
+        elm = etree.fromstring(XML_MARTI_UID_BC)
+        # TODO: Mock time, instead of using real time
+        now = dt.utcnow()
+        td = timedelta(days=10)
+
+        elm.set("time", now.isoformat())
+        elm.set("start", now.isoformat())
+        elm.set("stale", (now + td).isoformat())
+
+        msg = etree.tostring(elm)
+
+        # tk1 identifies self, tk2 should get message
+        self.tk1.feed(self.tk1_ident_msg)
+        self.tk2.feed(msg)
+        ret = self.tk1.queue.get_nowait()
+        self.assertTrue(ret.uid == "EB77220E-6299-4CA3-95FC-0200BD9FE78A")
+
+    def test_marti_callsign(self):
+        """
+        This integration test sets up two clients, and ensures that packets with
+        <Marti> tags containing callsigns get routed.
+        """
+        # Both clients connect simultaneously
+        self.router.client_connect(self.tk1)
+        self.router.client_connect(self.tk2)
+
+        elm = etree.fromstring(XML_MARTI_CALLSIGN_BC)
+        # TODO: Mock time, instead of using real time
+        now = dt.utcnow()
+        td = timedelta(days=10)
+
+        elm.set("time", now.isoformat())
+        elm.set("start", now.isoformat())
+        elm.set("stale", (now + td).isoformat())
+
+        msg = etree.tostring(elm)
+
+        # tk1 identifies self, tk2 should get message
+        self.tk1.feed(self.tk1_ident_msg)
+        self.tk2.feed(msg)
+        ret = self.tk1.queue.get_nowait()
         self.assertTrue(ret.uid == "EB77220E-6299-4CA3-95FC-0200BD9FE78A")

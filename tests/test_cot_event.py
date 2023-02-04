@@ -28,7 +28,7 @@ class COTTestcase(ut.TestCase):
         self.assertAlmostEqual(event.point.le, 9999999.0, places=1)
 
         self.assertFalse(event.detail.has_marti)
-        self.assertEqual(len(list(event.detail.marti_cs)), 0)
+        self.assertEqual(len(list(event.detail.marti)), 0)
 
     def test_marshall(self):
         event = models.Event.from_elm(self.elm)
