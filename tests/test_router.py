@@ -12,6 +12,7 @@ from taky.cot import models
 from taky.config import load_config
 from . import XML_S, XML_EMPTY_MARTI_BC, XML_MARTI_UID_BC, XML_MARTI_CALLSIGN_BC
 from . import UnittestTAKClient
+from .test_geo_chat import XML_GEOCHAT_UIDS
 
 
 class RouterTestcase(ut.TestCase):
@@ -79,10 +80,11 @@ class RouterTestcase(ut.TestCase):
         self.router.send_persist(self.tk1)
         self.assertRaises(queue.Empty, self.tk1.queue.get_nowait)
 
-    def test_geochat(self):
+    def test_geochat_to_user(self):
         # TK1 connects, and identifies
         self.router.client_connect(self.tk1)
         self.tk1.feed(self.tk1_ident_msg)
+        self.router.client_connect(self.tk2)
 
         gc = models.GeoChat(None)
         gc.src_cs = "TESTCASE"
@@ -108,13 +110,38 @@ class RouterTestcase(ut.TestCase):
 
         self.router.route(None, evt)
 
-        # TK1 should not have any packets yet...
+        # TK1 should have a packet...
         try:
             evt = self.tk1.queue.get_nowait()
             self.assertIsInstance(evt.detail, models.GeoChat)
             self.assertEqual(evt.detail.message, gc.message)
         except queue.Empty:
             self.fail("Message not routed to user")
+
+        # TK2 should not receive the message
+        self.assertRaises(queue.Empty, self.tk2.queue.get_nowait)
+
+    def test_geochat_to_group_uids(self):
+        # TK1 connects, and identifies
+        self.router.client_connect(self.tk1)
+        self.tk1.feed(self.tk1_ident_msg)
+        self.router.client_connect(self.tk2)
+
+        elm = etree.fromstring(XML_GEOCHAT_UIDS)
+        evt = models.Event.from_elm(elm)
+
+        self.router.route(None, evt)
+
+        # TK1 should have a packet yet...
+        try:
+            rx_evt = self.tk1.queue.get_nowait()
+            self.assertIsInstance(rx_evt.detail, models.GeoChat)
+            self.assertEqual(rx_evt.detail.message, rx_evt.detail.message)
+        except queue.Empty:
+            self.fail("Message not routed to user")
+
+        # TK2 should not receive the message
+        self.assertRaises(queue.Empty, self.tk2.queue.get_nowait)
 
     def test_empty_marti(self):
         """

@@ -76,6 +76,10 @@ class Event:
                 if child.tag == "point":
                     ret.point = Point.from_elm(child)
                 elif child.tag == "detail":
+                    # Unfortunately, the detail element isn't usually explicit as
+                    # to what type it is. This means we need to infer the type by
+                    # looking at what tags it contains.
+
                     d_tags = set([d_elm.tag for d_elm in child.iterchildren()])
                     if TAKUser.is_type(d_tags):
                         ret.detail = TAKUser.from_elm(child, uid=ret.uid)

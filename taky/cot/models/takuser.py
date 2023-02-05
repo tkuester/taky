@@ -65,6 +65,12 @@ class TAKUser(Detail):
 
     @staticmethod
     def is_type(tags):
+        """
+        Utility method to assist in identifying unknown events.
+
+        @param tags A list of tags contained in the detail
+        @return True if the detail contains the identifying tags
+        """
         return TAKUSER_TAGS.issubset(tags)
 
     @staticmethod

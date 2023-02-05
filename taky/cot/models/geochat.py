@@ -28,11 +28,11 @@ class GeoChat(Detail):
     def __init__(self, elm):
         super().__init__(elm)
 
+        # We get these fields explicitly
         self.chatroom = None  # detail/__chat.chatroom
         self.chat_parent = None  # detail/__chat.parent
         self.group_owner = False  # detail/__chat.groupOwner
 
-        # We get these fields explicitly
         self.src_uid = None  # detail/link.uid
         self.src_cs = None  # detail/__chat.senderCallsign
         self.src_marker = None  # detail/link.type
@@ -44,6 +44,8 @@ class GeoChat(Detail):
         self.dst_uid = None
         # cot.Teams (if a group message, otherwise None)
         self.dst_team = None
+        # A list of group member UIDs (if present)
+        self.dst_group_uids = []
 
     def __repr__(self):
         if self.broadcast:
@@ -60,6 +62,13 @@ class GeoChat(Detail):
                 self.message,
             )
 
+        if self.dst_group_uids:
+            return '<GeoChat src="%s", dst="%s", msg="%s">' % (
+                self.src_cs,
+                self.chatroom,
+                self.message,
+            )
+
         return '<GeoChat src="%s", dst_uid="%s", msg="%s">' % (
             self.src_cs,
             self.dst_uid,
@@ -73,6 +82,12 @@ class GeoChat(Detail):
 
     @staticmethod
     def is_type(tags):
+        """
+        Utility method to assist in identifying unknown events.
+
+        @param tags A list of tags contained in the detail
+        @return True if the detail contains the identifying tags
+        """
         return GEOCHAT_TAGS.issubset(tags)
 
     @staticmethod
@@ -103,6 +118,9 @@ class GeoChat(Detail):
         elif gch.chatroom != ALL_CHAT_ROOMS:
             # Router will have to fill out .dst
             gch.dst_uid = chat.get("id")
+
+        for contact in elm.iterfind("./__chat/hierarchy/group/group/contact"):
+            gch.dst_group_uids.append(contact.get("uid"))
 
         gch.message = remarks.text
         gch.message_ts = isoparse(remarks.get("time")).replace(tzinfo=None)

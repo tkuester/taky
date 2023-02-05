@@ -147,6 +147,9 @@ class COTRouter:
                 self.broadcast(src, evt)
             elif chat.dst_team:
                 self.group_broadcast(src, evt, group=chat.dst_team)
+            elif chat.dst_group_uids:
+                for uid in chat.dst_group_uids:
+                    self.send_user(src, evt, dst_uid=uid)
             else:
                 self.send_user(src, evt, dst_uid=chat.dst_uid)
             return

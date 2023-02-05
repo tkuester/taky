@@ -15,7 +15,10 @@ class Detail:
     @staticmethod
     def is_type(tags):  # pylint: disable=unused-argument
         """
-        Examines the tags in a detail to determine if it belongs to this class
+        Utility method to assist in identifying unknown events.
+
+        @param tags A list of tags contained in the detail
+        @return True if the detail contains the identifying tags
         """
         # Always return true for base class
         return True
