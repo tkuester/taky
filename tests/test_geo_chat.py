@@ -40,7 +40,7 @@ XML_GEOCHAT_UIDS = """
     <link uid="S-1-5-21-deadbeef" type="a-f-G-U-C-I" relation="p-p"/>
     <remarks source="BAO.F.WinTAK.S-1-5-21-deadbeef" sourceID="S-1-5-21-deadbeef" to="4ef822b6-6b70-405a-b059-997a3c1a8103" time="2023-02-05T00:44:32.75Z">test</remarks>
     <marti>
-      <dest callsign="FM05"/>
+      <dest callsign="JENNY"/>
     </marti>
   </detail>
 </event>

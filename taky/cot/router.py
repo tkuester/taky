@@ -156,12 +156,9 @@ class COTRouter:
 
         # Check for Marti, use first
         if evt.detail and evt.detail.has_marti:
-            self.lgr.debug("Handling marti")
-            for (marti_type, marti) in evt.detail.marti:
-                if marti_type == "uid":
-                    self.send_user(src, evt, dst_uid=marti)
-                elif marti_type == "callsign":
-                    self.send_user(src, evt, dst_cs=marti)
+            for (marti_uid, marti_cs) in evt.detail.marti:
+                self.lgr.debug(f"Handling marti {marti_uid=} {marti_cs=}")
+                self.send_user(src, evt, dst_uid=marti_uid, dst_cs=marti_cs)
             return
 
         # Assume broadcast

@@ -37,23 +37,16 @@ class Detail:
     @property
     def marti(self):
         """
-        A list of callsigns and UIDs in the Marti tag, in a tuple of (type, id)
+        A list of destinations in the Marti tag, represented as a tuple of
+        (uid, callsign).
 
         Returns an empty list if not present
         """
         if self.elm is None:
             return
 
-        marti = self.elm.find("marti")
-        if marti is None:
-            return
-
-        for dest in marti.iterfind("dest"):
-            # Prefer to use UID over Callsign
-            if dest.get("uid"):
-                yield ("uid", dest.get("uid"))
-            else:
-                yield ("callsign", dest.get("callsign"))
+        for dest in self.elm.iterfind("./marti/dest"):
+            yield (dest.get("uid"), dest.get("callsign"))
 
     @property
     def as_element(self):

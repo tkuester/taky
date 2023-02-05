@@ -199,8 +199,10 @@ class RouterTestcase(ut.TestCase):
         This integration test sets up two clients, and ensures that packets with
         <Marti> tags containing callsigns get routed.
         """
-        # Both clients connect simultaneously
+        # TK1 connects and identifies
         self.router.client_connect(self.tk1)
+        self.tk1.feed(self.tk1_ident_msg)
+
         self.router.client_connect(self.tk2)
 
         elm = etree.fromstring(XML_MARTI_CALLSIGN_BC)
@@ -214,8 +216,12 @@ class RouterTestcase(ut.TestCase):
 
         msg = etree.tostring(elm)
 
-        # tk1 identifies self, tk2 should get message
-        self.tk1.feed(self.tk1_ident_msg)
+        # tk2 sends message to tk1 (via router)
         self.tk2.feed(msg)
+
+        # tk1 should have the message
         ret = self.tk1.queue.get_nowait()
         self.assertTrue(ret.uid == "EB77220E-6299-4CA3-95FC-0200BD9FE78A")
+
+        # tk2 should not have the message
+        self.assertRaises(queue.Empty, self.tk2.queue.get_nowait)
