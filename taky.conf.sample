@@ -13,6 +13,10 @@
 #port=
 # Where to store a log of .cot messages from the client for debug purposes
 #log_cot=
+# The monitor IP address. Recommend 127.0.0.1
+#mon_ip=127.0.0.1
+# Pick any port to enable the monitor server (ssl must be enabled)
+#mon_port=12345
 
 [dp_server]
 # Where user datapackage uploads are stored.
