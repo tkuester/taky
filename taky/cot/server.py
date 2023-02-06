@@ -49,7 +49,7 @@ def check_socket(mgmt_sock_path):
 
 
 def ping_socket(mgmt_sock_path):
-    """Attemps to send a ping to the management socket to check for a running server"""
+    """Attempts to send a ping to the management socket to check for a running server"""
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         client.connect(mgmt_sock_path)

@@ -86,7 +86,7 @@ class SocketClient:
         raise NotImplementedError()
 
     def ssl_handshake(self):
-        """Preform the SSL handshake on the socket"""
+        """Perform the SSL handshake on the socket"""
         if self.ready:
             return
 

@@ -151,7 +151,7 @@ def systemd(args):
     using_venv = sys.prefix != sys.base_prefix
     if using_venv:
         print(f" - Detected virtualenv: {sys.prefix}")
-        print("   Service files will be built for this virutalenv")
+        print("   Service files will be built for this virtualenv")
 
     site_path = None
     global_site = config.get("taky", "cfg_path") == "/etc/taky/taky.conf"
@@ -183,7 +183,7 @@ def systemd(args):
     for svc in svcs:
         path = os.path.join(args.path, svcs[svc])
         if os.path.exists(path):
-            print(f"ERROR: Refusing to overwite service file: {path}", file=sys.stderr)
+            print(f"ERROR: Refusing to overwrite service file: {path}", file=sys.stderr)
             return 1
 
     print(f" - Writing services to {args.path}")
