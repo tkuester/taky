@@ -75,6 +75,9 @@ def load_config(path=None, explicit=False):
 
         ret_config.set("taky", "root_dir", ".")
         ret_config.set("dp_server", "upload_path", "./dp-user")
+    
+    # Set the config path
+    ret_config.set("taky","cfg_path",path)
 
     # Make directories absolute
     for (sect, opt) in [
@@ -133,8 +136,7 @@ def load_config(path=None, explicit=False):
                 f_path = os.path.realpath(os.path.join(cfg_dir, f_path))
                 ret_config.set("ssl", f_name, f_path)
 
-    if explicit:
-        ret_config.set("taky", "cfg_path", path)
+
 
     app_config.clear()
     app_config.update(ret_config)
