@@ -2,6 +2,8 @@ from .xmldeclstrip import XMLDeclStrip
 from . import anc
 from . import datapackage
 
+import os.path
+
 
 def seconds_to_human(sec):
     """
@@ -21,11 +23,7 @@ def seconds_to_human(sec):
 
     ret = "%02dh %02dm %06.3fs" % (hours, minutes, sec)
     if days > 0:
-        if days > 1:
-            ret = "%dd " % days + ret
-        else:
-            ret = "%dd " % days + ret
-
+        ret = "%dd " % days + ret
     return ret
 
 
@@ -61,3 +59,12 @@ def pprinttable(rows):
     print(separator)
     for line in rows:
         print(pattern % tuple(t for t in line))
+
+
+def is_file_safe(file_name, dir_path):
+    """
+    Ensure that path traversal is not possible
+    """
+    file_path = os.path.dirname(file_name)
+    real_dir = os.path.realpath(file_path)
+    return os.path.realpath(dir_path) == real_dir
