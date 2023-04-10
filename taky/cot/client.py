@@ -4,6 +4,7 @@ import time
 import enum
 from datetime import datetime as dt
 from datetime import timedelta
+from datetime import date
 import socket
 import ssl
 import logging
@@ -12,6 +13,7 @@ import traceback
 from lxml import etree
 
 from taky.config import app_config
+from taky.util import is_file_safe
 from taky.util import XMLDeclStrip
 from . import models
 
@@ -182,6 +184,7 @@ class TAKClient:
 
         self.log_cot_dir = app_config.get("cot_server", "log_cot")
         self.cot_fp = None
+        self.log_date = date.today().isoformat()
 
         parser = etree.XMLPullParser(tag="event", resolve_entities=False)
         parser.feed(b"<root>")
@@ -230,23 +233,37 @@ class TAKClient:
         if evt and evt.uid and evt.uid.endswith("-ping"):
             return
 
+        # Rotating logs
+        if self.cot_fp:
+            tdate = date.today()
+            isodate = tdate.isoformat()
+            if self.log_date != isodate:
+                self.close_cot()
+                self.log_date = isodate
+
         # Open the COT file if it's the first run
         if not self.cot_fp:
             # Don't log if we don't have a user yet
             if self.user and self.user.uid:
                 name = os.path.join(
-                    self.log_cot_dir, f"{self.user.uid}-{self.user.callsign}.cot"
+                    self.log_cot_dir,
+                    f"{self.log_date}-{self.user.uid}-{self.user.callsign}.cot",
                 )
             elif hasattr(self, "addr"):
                 name = "monitor" if self.monitor else "anonymous"
-                name = os.path.join(self.log_cot_dir, f"{name}-{self.addr[0]}.cot")
+                name = os.path.join(
+                    self.log_cot_dir, f"{self.log_date}-{name}-{self.addr[0]}.cot"
+                )
             else:
                 # Don't have a way to determine log file name!
                 return
 
             try:
                 self.lgr.debug("Opening logfile %s", name)
-                self.cot_fp = open(name, "a+", encoding="utf8")
+                if is_file_safe(name, self.log_cot_dir):
+                    self.cot_fp = open(name, "a+", encoding="utf8")
+                else:
+                    self.lgr.error("The file name %s is not valid", name)
             except OSError as exc:
                 self.lgr.warning("Unable to open COT log: %s", exc)
                 self.cot_fp = None
@@ -282,7 +299,7 @@ class TAKClient:
         # TODO: Specify maximum element size
         self.xdc.feed(data)
 
-        for (_, elm) in self.xdc.read_events():
+        for _, elm in self.xdc.read_events():
             self.num_rx += 1
             self.last_rx = time.time()
             try:
