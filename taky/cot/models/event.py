@@ -20,6 +20,7 @@ class Event:
         start=None,
         stale=None,
         version="2.0",
+        opex=None,
     ):
         self.version = version
         self.uid = uid
@@ -28,6 +29,7 @@ class Event:
         self.time = time
         self.start = start
         self.stale = stale
+        self.opex = opex
 
         self.point = Point()
         self.detail = None
@@ -63,6 +65,7 @@ class Event:
             time=time,
             start=start,
             stale=stale,
+            opex=elm.get("opex"),
         )
 
         if ret.uid is None:
@@ -105,6 +108,10 @@ class Event:
         ret.set("time", self.time.isoformat(timespec="milliseconds") + "Z")
         ret.set("start", self.start.isoformat(timespec="milliseconds") + "Z")
         ret.set("stale", self.stale.isoformat(timespec="milliseconds") + "Z")
+
+        if self.opex is not None:
+            ret.set("opex", self.opex)
+
         ret.append(self.point.as_element)
         if self.detail is not None:
             ret.append(self.detail.as_element)

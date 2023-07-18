@@ -3,7 +3,7 @@ import unittest as ut
 from lxml import etree
 
 from taky.cot import models
-from . import elements_equal, XML_S
+from . import elements_equal, XML_S, XML_NO_OPEX
 
 
 class COTTestcase(ut.TestCase):
@@ -19,6 +19,7 @@ class COTTestcase(ut.TestCase):
         self.assertEqual(event.etype, "a-f-G-U-C")
         self.assertEqual(event.how, "m-g")
         self.assertEqual(event.time, event.start)
+        self.assertEqual(event.opex, "foo")
 
         # Point
         self.assertAlmostEqual(event.point.lat, 1.234567, places=6)
@@ -37,6 +38,15 @@ class COTTestcase(ut.TestCase):
         elm = etree.fromstring(XML_S)
 
         self.assertTrue(elements_equal(elm, event.as_element))
+
+    def test_marshall_with_opex(self):
+        elmEvent = models.Event.from_elm(self.elm).as_element
+        self.assertEqual("foo", elmEvent.get("opex"))
+
+    def test_marshall_without_opex(self):
+        element = etree.fromstring(XML_NO_OPEX)
+        elmEvent = models.Event.from_elm(element).as_element
+        self.assertIsNone(elmEvent.get("opex"))
 
     def test_marshall_err_tagname(self):
         self.elm.tag = "xxx"
