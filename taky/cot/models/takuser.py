@@ -89,7 +89,7 @@ class TAKUser(Detail):
                 ret.battery = d_elm.get("battery")
             elif d_elm.tag == "track":
                 course_attr = d_elm.get("course")
-                speed_attr = d_elem.get("speed")
+                speed_attr = d_elm.get("speed")
                 if course_attr != None:
                     ret.course = float(course_attr)
                 if speed_attr != None:
