@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          push: ${{inputs.push}}
+          push: true
           platforms: ${{ env.PLATFORMS }}
           pull: true
           build-args: VERSION=${{ github.ref_name }}
