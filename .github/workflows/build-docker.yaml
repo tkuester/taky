@@ -58,7 +58,7 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           pull: true
           build-args: VERSION=${{ github.ref_name }}
-          tags: ${{ steps.docker-meta.outputs.tags }}
+          tags: ${{ steps.taky-meta.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
