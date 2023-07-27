@@ -44,8 +44,8 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker meta for postgres-operator
-        id: postgres-operator-meta
+      - name: Docker meta for taky
+        id: taky-meta
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/${{ github.repository_owner }}/taky
@@ -53,7 +53,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: docker/${{inputs.image-name}}
+          context: .
           push: ${{inputs.push}}
           platforms: ${{ env.PLATFORMS }}
           pull: true
