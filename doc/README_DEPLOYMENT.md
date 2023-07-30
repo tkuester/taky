@@ -110,7 +110,7 @@ security practice to run daemons under users other than root. We will name
 our user `stickytak`, but you can choose any username you like.
 
 ```
-$ sudo adduser stickytak.
+admin@bluetack:~$ sudo adduser stickytak
 ```
 
 Step 2. Use `takyctl` to build the required files
@@ -124,7 +124,7 @@ admin@bluetack:~$ sudo takyctl setup --user stickytak \
                                      --public-ip 192.168.1.100 \
                                      --host bluetack
 
-admin@bluetack:~$ ls -l /etc/taky
+admin@bluetack:~$ ls -lR /etc/taky
 /etc/taky:
 total 8
 drwxr-xr-x 2 stickytak stickytak 4096 Feb 27 20:12 ssl
@@ -143,12 +143,16 @@ admin@bluetack:~$ cat /etc/taky/taky.conf
 hostname = bluetack
 node_id = TAKY
 bind_ip = 0.0.0.0
-public_ip = 192.168.1.91
+public_ip = 192.168.1.100
 redis
+root_dir = /var/taky
 
 [cot_server]
 port = 8089
+mon_ip
+mon_port
 log_cot
+max_persist_ttl = -1
 
 [dp_server]
 upload_path = /var/taky/dp-user
@@ -165,7 +169,7 @@ key = /etc/taky/ssl/server.key
 key_pw
 ```
 
-Step 3. Configure the redis backend
+Step 3. Configure the redis backend (Optional)
 
 If you want the map items to persist between runs of taky, you'll need to
 install the redis server. (If you're following the instructions, you already
@@ -180,7 +184,7 @@ redis = true
 Step 4. Generate a client certificate
 
 All your users will need a client certificate. This is fairly straight forward
-to do! 
+to do!
 
 For ATAK/Wintak/TakTracker:
 ```
@@ -207,7 +211,7 @@ For the COT server:
 ```
 admin@bluetack:~$ sudo su stickytak
 stickytak@bluetack:~$ taky
-INFO:root:taky v0.7
+INFO:root:taky v0.9
 INFO:load_config:Loading config file from /etc/taky/taky.conf
 INFO:COTServer:Loading CA certificate from /etc/taky/ssl/ca.crt
 INFO:COTServer:Listening for ssl on 0.0.0.0:8089
@@ -232,7 +236,7 @@ Step 6. Setup systemd services
 From the command line, run
 
 ```
-admin@bluetack:~$ takyctl systemd -u stickytak
+admin@bluetack:~$ sudo takyctl systemd -u stickytak
 [sudo] password for admin:
 Building systemd services
  - Detected system-wide site install
