@@ -67,6 +67,9 @@ def load_config(path=None, explicit=False):
         cfg_dir = os.path.realpath(os.path.dirname(path))
         with open(path, "r", encoding="utf8") as cfg_fp:
             ret_config.read_file(cfg_fp, source=path)
+
+        # We know the file exists now, set the config path
+        ret_config.set("taky", "cfg_path", path)
     elif explicit:
         raise FileNotFoundError("Config file required, but not present")
     else:
@@ -75,9 +78,6 @@ def load_config(path=None, explicit=False):
 
         ret_config.set("taky", "root_dir", ".")
         ret_config.set("dp_server", "upload_path", "./dp-user")
-    
-    # Set the config path
-    ret_config.set("taky","cfg_path",path)
 
     # Make directories absolute
     for (sect, opt) in [
@@ -135,8 +135,6 @@ def load_config(path=None, explicit=False):
             if f_path and not os.path.isabs(f_path):
                 f_path = os.path.realpath(os.path.join(cfg_dir, f_path))
                 ret_config.set("ssl", f_name, f_path)
-
-
 
     app_config.clear()
     app_config.update(ret_config)
