@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import socket
+import argparse
 
 from taky.config import DEFAULT_CFG
 from taky.config import app_config as config
@@ -21,34 +22,62 @@ def setup_taky_reg(subp):
         default="atakatak",
         help="Password for server .p12 [%(default)s]",
     )
-    setup.add_argument(
-        "--user", dest="user", default=None, help="User/group for file permissions"
-    )
-    setup.add_argument(
+
+    grp = setup.add_argument_group("SSL", "Options for SSL")
+    grp2 = grp.add_mutually_exclusive_group()
+    grp2.add_argument(
         "--no-ssl",
         dest="use_ssl",
         action="store_false",
         help="Disable SSL for the server",
     )
-    setup.add_argument(
+    grp2.add_argument(
+        "--cafile",
+        dest="cafile",
+        type=argparse.FileType(),
+        help="Specify a CA file to use for certificates",
+    )
+    grp.add_argument(
+        "--cakey",
+        dest="cakey",
+        type=argparse.FileType(),
+        help="Specify the CA's key",
+    )
+
+    grp = setup.add_argument_group("Network", "Hostname and IP Settings")
+    grp.add_argument(
         "--host",
         dest="hostname",
         default=default_hostname,
         help="Server hostname [%(default)s]",
     )
-    setup.add_argument(
+    grp.add_argument(
         "--bind-ip", dest="ip", default="0.0.0.0", help="Bind Address [%(default)s]"
     )
-    setup.add_argument(
+    grp.add_argument(
         "--public-ip", dest="public_ip", required=True, help="Public IP address"
     )
 
-    setup.add_argument("path", nargs="?", help="Optional path for taky install")
+    grp = setup.add_argument_group("Host OS", "Configuration for the Host OS")
+    grp.add_argument(
+        "--user", dest="user", default=None, help="User/group for file permissions"
+    )
+    grp.add_argument("path", nargs="?", help="Optional path for taky install")
 
 
 def setup_taky(args):
     config.clear()
     config.read_dict(DEFAULT_CFG)
+
+    if args.cafile:
+        config.set("ssl", "ca", os.path.abspath(args.cafile.name))
+
+        if not args.cakey:
+            # TODO: I think you can have the key and CA together...
+            print("ERROR: Please specify the path to your CA key")
+            return 1
+
+        config.set("ssl", "ca_key", os.path.abspath(args.cakey.name))
 
     if args.path:
         if os.path.exists(args.path):
@@ -72,8 +101,10 @@ def setup_taky(args):
 
         config.set("taky", "root_dir", ".")
 
-        config.set("ssl", "ca", os.path.join(".", "ssl", "ca.crt"))
-        config.set("ssl", "ca_key", os.path.join(".", "ssl", "ca.key"))
+        if not args.cafile:
+            config.set("ssl", "ca", os.path.join(".", "ssl", "ca.crt"))
+            config.set("ssl", "ca_key", os.path.join(".", "ssl", "ca.key"))
+
         config.set("ssl", "server_p12", os.path.join(".", "ssl", "server.p12"))
         config.set("ssl", "cert", os.path.join(".", "ssl", "server.crt"))
         config.set("ssl", "key", os.path.join(".", "ssl", "server.key"))
@@ -130,15 +161,15 @@ def setup_taky(args):
                 shutil.chown(dir_name, user=args.user, group=args.user)
 
     if config.getboolean("ssl", "enabled"):
-        if os.path.exists(config.get("ssl", "ca")):
-            ca_path = config.get("ssl", "ca")
-            print(f"ERROR: CA exists at {ca_path}, stopping here", file=sys.stderr)
-            return 1
-
-        print(" - Generating certificate authority")
-        anc.make_ca(
-            crt_path=config.get("ssl", "ca"), key_path=config.get("ssl", "ca_key")
-        )
+        if not os.path.exists(config.get("ssl", "ca")):
+            print(" - Generating certificate authority")
+            anc.make_ca(
+                crt_path=config.get("ssl", "ca"), key_path=config.get("ssl", "ca_key")
+            )
+        else:
+            print(
+                f" - Will use provided certificate authority: '{config.get('ssl', 'ca')}'"
+            )
 
         if args.user:
             shutil.chown(config.get("ssl", "ca"), user=args.user, group=args.user)
@@ -148,16 +179,26 @@ def setup_taky(args):
         cert_db = anc.CertificateDatabase()
 
         print(" - Generating server certificate")
-        server_cert = anc.make_cert(
-            path=ssl_path,
-            f_name="server",
-            hostname=args.hostname,
-            cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
-            cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
-            dump_pem=True,
-            key_in_pem=False,
-            is_server_cert=True,
-        )
+        try:
+            server_cert = anc.make_cert(
+                path=ssl_path,
+                f_name="server",
+                hostname=args.hostname,
+                cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
+                cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
+                dump_pem=True,
+                key_in_pem=False,
+                is_server_cert=True,
+            )
+        except TypeError as exc:
+            print("ERROR: Unable to build server certificate.")
+            if args.cafile:
+                print(
+                    "       Check provided CA. If encrypted, use CA_PASS env to decrypt"
+                )
+            print(f"        - Exception: {exc}")
+            return 1
+
         cert_db.add_certificate(server_cert)
 
         if args.user:

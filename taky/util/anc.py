@@ -152,7 +152,11 @@ def make_cert(
 
     # Load CA
     (ca_crt_path, ca_key_path) = cert_auth
-    (ca_crt, ca_key) = load_certificate(ca_crt_path, ca_key_path)
+    ca_pass = os.environ.get("CA_PASS")
+    if ca_pass:
+        ca_pass = ca_pass.encode()
+
+    (ca_crt, ca_key) = load_certificate(ca_crt_path, ca_key_path, ca_pass)
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 

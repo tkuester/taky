@@ -62,16 +62,22 @@ def build_client(args):
 
     # Build client certificates
     client_pkg_name = f"{args.name}-{uuid.uuid4()}"
-    client_cert = anc.make_cert(
-        path=cdir,
-        f_name=client_pkg_name,
-        hostname=args.name,
-        cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
-        cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
-        dump_pem=args.dump_pem,
-        key_in_pem=True,
-        is_server_cert=False,
-    )
+    try:
+        client_cert = anc.make_cert(
+            path=cdir,
+            f_name=client_pkg_name,
+            hostname=args.name,
+            cert_pw=args.p12_pw,  # TODO: OS environ? -p is bad
+            cert_auth=(config.get("ssl", "ca"), config.get("ssl", "ca_key")),
+            dump_pem=args.dump_pem,
+            key_in_pem=True,
+            is_server_cert=False,
+        )
+    except TypeError as exc:
+        print("ERROR: Unable to build client certificate")
+        print(f"       - Message: {exc}")
+        sys.exit(1)
+
     cert_db.add_certificate(client_cert)
 
     # Build .pref file
