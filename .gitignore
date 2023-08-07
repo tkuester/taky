@@ -18,3 +18,4 @@ htmlcov
 *.pem
 *.p12
 *.zip
+.venv
