@@ -181,9 +181,20 @@ def datapackage_metadata_tool(f_hash):
     if not meta:
         return f"Could not find file matching {f_hash}", 404
 
-    visibility = (
-        "public" if request.get_data().decode("utf-8") == "public" else "private"
-    )
+    max_content_length = 4096
+    data_len = request.content_length
+    if data_len > max_content_length:
+        return "Content length must be <= f{max_content_length}", 400
+
+    try:
+        r_data = request.get_data().decode().strip()
+    except UnicodeDecodeError:
+        return "Invalid data, unable to decode", 400
+
+    if r_data not in ["public", "private"]:
+        return f"Unexpected value: {r_data}", 400
+
+    visibility = "public" if r_data == "public" else "private"
 
     if meta.get("Visibility", "private") != visibility:
         meta["Visibility"] = visibility
