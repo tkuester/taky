@@ -17,7 +17,12 @@ def url_for(f_hash):
 
 def get_meta(f_hash=None, f_name=None):
     """
-    Gets the metadata for an assigned filename or hash
+    Gets the metadata for an assigned filename or hash. If no file is found, then an empty
+    dictionary is returned to the user.
+
+    @param f_hash The file hash to index on
+    @param f_name The name of the file
+    @return A dictionary of the JSON metadata, or an empty dictionary on error.
     """
     if f_hash:
         meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
@@ -92,12 +97,17 @@ def datapackage_get():
         return "Must supply hash", 400
 
     meta = get_meta(f_hash=f_hash)
-    name = os.path.join(app.config["UPLOAD_PATH"], meta["UID"])
+    uid = meta.get("UID")
+    if uid is None:
+        return f"Can't find metadata for {f_hash}", 404
 
-    if not os.path.exists(name):
-        return f"Can't find {name}", 404
+    f_name = meta.get("Name", f"{uid}.bin")
+    f_path = os.path.join(app.config["UPLOAD_PATH"], uid)
 
-    return send_file(name, as_attachment=True, download_name=meta["Name"])
+    if not os.path.exists(f_path):
+        return f"Can't find {f_path}", 404
+
+    return send_file(f_path, as_attachment=True, download_name=f_name)
 
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])
