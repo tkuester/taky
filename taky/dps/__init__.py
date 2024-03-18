@@ -9,23 +9,25 @@ from taky.config import load_config, app_config
 application = app = Flask(__name__)
 
 
-def requires_auth(func, config):
+def requires_auth(func):
     """
     Function to ensure that a valid client certificate is submitted if SSL is enabled
     """
-
-	
-    if config.getboolean("ssl", "enabled"):
-        return check_headers
-
+        
     @functools.wraps(func)
     def check_headers(*args, **kwargs):
         if not flask.request.headers.get("X-USER"):
-            flask.abort(401)
+            if app.config["SSL"] == True:
+                flask.abort(401)
+            else:
+                return func(*args, **kwargs)
+            
         if flask.request.headers.get("X-REVOKED"):
             flask.abort(403)
 
         return func(*args, **kwargs)
+	
+    return check_headers
 
 
 
@@ -37,8 +39,10 @@ def configure_app(config):
     cot_port = config.getint("cot_server", "port")
     if config.getboolean("ssl", "enabled"):
         app.config["COT_CONN_STR"] = f'ssl:{app.config["HOSTNAME"]}:{cot_port}'
+        app.config["SSL"] = True
     else:
         app.config["COT_CONN_STR"] = f'tcp:{app.config["HOSTNAME"]}:{cot_port}'
+        app.config["SSL"] = False
 
 
 try:
