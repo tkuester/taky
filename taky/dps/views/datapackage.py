@@ -42,6 +42,9 @@ def put_meta(meta):
 
     # Save the file's meta/{filename}.json
     meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
+    # Create directories if they do not exist
+    os.makedirs(os.path.dirname(meta_path), exist_ok=True)
+    
     with open(meta_path, "w", encoding="utf8") as meta_fp:
         json.dump(meta, meta_fp)
 
@@ -135,8 +138,12 @@ def datapackage_upload():
         except:  # pylint: disable=bare-except
             pass
 
+    
     # Save the uploaded file
     file_path = os.path.join(app.config["UPLOAD_PATH"], filename)
+    
+    # Create the directory if it doesn't exist 
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     asset_fp.save(file_path)
 
     sub_user = request.headers.get("X-USER", "Anonymous")
