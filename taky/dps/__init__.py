@@ -9,10 +9,14 @@ from taky.config import load_config, app_config
 application = app = Flask(__name__)
 
 
-def requires_auth(func):
+def requires_auth(func, config):
     """
-    Function to ensure that a valid client certificate is submitted
+    Function to ensure that a valid client certificate is submitted if SSL is enabled
     """
+
+	
+    if config.getboolean("ssl", "enabled"):
+        return check_headers
 
     @functools.wraps(func)
     def check_headers(*args, **kwargs):
@@ -23,7 +27,6 @@ def requires_auth(func):
 
         return func(*args, **kwargs)
 
-    return check_headers
 
 
 def configure_app(config):
