@@ -13,6 +13,7 @@ from lxml import etree
 
 from taky.config import app_config
 from taky.util import XMLDeclStrip
+from taky import util
 from . import models
 
 
@@ -246,6 +247,8 @@ class TAKClient:
 
             try:
                 self.lgr.debug("Opening logfile %s", name)
+                if not util.is_file_safe(name,self.log_cot_dir):
+                    raise OSError(f"Illegal file path {name}" )
                 self.cot_fp = open(name, "a+", encoding="utf8")
             except OSError as exc:
                 self.lgr.warning("Unable to open COT log: %s", exc)
