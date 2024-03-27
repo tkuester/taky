@@ -61,3 +61,12 @@ def pprinttable(rows):
     print(separator)
     for line in rows:
         print(pattern % tuple(t for t in line))
+
+
+def is_file_safe(file_name, dir_path):
+    """
+    Ensure that path traversal is not possible
+    """
+    file_path = os.path.dirname(file_name)
+    real_dir = os.path.realpath(file_path)
+    return os.path.realpath(dir_path) == real_dir
