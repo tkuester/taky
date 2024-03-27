@@ -328,8 +328,8 @@ class CertificateDatabase:
 
         self.cert_db_sn[cert.serial_number] = {
             "status": "V",
-            "issued": cert.not_valid_before,
-            "expires": cert.not_valid_after,
+            "issued": cert.not_valid_before_utc,
+            "expires": cert.not_valid_after_utc,
             "serial_num": cert.serial_number,
             "name": common_name,
         }
