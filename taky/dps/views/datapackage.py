@@ -1,5 +1,7 @@
 import os
 import json
+import hashlib
+import magic
 from datetime import datetime as dt
 
 from flask import request, send_file
@@ -99,6 +101,57 @@ def datapackage_get():
 
     return send_file(name, as_attachment=True, download_name=meta["Name"])
 
+#Experimental reverse-engineered endpoint for iTAK Datapackage upload
+@app.route("/Marti/sync/upload", methods=["POST"])
+@requires_auth
+def datapackage_upload_itak():
+    mime = magic.Magic(mime=True)
+    try:
+        name = request.args["name"]
+        uid = request.args["uid"]
+        creator_uid = request.args["CreatorUid"]
+        f_hash = hashlib.sha256(request.data)
+        keywords = request.args["keywords"]
+    except KeyError:
+        return "Invalid arguments", 400
+
+    filename = secure_filename(f"{creator_uid}_{name}")
+
+    meta = get_meta(f_name=filename)
+    if meta.get("Hash") != f_hash:
+        old_meta_hash_path = os.path.join(
+            app.config["UPLOAD_PATH"], "meta", f'{meta.get("Hash")}.json'
+        )
+        try:
+            os.unlink(old_meta_hash_path)
+        except:  # pylint: disable=bare-except
+            pass
+
+    # Save the uploaded file
+    file_path = os.path.join(app.config["UPLOAD_PATH"], filename)
+    with open(file_path, "wb") as binary_file:
+        binary_file.write(request.data)
+
+    sub_user = request.headers.get("X-USER", "Anonymous")
+    meta = {
+        "UID": uid,  # What the file will be saved as
+        "Name": name,  # File name on the server
+        "Hash": f_hash.hexdigest(),  # SHA-256, checked
+        "PrimaryKey": 1,  # Not used, must be >= 0
+        "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
+        "SubmissionUser": sub_user,
+        "CreatorUid": creator_uid,
+        "Keywords": f"{keywords}",
+        "MIMEType": f"{mime.from_buffer(request.data)}",
+        "Size": os.path.getsize(file_path),  # Checked, do not fake
+        "Visibility": "public",
+    }
+
+    put_meta(meta)
+
+    # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
+    # This is needed for client-to-client data package transmission
+    return url_for(f_hash.hexdigest())
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])
 @requires_auth
