@@ -38,7 +38,7 @@ taky - A simple COT server for ATAK
 
 Looking for an indepth feature comparison?
 
-## Requirements
+## Hardware and Software Requirements
 
  * Python 3.6 or greater
  * lxml (BSD)
@@ -52,6 +52,12 @@ This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
 ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and has even been tested
 on a CentOS 8 docker image! As the package is available on pip, it should run
 on most modern linux distros and docker containers!
+
+taky has minimal hardware requirements, and runs comfortably on small VPS's,
+embedded systems, and old desktops. Many users have reported successful usage
+on older models of RaspberryPi and the smallest Digital Ocean droplets. If you
+have at least 128 MB of RAM free, you should be able to run taky just fine
+with up to 100 clients.
 
 ## Installation
 
