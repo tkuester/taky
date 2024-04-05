@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Support for GeoChat with custom groups
  - Support for Marti packets using UIDs
 
+## [0.9] - 2024/04/05
+
+### Fixed
+ - Fixed a critical bug in the data package server which would permit
+   unauthorized users to access URL's that require a valid client certificate.
+
+### Contributors
+ - Big thanks to @CyberXZT for finding the security vulnerability!
+ - Thanks to @chcksnpr42 for helping improve documentation!
+
 ## [0.9] - 2023/01/21
 
 ### Added

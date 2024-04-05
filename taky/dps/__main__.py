@@ -53,6 +53,19 @@ class ClientCertificateWorker(SyncWorker):
         headers = dict(req.headers)
         peer_cert = client.getpeercert()
 
+        # Don't let users specify these header values
+        forbidden_keys = [
+            "X-USER",
+            "X-SERIAL_NUMBER",
+            "X-ISSUER",
+            "X-REVOKED",
+            "X-NOT_BEFORE",
+            "X-NOT_AFTER",
+        ]
+        for keyname in forbidden_keys:
+            if keyname in headers:
+                headers.pop(keyname)
+
         if peer_cert:
             subject = dict(
                 [i for subtuple in peer_cert.get("subject") for i in subtuple]
