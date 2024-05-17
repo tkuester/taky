@@ -1,9 +1,12 @@
-name: Pylint
+name: Linting and testing
 
 on:
   push:
+    branches:
+      - main
     paths:
-    - 'taky/**'
+      - 'taky/**'
+  pull_request:
   workflow_dispatch:
 
 jobs:
