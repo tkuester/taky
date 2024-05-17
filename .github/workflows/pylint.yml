@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     outputs:
@@ -15,12 +15,12 @@ jobs:
       cov-pct: ${{ steps.tests.outputs.cov-pct }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - id: setup-python
-      name: Set up Python 3.8
+      name: Set up Python 3.11
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.11
     - id: pip-cache
       name: Cache pip
       uses: actions/cache@v2
@@ -41,7 +41,7 @@ jobs:
     - id: pylint
       name: Analyzing the code with pylint
       run: |
-        python3 -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('::set-output name=score::%.2f' % ret.linter.stats.global_note)"
+        python3 -c "from pylint.lint import Run; ret = Run(['taky']); print('::set-output name=score::%.2f' % ret.linter.stats.global_note)"
     - id: tests
       name: Running unit tests, generating coverage
       run: |
@@ -50,7 +50,7 @@ jobs:
         echo "::set-output name=cov-pct::${COV_PCT}"
   badges:
     runs-on: ubuntu-latest
-    needs: build
+    needs: lint-and-test
     steps:
     - id: shieldsio-pylint
       name: Create the Pylint Badge
