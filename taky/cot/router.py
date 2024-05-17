@@ -2,6 +2,7 @@
 import time
 import enum
 import logging
+from pytz import UTC
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -126,6 +127,7 @@ class COTRouter:
         Send a message to a destination by callsign or UID
         """
         for client in self.find_clients(uid=dst_uid, callsign=dst_cs):
+            self.lgr.debug("%s -> %s: %s", src.user, client.user, msg)
             client.send_event(msg)
 
     def route(self, src, evt):
@@ -138,7 +140,7 @@ class COTRouter:
         # If configured, constrain events to a max TTL
         if self.max_ttl >= 0:
             if evt.persist_ttl > self.max_ttl:
-                evt.stale = dt.utcnow() + timedelta(seconds=self.max_ttl)
+                evt.stale = dt.now(UTC) + timedelta(seconds=self.max_ttl)
 
         # Special handling for chat messages
         if isinstance(evt.detail, models.GeoChat):
@@ -153,9 +155,13 @@ class COTRouter:
 
         # Check for Marti, use first
         if evt.detail and evt.detail.has_marti:
-            self.lgr.debug("Handling marti")
+            self.lgr.debug("Handling marti: %s %s",
+                            [callsign for callsign in evt.detail.marti_cs], [uid for uid in evt.detail.marti_uid])
             for callsign in evt.detail.marti_cs:
                 self.send_user(src, evt, dst_cs=callsign)
+
+            for uid in evt.detail.marti_uid:
+                self.send_user(src, evt, dst_uid=uid)
             return
 
         # Assume broadcast

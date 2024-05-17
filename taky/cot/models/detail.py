@@ -46,7 +46,26 @@ class Detail:
             return
 
         for dest in marti.iterfind("dest"):
-            yield dest.get("callsign")
+            if dest.get("callsign") is not None:
+                yield dest.get("callsign")
+                
+    @property
+    def marti_uid(self):
+        """
+        A list of UIDs in the Marti tag (if present)
+
+        Returns an empty list if not present
+        """
+        if self.elm is None:
+            return
+
+        marti = self.elm.find("marti")
+        if marti is None:
+            return
+
+        for dest in marti.iterfind("dest"):
+            if dest.get("uid") is not None:
+                yield dest.get("uid")
 
     @property
     def as_element(self):
