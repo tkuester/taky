@@ -1,8 +1,11 @@
 import os
 import json
+import hashlib
+
 from datetime import datetime as dt
 
 from flask import request, send_file
+from pytz import UTC
 from werkzeug.utils import secure_filename
 
 from taky.dps import app, requires_auth
@@ -37,18 +40,18 @@ def put_meta(meta):
     """
     Updates the metadata - the supplied hash/UID is used to find the target file
     """
-    filename = meta.get("UID")
+    f_uid = meta.get("UID")
     f_hash = meta.get("Hash")
 
-    # Save the file's meta/{filename}.json
-    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
+    # Save the file's meta/{f_uid}.json
+    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_uid}.json")
     with open(meta_path, "w", encoding="utf8") as meta_fp:
         json.dump(meta, meta_fp)
 
-    # Symlink the meta/{f_hash}.json to {filename}.json
+    # Symlink the meta/{f_hash}.json to {f_uid}.json
     meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
     try:
-        os.symlink(f"{filename}.json", meta_hash_path)
+        os.symlink(f"{f_uid}.json", meta_hash_path)
     except FileExistsError:
         pass
 
@@ -65,6 +68,7 @@ def datapackage_search():
     """
     ret = []
     for item in os.listdir(app.config["UPLOAD_PATH"]):
+        
         path = os.path.join(app.config["UPLOAD_PATH"], item)
         if not os.path.isfile(path):
             continue
@@ -73,7 +77,7 @@ def datapackage_search():
         meta = get_meta(f_name=item)
         if meta and meta.get("Visibility", "public") == "public":
             ret.append(meta)
-
+    
     return {"resultCount": len(ret), "results": ret}
 
 
@@ -92,13 +96,76 @@ def datapackage_get():
         return "Must supply hash", 400
 
     meta = get_meta(f_hash=f_hash)
-    name = os.path.join(app.config["UPLOAD_PATH"], meta["UID"])
+    name = os.path.join(app.config["UPLOAD_PATH"], meta["Name"])
 
     if not os.path.exists(name):
         return f"Can't find {name}", 404
 
     return send_file(name, as_attachment=True, download_name=meta["Name"])
 
+#Based on PR https://github.com/tkuester/taky/pull/90
+#Experimental reverse-engineered endpoint for iTAK Datapackage upload
+@app.route("/Marti/sync/upload", methods=["POST"])
+@requires_auth
+def datapackage_upload_itak():
+    """
+    Upload a datapackage to the server from iTAK clients
+
+    Arguments:
+        name=...
+        uid=...
+        CreatorUid=...
+        keywords=...
+
+    Return:
+        The URL where the file can be downloaded
+    """
+    try:
+        name = request.args["name"]
+        uid = request.args["uid"]
+        creator_uid = request.args["CreatorUid"]
+        f_hash = hashlib.sha256(request.data)
+        keywords = request.args["keywords"]
+    except KeyError:
+        return "Invalid arguments", 400
+
+    filename = secure_filename(f"{creator_uid}_{name}.zip")
+
+    meta = get_meta(f_name=filename)
+    if meta.get("Hash") != f_hash:
+        old_meta_hash_path = os.path.join(
+            app.config["UPLOAD_PATH"], "meta", f'{meta.get("Hash")}.json'
+        )
+        try:
+            os.unlink(old_meta_hash_path)
+        except:  # pylint: disable=bare-except
+            pass
+
+    # Save the uploaded file
+    file_path = os.path.join(app.config["UPLOAD_PATH"], filename)
+    with open(file_path, "wb") as binary_file:
+        binary_file.write(request.data)
+
+    sub_user = request.headers.get("X-USER", "Anonymous")
+    meta = {
+        "UID": uid,  # What the file will be saved as
+        "Name": name,  # File name on the server
+        "Hash": f_hash.hexdigest(),  # SHA-256, checked
+        "PrimaryKey": 1,  # Not used, must be >= 0
+        "SubmissionDateTime": dt.now(UTC).isoformat() + "Z",
+        "SubmissionUser": sub_user,
+        "CreatorUid": creator_uid,
+        "Keywords": f"{keywords}",
+        "MIMEType": "application/x-zip-compressed", # iTAK sends a zip file
+        "Size": os.path.getsize(file_path),  # Checked, do not fake
+        "Visibility": "public",
+    }
+
+    put_meta(meta)
+
+    # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
+    # This is needed for client-to-client data package transmission
+    return url_for(f_hash.hexdigest())
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])
 @requires_auth
@@ -114,7 +181,6 @@ def datapackage_upload():
     Return:
         The URL where the file can be downloaded
     """
-
     try:
         asset_fp = request.files["assetfile"]
         creator_uid = request.args["creatorUid"]
