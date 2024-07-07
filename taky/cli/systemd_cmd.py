@@ -163,7 +163,7 @@ def systemd(args):
             "dps": "taky-dps.service",
         }
     else:
-        site_path = os.path.dirname(config.get("taky", "cfg_path"))
+        site_path = os.path.dirname(str(config.get("taky", "cfg_path")))
         hostname = config.get("taky", "hostname")
         print(f" - Detected site install: {site_path}")
         svcs = {
