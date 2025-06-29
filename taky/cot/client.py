@@ -38,6 +38,7 @@ class SocketClient:
         self.ssl_hs = SSLState.SSL_WAIT if use_ssl else SSLState.NO_SSL
         self.out_buff = b""
         self.connect_cb = kwargs.get("cbs", {}).get("connect", lambda client: None)
+        self.buf_size = kwargs.get("buf_size", 4096)
 
         (ip, port) = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
@@ -113,7 +114,7 @@ class SocketClient:
             return
 
         try:
-            data = self.sock.recv(4096)
+            data = self.sock.recv(self.buf_size)
 
             if len(data) == 0:
                 self.disconnect("Client disconnected")
@@ -141,7 +142,7 @@ class SocketClient:
             return
 
         try:
-            sent = self.sock.send(self.out_buff[0:4096])
+            sent = self.sock.send(self.out_buff[0:self.buf_size])
             self.out_buff = self.out_buff[sent:]
         except BlockingIOError:
             self.lgr.debug("Client blocked TX: %s", self)

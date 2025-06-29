@@ -225,6 +225,7 @@ class COTServer:
                     "route": self.router.route,
                     "connect": self.client_connect,
                 },
+                buf_size=config.getint("cot_server", "buf_size")
             )
         else:
             self.lgr.info("New %s cot client from %s:%s", stype, ip_addr, port)
@@ -236,6 +237,7 @@ class COTServer:
                     "packet_rx": self.mon_packet,
                     "connect": self.client_connect,
                 },
+                buf_size=config.getint("cot_server", "buf_size")
             )
 
         self.router.client_connect(self.clients[sock])
