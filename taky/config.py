@@ -20,6 +20,7 @@ DEFAULT_CFG = {
         "mon_port": None,
         "log_cot": None,  # Path to log COT files to
         "max_persist_ttl": -1,  # Enforce a maximum persistence TTL
+        "buf_size": 4096 # default buffer size for the socket
     },
     "dp_server": {
         "upload_path": "/var/taky/dp-user",
@@ -99,6 +100,17 @@ def load_config(path=None, explicit=False):
         if port <= 0 or port >= 65535:
             raise ValueError(f"Invalid port: {port}")
     ret_config.set("cot_server", "port", str(port))
+
+    buf_size = ret_config.get("cot_server", "buf_size")
+    if buf_size in [None, ""]:
+        buf_size = 4096
+    else:
+        try:
+            buf_size = int(buf_size)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid buf_size: {max_ttl}") from exc
+
+    ret_config.set("cot_server", "buf_size", str(buf_size))
 
     max_ttl = ret_config.get("cot_server", "max_persist_ttl")
     if max_ttl in [None, ""]:
