@@ -45,8 +45,8 @@ class Point:
     @property
     def as_element(self):
         ret = etree.Element("point")
-        ret.set("lat", "%.6f" % self.lat)
-        ret.set("lon", "%.6f" % self.lon)
+        ret.set("lat", "%.13f" % self.lat)
+        ret.set("lon", "%.13f" % self.lon)
         ret.set("hae", "%.1f" % self.hae)
         ret.set("ce", "%.1f" % self.ce)
         ret.set("le", "%.1f" % self.le)
