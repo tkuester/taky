@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools >= 77.0.3",
+	"setuptools_scm[toml]>=8"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[project]
+name="taky"
+dynamic=["version","scripts"]
+authors=[
+	{name="Tim K", email="tpkuester@gmail.com"}
+]
+description="A simple TAK server and COT router"
+readme="README.md"
+requires-python=">=3.6"
+dependencies=[
+	"lxml>=4.4.0",
+	"cryptography>=38.0.0",
+	"dateutils",
+	"Flask~=2.0",
+	"gunicorn",
+	"redis"
+]
+classifiers=[
+	"Topic :: Communications",
+	"Development Status :: 4 - Beta",
+	"Programming Language :: Python :: 3.6"
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/tkuester/taky"
+Issues   = "https://github.com/tkuester/taky/issues"
+
+[project.optional-dependencies]
+test = [
+        "mock"
+]
+
+[project.entry-points."taky.cli"]
+taky     = "taky.cot.__main__:main"
+taky_dps = "taky.dps.__main__:main"
+takyctl  = "taky.cli.__main__:main"
+
