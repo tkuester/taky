@@ -18,6 +18,7 @@ setup(
         "Flask~=2.0",
         "gunicorn",
         "redis",
+        "importlib_metadata; python_version<'3.8'",
     ],
     description="A simple TAK server and COT router",
     long_description=long_description,
